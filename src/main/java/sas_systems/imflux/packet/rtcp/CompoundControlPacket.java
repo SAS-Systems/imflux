@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package sas_systems.imflux.packet;
+package sas_systems.imflux.packet.rtcp;
 
 import java.util.Arrays;
 import java.util.List;
-
-import sas_systems.imflux.packet.rtcp.ControlPacket;
 
 /**
  * This is the container packet for all {@link ControlPacket}s. <br/><br/>
