@@ -156,7 +156,7 @@ public class DataPacketTest {
         assertEquals(1248975, packet.getTimestamp());
         assertEquals(0x4fbc4ca1, packet.getSsrc());
         assertEquals(1145 - 12, packet.getDataSize());
-        System.err.println(packet);
+        System.out.println(packet);
     }
 
     @Test

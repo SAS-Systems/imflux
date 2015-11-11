@@ -54,7 +54,7 @@ public class SdesChunkTest {
         ChannelBuffer encoded = chunk.encode();
         // Must be 32 bit aligned.
         assertEquals(0, encoded.readableBytes() % 4);
-        System.err.println("encoded readable bytes: " + encoded.readableBytes());
+        System.out.println("encoded readable bytes: " + encoded.readableBytes());
         SdesChunk decoded = SdesChunk.decode(encoded);
 
         assertEquals(chunk.getSsrc(), decoded.getSsrc());
@@ -77,12 +77,16 @@ public class SdesChunkTest {
         chunk.addItem(SdesChunkItems.createLocationItem("99999 city"));
         chunk.addItem(SdesChunkItems.createNoteItem("somthing important"));
         chunk.addItem(SdesChunkItems.createToolItem("some other stuff"));
-        chunk.addItem(SdesChunkItems.createNullItem());
+        try {
+        	chunk.addItem(SdesChunkItems.createNullItem());
+        } catch(Exception e) {
+        	assertNotNull(e);
+        }
 
         ChannelBuffer encoded = chunk.encode();
         // Must be 32 bit aligned.
         assertEquals(0, encoded.readableBytes() % 4);
-        System.err.println("encoded readable bytes: " + encoded.readableBytes());
+        System.out.println("encoded readable bytes: " + encoded.readableBytes());
         SdesChunk decoded = SdesChunk.decode(encoded);
 
         // chunk is checked in test1
