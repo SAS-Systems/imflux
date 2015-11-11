@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Bruno de Carvalho
+ * Copyright 2015 Sebastian Schmidl
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,18 @@
 package sas_systems.imflux.util;
 
 /**
+ * Provides methods for Time operations.
+ * 
  * @author <a:mailto="bruno.carvalho@wit-software.com" />Bruno de Carvalho</a>
+ * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
 public class TimeUtils {
 
     // constructors ---------------------------------------------------------------------------------------------------
-
     private TimeUtils() {
     }
 
     // public static methods ------------------------------------------------------------------------------------------
-
     /**
      * Retrieve a timestamp for the current instant.
      *
