@@ -16,12 +16,17 @@
 
 package sas_systems.imflux.packet;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.junit.Test;
+
+import sas_systems.imflux.util.ByteUtils;
 
 /**
  * JUnit test for the methods encode and decode of the class {@link DataPacket}.
@@ -100,6 +105,7 @@ public class DataPacketTest {
 
     @Test
     public void testEncodeDecode() {
+    	// packet for comparison
         DataPacket packet = new DataPacket();
         packet.setVersion(RtpVersion.V2);
         packet.setMarker(true);
@@ -111,11 +117,13 @@ public class DataPacketTest {
         packet.addContributingSourceId(69);
         packet.addContributingSourceId(70);
         packet.addContributingSourceId(71);
-        packet.setData(new byte[]{0x69, 0x69, 0x69, 0x69});
+        packet.setData(new byte[]{0x6f, 0x6f, 0x6f, 0x6f});
 
+        // encode and put into new packet
         ChannelBuffer buffer = packet.encode();
-
         DataPacket decoded = DataPacket.decode(buffer);
+        
+        // check identity
         assertEquals(packet.getVersion(), decoded.getVersion());
         assertEquals(packet.hasMarker(), decoded.hasMarker());
         assertEquals(packet.getPayloadType(), decoded.getPayloadType());
