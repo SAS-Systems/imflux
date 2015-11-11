@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package sas_systems.imflux.packet;
+package sas_systems.imflux.test.packet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -26,6 +26,8 @@ import java.util.Arrays;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.junit.Test;
 
+import sas_systems.imflux.packet.DataPacket;
+import sas_systems.imflux.packet.RtpVersion;
 import sas_systems.imflux.util.ByteUtils;
 
 /**
