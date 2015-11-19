@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<<<<<<< HEAD
-<class-diagram version="1.1.9" icons="true" always-add-relationships="false" generalizations="true" realizations="true" 
-  associations="true" dependencies="false" nesting-relationships="true" router="FAN">  
-  <enumeration id="1" language="java" name="sas_systems.imflux.packet.rtcp.ControlPacket.Type" project="imflux" 
-    file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/ControlPacket.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="259" y="-103"/>    
-=======
 <class-diagram version="1.1.9" icons="true" automaticImage="PNG" always-add-relationships="false" generalizations="true" 
   realizations="true" associations="true" dependencies="false" nesting-relationships="true" router="FAN">  
   <enumeration id="1" language="java" name="sas_systems.imflux.packet.rtcp.ControlPacket.Type" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/ControlPacket.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="1120" y="-528"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
+    <position height="-1" width="-1" x="1120" y="-528"/>  
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -20,11 +12,7 @@
   </enumeration>  
   <class id="2" language="java" name="sas_systems.imflux.packet.rtcp.ControlPacket" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/ControlPacket.java" binary="false" corner="BOTTOM_RIGHT">    
-<<<<<<< HEAD
-    <position height="207" width="209" x="615" y="-206"/>    
-=======
-    <position height="-1" width="-1" x="810" y="-417"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
+    <position height="-1" width="-1" x="810" y="-417"/> 
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -33,11 +21,7 @@
   </class>  
   <class id="3" language="java" name="sas_systems.imflux.packet.rtcp.SdesChunk" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/SdesChunk.java" binary="false" corner="BOTTOM_RIGHT">    
-<<<<<<< HEAD
-    <position height="-1" width="-1" x="1237" y="529"/>    
-=======
     <position height="-1" width="-1" x="2009" y="180"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -46,12 +30,8 @@
   </class>  
   <class id="4" language="java" name="sas_systems.imflux.packet.rtcp.SenderReportPacket" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/SenderReportPacket.java" binary="false" 
-    corner="BOTTOM_RIGHT">    
-<<<<<<< HEAD
-    <position height="-1" width="-1" x="225" y="574"/>    
-=======
-    <position height="-1" width="-1" x="390" y="346"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
+    corner="BOTTOM_RIGHT">
+    <position height="-1" width="-1" x="390" y="346"/>
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -61,11 +41,7 @@
   <class id="5" language="java" name="sas_systems.imflux.packet.rtcp.AbstractReportPacket" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/AbstractReportPacket.java" binary="false" 
     corner="BOTTOM_RIGHT">    
-<<<<<<< HEAD
-    <position height="207" width="231" x="397" y="41"/>    
-=======
     <position height="-1" width="-1" x="701" y="-117"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -74,11 +50,7 @@
   </class>  
   <class id="6" language="java" name="sas_systems.imflux.packet.rtcp.SdesChunkItems" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/SdesChunkItems.java" binary="false" corner="BOTTOM_RIGHT">    
-<<<<<<< HEAD
-    <position height="-1" width="-1" x="1112" y="1128"/>    
-=======
     <position height="-1" width="-1" x="1471" y="537"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -88,11 +60,7 @@
   <class id="7" language="java" name="sas_systems.imflux.packet.rtcp.SourceDescriptionPacket" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/SourceDescriptionPacket.java" binary="false" 
     corner="BOTTOM_RIGHT">    
-<<<<<<< HEAD
-    <position height="225" width="342" x="1265" y="41"/>    
-=======
-    <position height="-1" width="-1" x="1785" y="-180"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
+    <position height="-1" width="-1" x="1785" y="-180"/> 
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -101,11 +69,7 @@
   </class>  
   <class id="8" language="java" name="sas_systems.imflux.packet.rtcp.SdesChunkItem" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/SdesChunkItem.java" binary="false" corner="BOTTOM_RIGHT">    
-<<<<<<< HEAD
-    <position height="-1" width="-1" x="1232" y="829"/>    
-=======
     <position height="-1" width="-1" x="1758" y="123"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -114,11 +78,7 @@
   </class>  
   <class id="9" language="java" name="sas_systems.imflux.packet.rtcp.ByePacket" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/ByePacket.java" binary="false" corner="BOTTOM_RIGHT">    
-<<<<<<< HEAD
-    <position height="297" width="272" x="668" y="41"/>    
-=======
     <position height="-1" width="-1" x="403" y="-70"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -127,11 +87,7 @@
   </class>  
   <enumeration id="10" language="java" name="sas_systems.imflux.packet.rtcp.SdesChunkItem.Type" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/SdesChunkItem.java" binary="false" corner="BOTTOM_RIGHT">    
-<<<<<<< HEAD
-    <position height="-1" width="-1" x="1487" y="747"/>    
-=======
     <position height="-1" width="-1" x="1442" y="190"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -140,11 +96,7 @@
   </enumeration>  
   <class id="11" language="java" name="sas_systems.imflux.packet.rtcp.AppDataPacket" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/AppDataPacket.java" binary="false" corner="BOTTOM_RIGHT">    
-<<<<<<< HEAD
-    <position height="135" width="245" x="980" y="41"/>    
-=======
     <position height="-1" width="-1" x="1398" y="-131"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -154,11 +106,7 @@
   <class id="12" language="java" name="sas_systems.imflux.packet.rtcp.CompoundControlPacket" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/CompoundControlPacket.java" binary="false" 
     corner="BOTTOM_RIGHT">    
-<<<<<<< HEAD
-    <position height="153" width="246" x="615" y="-399"/>    
-=======
     <position height="-1" width="-1" x="817" y="-664"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -168,11 +116,7 @@
   <class id="13" language="java" name="sas_systems.imflux.packet.rtcp.SdesChunkPrivItem" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/SdesChunkPrivItem.java" binary="false" 
     corner="BOTTOM_RIGHT">    
-<<<<<<< HEAD
-    <position height="-1" width="-1" x="1429" y="1031"/>    
-=======
     <position height="-1" width="-1" x="1753" y="496"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -182,11 +126,7 @@
   <class id="14" language="java" name="sas_systems.imflux.packet.rtcp.ReceiverReportPacket" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/ReceiverReportPacket.java" binary="false" 
     corner="BOTTOM_RIGHT">    
-<<<<<<< HEAD
-    <position height="-1" width="-1" x="589" y="466"/>    
-=======
     <position height="-1" width="-1" x="750" y="240"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -196,23 +136,13 @@
   <class id="15" language="java" name="sas_systems.imflux.packet.rtcp.ReceptionReport" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/ReceptionReport.java" binary="false" 
     corner="BOTTOM_RIGHT">    
-<<<<<<< HEAD
-    <position height="-1" width="-1" x="945" y="646"/>    
-=======
-    <position height="-1" width="-1" x="1089" y="131"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
+    <position height="-1" width="-1" x="1089" y="131"/>   
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-<<<<<<< HEAD
-  <association id="16">    
-    <end type="SOURCE" refId="6" navigable="false">      
-      <attribute id="17" name="NULL_ITEM"/>      
-      <multiplicity id="18" minimum="0" maximum="1"/>    
-=======
   <enumeration id="16" language="java" name="sas_systems.imflux.packet.RtpVersion" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/RtpVersion.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="451" y="-643"/>    
@@ -258,42 +188,11 @@
   <association id="25">    
     <end type="SOURCE" refId="6" navigable="false">      
       <attribute id="26" name="NULL_ITEM"/>      
-      <multiplicity id="27" minimum="0" maximum="1"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
+      <multiplicity id="27" minimum="0" maximum="1"/>   
     </end>    
     <end type="TARGET" refId="8" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-<<<<<<< HEAD
-  <nesting id="19">    
-    <end type="SOURCE" refId="8"/>    
-    <end type="TARGET" refId="10"/>  
-  </nesting>  
-  <association id="20">    
-    <end type="SOURCE" refId="12" navigable="false">      
-      <attribute id="21" name="controlPackets"/>      
-      <multiplicity id="22" minimum="0" maximum="2147483647"/>    
-    </end>    
-    <end type="TARGET" refId="2" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <generalization id="23">    
-    <end type="SOURCE" refId="11"/>    
-    <end type="TARGET" refId="2"/>  
-  </generalization>  
-  <generalization id="24">    
-    <end type="SOURCE" refId="7"/>    
-    <end type="TARGET" refId="2"/>  
-  </generalization>  
-  <generalization id="25">    
-    <end type="SOURCE" refId="9"/>    
-    <end type="TARGET" refId="2"/>  
-  </generalization>  
-  <association id="26">    
-    <end type="SOURCE" refId="7" navigable="false">      
-      <attribute id="27" name="chunks"/>      
-      <multiplicity id="28" minimum="0" maximum="2147483647"/>    
-=======
   <association id="28">    
     <end type="SOURCE" refId="5" navigable="false">      
       <attribute id="29" name="reports"/>      
@@ -306,37 +205,10 @@
     <end type="SOURCE" refId="7" navigable="false">      
       <attribute id="32" name="chunks"/>      
       <multiplicity id="33" minimum="0" maximum="2147483647"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
     </end>    
     <end type="TARGET" refId="3" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-<<<<<<< HEAD
-  <generalization id="29">    
-    <end type="SOURCE" refId="4"/>    
-    <end type="TARGET" refId="5"/>  
-  </generalization>  
-  <association id="30">    
-    <end type="SOURCE" refId="5" navigable="false">      
-      <attribute id="31" name="reports"/>      
-      <multiplicity id="32" minimum="0" maximum="2147483647"/>    
-    </end>    
-    <end type="TARGET" refId="15" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="33">    
-    <end type="SOURCE" refId="3" navigable="false">      
-      <attribute id="34" name="items"/>      
-      <multiplicity id="35" minimum="0" maximum="2147483647"/>    
-    </end>    
-    <end type="TARGET" refId="8" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="36">    
-    <end type="SOURCE" refId="2" navigable="false">      
-      <attribute id="37" name="type"/>      
-      <multiplicity id="38" minimum="0" maximum="1"/>    
-=======
   <generalization id="34">    
     <end type="SOURCE" refId="7"/>    
     <end type="TARGET" refId="2"/>  
@@ -377,37 +249,10 @@
     <end type="SOURCE" refId="2" navigable="false">      
       <attribute id="46" name="type"/>      
       <multiplicity id="47" minimum="0" maximum="1"/>    
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
     </end>    
     <end type="TARGET" refId="1" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-<<<<<<< HEAD
-  <generalization id="39">    
-    <end type="SOURCE" refId="5"/>    
-    <end type="TARGET" refId="2"/>  
-  </generalization>  
-  <association id="40">    
-    <end type="SOURCE" refId="8" navigable="false">      
-      <attribute id="41" name="type"/>      
-      <multiplicity id="42" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="10" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <generalization id="43">    
-    <end type="SOURCE" refId="13"/>    
-    <end type="TARGET" refId="8"/>  
-  </generalization>  
-  <nesting id="44">    
-    <end type="SOURCE" refId="2"/>    
-    <end type="TARGET" refId="1"/>  
-  </nesting>  
-  <generalization id="45">    
-    <end type="SOURCE" refId="14"/>    
-    <end type="TARGET" refId="5"/>  
-  </generalization>  
-=======
   <association id="48">    
     <end type="SOURCE" refId="3" navigable="false">      
       <attribute id="49" name="items"/>      
@@ -424,7 +269,6 @@
     <end type="TARGET" refId="16" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
->>>>>>> da0726dd4035feb9bf5bb285b6adb96a23c68f12
   <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
     sort-features="false" accessors="true" visibility="true">    
     <attributes public="true" package="true" protected="true" private="true" static="true"/>    
