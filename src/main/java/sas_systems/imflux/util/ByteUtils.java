@@ -109,8 +109,13 @@ public class ByteUtils {
     }
 
     /**
-     * Converts a hex string into a byte array.
-     * 
+     * Converts a hex string into a byte array.</br>
+     * Example: 
+     * <pre>
+     * 	hex: 	 A4B5
+     * 	byte[0]= A4
+     * 	byte[1]= B5	
+     * </pre>
      * @param hexString the hex string to be converted
      * @return a byte array containing the hex values
      */

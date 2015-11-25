@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.math.BigInteger;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.junit.Test;
@@ -89,7 +91,7 @@ public class SenderReportPacketTest {
     public void testEncodeDecode() throws Exception {
         SenderReportPacket packet = new SenderReportPacket();
         packet.setSenderSsrc(0x45);
-        packet.setNtpTimestamp(0x45);
+        packet.setNtpTimestamp(new BigInteger("45", 16));
         packet.setRtpTimestamp(0x45);
         packet.setSenderOctetCount(20);
         packet.setSenderPacketCount(2);

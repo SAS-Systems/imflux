@@ -16,8 +16,12 @@
 
 package sas_systems.imflux.packet.rtcp;
 
+import java.math.BigInteger;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
+
+import sas_systems.imflux.util.ByteUtils;
 
 /**
  * A control packet of type SR (sender report):
@@ -69,10 +73,7 @@ import org.jboss.netty.buffer.ChannelBuffers;
 public class SenderReportPacket extends AbstractReportPacket {
 
     // internal vars --------------------------------------------------------------------------------------------------
-
-    // TODO this might not be a long (=Unix Timestamp)...
-	// better: object of type date or similar
-    private long ntpTimestamp;
+    private BigInteger ntpTimestamp;
     private long rtpTimestamp;
     private long senderPacketCount;
     private long senderOctetCount;
@@ -80,6 +81,7 @@ public class SenderReportPacket extends AbstractReportPacket {
     // constructors ---------------------------------------------------------------------------------------------------
     public SenderReportPacket() {
         super(Type.SENDER_REPORT);
+        ntpTimestamp = new BigInteger(new byte[1]);
     }
 
     // public static methods ------------------------------------------------------------------------------------------
@@ -96,7 +98,7 @@ public class SenderReportPacket extends AbstractReportPacket {
         SenderReportPacket packet = new SenderReportPacket();
         
         packet.setSenderSsrc(buffer.readUnsignedInt());			// reads 4 bytes (one 32bit word) from the buffer
-        packet.setNtpTimestamp(buffer.readLong());				// reads 8 bytes (two 32bit word) from the buffer
+        packet.setNtpTimestamp(new BigInteger(buffer.readBytes(16).array())); // reads 8 bytes (two 32bit word) from the buffer
         packet.setRtpTimestamp(buffer.readUnsignedInt());		// reads 4 bytes (one 32bit word) from the buffer
         packet.setSenderPacketCount(buffer.readUnsignedInt());	// reads 4 bytes (one 32bit word) from the buffer
         packet.setSenderOctetCount(buffer.readUnsignedInt());	// reads 4 bytes (one 32bit word) from the buffer
@@ -135,8 +137,12 @@ public class SenderReportPacket extends AbstractReportPacket {
         if ((fixedBlockSize < 0) || ((fixedBlockSize % 4) > 0)) {
             throw new IllegalArgumentException("Padding modulus must be a non-negative multiple of 4");
         }
+        byte[] timestamp = packet.ntpTimestamp.toByteArray();
+        if(timestamp.length > 16) {
+	    	throw new UnsupportedOperationException("Couldn't encode ntpTimestamp because it's too long!");
+	    }
 
-        // Common header + other fields (sender ssrc, ntp timestamp, rtp timestamp, packet count, octet count)
+        // Common header + other fields (sender ssrc, ntp timestamp, rtp timestamp, packet count, octet count) in bytes
         int size = 4 + 24;
         if (packet.reports != null) {
             size += packet.reports.size() * 24;
@@ -176,7 +182,7 @@ public class SenderReportPacket extends AbstractReportPacket {
         
         // Next 24 bytes: ssrc, ntp timestamp, rtp timestamp, octet count, packet count
         buffer.writeInt((int) packet.senderSsrc);
-        buffer.writeLong(packet.ntpTimestamp);
+        buffer.writeBytes(timestamp); // FIXME: !! doesn't write a long(64bit) -> trailing zeros
         buffer.writeInt((int) packet.rtpTimestamp);
         buffer.writeInt((int) packet.senderPacketCount);
         buffer.writeInt((int) packet.senderOctetCount);
@@ -228,12 +234,14 @@ public class SenderReportPacket extends AbstractReportPacket {
 
     // getters & setters ----------------------------------------------------------------------------------------------
 
-    public long getNtpTimestamp() {
+    public BigInteger getNtpTimestamp() {
         return ntpTimestamp;
     }
 
-    public void setNtpTimestamp(long ntpTimestamp) {
-        if ((ntpTimestamp < 0) || (ntpTimestamp > 0xffffffffffffffffl)) {
+    public void setNtpTimestamp(BigInteger ntpTimestamp) {
+//    	long max = 0xffffffffffffffffl;
+        if ((ntpTimestamp.compareTo(new BigInteger("0")) <= 0) 
+        		|| (ntpTimestamp.compareTo(new BigInteger("ffffffffffffffff", 16)) > 0)) {
             throw new IllegalArgumentException("Valid range for NTP timestamp is [0;0xffffffffffffffff]");
         }
         this.ntpTimestamp = ntpTimestamp;
