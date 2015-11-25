@@ -3,7 +3,7 @@
   realizations="true" associations="true" dependencies="false" nesting-relationships="true" router="FAN">  
   <enumeration id="1" language="java" name="sas_systems.imflux.packet.rtcp.ControlPacket.Type" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/ControlPacket.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="1120" y="-528"/>    
+    <position height="-1" width="-1" x="1120" y="-528"/>  
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -12,7 +12,7 @@
   </enumeration>  
   <class id="2" language="java" name="sas_systems.imflux.packet.rtcp.ControlPacket" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/ControlPacket.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="810" y="-417"/>    
+    <position height="-1" width="-1" x="810" y="-417"/> 
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -30,8 +30,8 @@
   </class>  
   <class id="4" language="java" name="sas_systems.imflux.packet.rtcp.SenderReportPacket" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/SenderReportPacket.java" binary="false" 
-    corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="390" y="346"/>    
+    corner="BOTTOM_RIGHT">
+    <position height="-1" width="-1" x="390" y="346"/>
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -60,7 +60,7 @@
   <class id="7" language="java" name="sas_systems.imflux.packet.rtcp.SourceDescriptionPacket" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/SourceDescriptionPacket.java" binary="false" 
     corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="1785" y="-180"/>    
+    <position height="-1" width="-1" x="1785" y="-180"/> 
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -136,7 +136,7 @@
   <class id="15" language="java" name="sas_systems.imflux.packet.rtcp.ReceptionReport" project="imflux" 
     file="/imflux/src/main/java/sas_systems/imflux/packet/rtcp/ReceptionReport.java" binary="false" 
     corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="1089" y="131"/>    
+    <position height="-1" width="-1" x="1089" y="131"/>   
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -188,7 +188,7 @@
   <association id="25">    
     <end type="SOURCE" refId="6" navigable="false">      
       <attribute id="26" name="NULL_ITEM"/>      
-      <multiplicity id="27" minimum="0" maximum="1"/>    
+      <multiplicity id="27" minimum="0" maximum="1"/>   
     </end>    
     <end type="TARGET" refId="8" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
