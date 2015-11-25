@@ -1,0 +1,34 @@
+# Notes:
+#  - you can skip a build by adding [ci skip] to the commit message 
+#
+
+# see http://about.travis-ci.org/docs/user/languages/java/
+language: java
+
+# test for these JDK versions and environments
+jdk:
+   - oraclejdk8
+   - oraclejdk7
+   - openjdk7
+   
+# container-based build:
+sudo: false
+
+#before_install:
+#   - 
+
+#before_script:
+
+#script:
+
+#after_success:
+  
+#after_failure:
+
+#before_deploy:
+
+#deploy:
+
+#after_deploy:
+
+#after_script:
