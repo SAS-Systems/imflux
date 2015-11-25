@@ -10,9 +10,21 @@ jdk:
    - oraclejdk8
    - oraclejdk7
    - openjdk7
+
+# only build these branches (RegEx is also valid, eg. /^deploy.*$/):
+branches:
+  only:
+    - deploy
+    - travisTest
    
 # container-based build:
 sudo: false
+
+
+#--------------------------------------------------------------------
+# use default settings:
+#   maven (mvn install -DskipTests=true, mvn test -B)
+#--------------------------------------------------------------------
 
 #before_install:
 #   - 
