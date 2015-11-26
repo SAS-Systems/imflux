@@ -120,7 +120,7 @@ public class SenderReportPacketTest {
 
         SenderReportPacket srPacket = (SenderReportPacket) controlPacket;
 
-        assertEquals(0x45, srPacket.getNtpTimestamp());
+        assertEquals(0x45, srPacket.getNtpTimestamp().intValue());
         assertEquals(0x45, srPacket.getRtpTimestamp());
         assertEquals(20, srPacket.getSenderOctetCount());
         assertEquals(2, srPacket.getSenderPacketCount());

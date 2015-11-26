@@ -98,7 +98,11 @@ public class SenderReportPacket extends AbstractReportPacket {
         SenderReportPacket packet = new SenderReportPacket();
         
         packet.setSenderSsrc(buffer.readUnsignedInt());			// reads 4 bytes (one 32bit word) from the buffer
-        packet.setNtpTimestamp(new BigInteger(buffer.readBytes(16).array())); // reads 8 bytes (two 32bit word) from the buffer
+        ChannelBuffer ntp = buffer.readBytes(length);
+        System.out.println("Long: " + ntp.readLong());
+        ntp.resetReaderIndex(); 
+        System.out.println("BigInteger: " + new BigInteger(buffer.readBytes(8).array()).longValue());
+//        packet.setNtpTimestamp(new BigInteger(buffer.readBytes(8).array())); // reads 8 bytes (two 32bit words) from the buffer
         packet.setRtpTimestamp(buffer.readUnsignedInt());		// reads 4 bytes (one 32bit word) from the buffer
         packet.setSenderPacketCount(buffer.readUnsignedInt());	// reads 4 bytes (one 32bit word) from the buffer
         packet.setSenderOctetCount(buffer.readUnsignedInt());	// reads 4 bytes (one 32bit word) from the buffer
@@ -137,10 +141,18 @@ public class SenderReportPacket extends AbstractReportPacket {
         if ((fixedBlockSize < 0) || ((fixedBlockSize % 4) > 0)) {
             throw new IllegalArgumentException("Padding modulus must be a non-negative multiple of 4");
         }
-        byte[] timestamp = packet.ntpTimestamp.toByteArray();
-        if(timestamp.length > 16) {
+        // FIXME 1
+        byte[] temp = packet.ntpTimestamp.toByteArray();
+        if(temp.length > 8) {
 	    	throw new UnsupportedOperationException("Couldn't encode ntpTimestamp because it's too long!");
 	    }
+        // copy into new array to allow leading zeros and ensure writing of 8 bytes
+        byte[] timestamp = new byte[8];
+        for (int i = temp.length; i > 0; i--) {
+			timestamp[timestamp.length-i] = temp[temp.length-i];
+		}
+        
+        
 
         // Common header + other fields (sender ssrc, ntp timestamp, rtp timestamp, packet count, octet count) in bytes
         int size = 4 + 24;
@@ -182,7 +194,9 @@ public class SenderReportPacket extends AbstractReportPacket {
         
         // Next 24 bytes: ssrc, ntp timestamp, rtp timestamp, octet count, packet count
         buffer.writeInt((int) packet.senderSsrc);
-        buffer.writeBytes(timestamp); // FIXME: !! doesn't write a long(64bit) -> trailing zeros
+        System.out.println(buffer.writableBytes());
+        buffer.writeBytes(timestamp); 
+        System.out.println(buffer.writableBytes());
         buffer.writeInt((int) packet.rtpTimestamp);
         buffer.writeInt((int) packet.senderPacketCount);
         buffer.writeInt((int) packet.senderOctetCount);
@@ -193,6 +207,7 @@ public class SenderReportPacket extends AbstractReportPacket {
                 buffer.writeBytes(block.encode());
             }
         }
+        System.out.println(buffer.writableBytes());
         
         // padding if required
         if (padding > 0) {
@@ -239,7 +254,6 @@ public class SenderReportPacket extends AbstractReportPacket {
     }
 
     public void setNtpTimestamp(BigInteger ntpTimestamp) {
-//    	long max = 0xffffffffffffffffl;
         if ((ntpTimestamp.compareTo(new BigInteger("0")) <= 0) 
         		|| (ntpTimestamp.compareTo(new BigInteger("ffffffffffffffff", 16)) > 0)) {
             throw new IllegalArgumentException("Valid range for NTP timestamp is [0;0xffffffffffffffff]");
