@@ -91,7 +91,8 @@ public class SenderReportPacketTest {
     public void testEncodeDecode() throws Exception {
         SenderReportPacket packet = new SenderReportPacket();
         packet.setSenderSsrc(0x45);
-        packet.setNtpTimestamp(new BigInteger("45", 16));
+        System.out.println("NTP: 0x" + new BigInteger("F00000045", 16).toString(16));
+        packet.setNtpTimestamp(new BigInteger("F00000045", 16));
         packet.setRtpTimestamp(0x45);
         packet.setSenderOctetCount(20);
         packet.setSenderPacketCount(2);
@@ -119,8 +120,9 @@ public class SenderReportPacketTest {
         assertEquals(ControlPacket.Type.SENDER_REPORT, controlPacket.getType());
 
         SenderReportPacket srPacket = (SenderReportPacket) controlPacket;
+        System.out.println("NTP after de- and encoding: 0x" + srPacket.getNtpTimestamp().toString(16));
 
-        assertEquals(0x45, srPacket.getNtpTimestamp().intValue());
+        assertEquals(new BigInteger("F00000045", 16), srPacket.getNtpTimestamp());
         assertEquals(0x45, srPacket.getRtpTimestamp());
         assertEquals(20, srPacket.getSenderOctetCount());
         assertEquals(2, srPacket.getSenderPacketCount());
@@ -139,6 +141,29 @@ public class SenderReportPacketTest {
         assertEquals(23, srPacket.getReports().get(1).getDelaySinceLastSenderReport());
         assertEquals(24, srPacket.getReports().get(1).getInterArrivalJitter());
         assertEquals(25, srPacket.getReports().get(1).getExtendedHighestSequenceNumberReceived());
+
+        assertEquals(0, encoded.readableBytes());
+    }
+    
+    @Test
+    public void testEncodeDecodeWithMaxNTP() throws Exception {
+        SenderReportPacket packet = new SenderReportPacket();
+        packet.setSenderSsrc(0x45);
+        System.out.println("NTP: 0x" + new BigInteger("FFFFFFFFFFFFFFFF", 16).toString(16));
+        packet.setNtpTimestamp(new BigInteger("10FFFFFFFFFFFFFFF", 16));
+        packet.setRtpTimestamp(0x45);
+
+        ChannelBuffer encoded = packet.encode();
+        assertEquals(0, encoded.readableBytes() % 4);
+
+        ControlPacket controlPacket = ControlPacket.decode(encoded);
+        assertEquals(ControlPacket.Type.SENDER_REPORT, controlPacket.getType());
+
+        SenderReportPacket srPacket = (SenderReportPacket) controlPacket;
+        System.out.println("NTP after de- and encoding: 0x" + srPacket.getNtpTimestamp().toString(16));
+
+        assertEquals(new BigInteger("FFFFFFFFFFFFFFFF", 16), srPacket.getNtpTimestamp());
+        assertEquals(0x45, srPacket.getRtpTimestamp());
 
         assertEquals(0, encoded.readableBytes());
     }
