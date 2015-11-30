@@ -150,7 +150,7 @@ public class SenderReportPacketTest {
         SenderReportPacket packet = new SenderReportPacket();
         packet.setSenderSsrc(0x45);
         System.out.println("NTP: 0x" + new BigInteger("FFFFFFFFFFFFFFFF", 16).toString(16));
-        packet.setNtpTimestamp(new BigInteger("10FFFFFFFFFFFFFFF", 16));
+        packet.setNtpTimestamp(new BigInteger("FFFFFFFFFFFFFFFF", 16));
         packet.setRtpTimestamp(0x45);
 
         ChannelBuffer encoded = packet.encode();
