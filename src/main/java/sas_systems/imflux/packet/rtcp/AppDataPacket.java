@@ -16,7 +16,8 @@
 
 package sas_systems.imflux.packet.rtcp;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
+
 
 /**
  * A control packet of type APP (application-defined).<br/>
@@ -61,7 +62,7 @@ public class AppDataPacket extends ControlPacket {
      * @param length remaining 32bit words
      * @return null
      */
-    public static ChannelBuffer encode(int currentCompoundLength, int fixedBlockSize, AppDataPacket packet) {
+    public static ByteBuf encode(int currentCompoundLength, int fixedBlockSize, AppDataPacket packet) {
         return null;
     }
 
@@ -70,7 +71,7 @@ public class AppDataPacket extends ControlPacket {
      * Not implemented yet.
      */
     @Override
-    public ChannelBuffer encode(int currentCompoundLength, int fixedBlockSize) {
+    public ByteBuf encode(int currentCompoundLength, int fixedBlockSize) {
         return encode(currentCompoundLength, fixedBlockSize, this);
     }
 
@@ -78,7 +79,7 @@ public class AppDataPacket extends ControlPacket {
      * Not implemented yet.
      */
     @Override
-    public ChannelBuffer encode() {
+    public ByteBuf encode() {
         return encode(0, 0, this);
     }
 }

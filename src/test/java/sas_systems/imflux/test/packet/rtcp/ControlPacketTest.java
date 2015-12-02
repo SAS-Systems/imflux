@@ -16,13 +16,13 @@
 
 package sas_systems.imflux.test.packet.rtcp;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
 import org.junit.Test;
 
 import sas_systems.imflux.packet.rtcp.ControlPacket;
@@ -49,7 +49,7 @@ public class ControlPacketTest {
         byte[] thirdPacketBytes = ByteUtils
                 .convertHexStringToByteArray("81cb0001e6aa996e");
 
-        ChannelBuffer buffer = ChannelBuffers.wrappedBuffer(firstPacketBytes, secondPacketBytes, thirdPacketBytes);
+        ByteBuf buffer = Unpooled.wrappedBuffer(firstPacketBytes, secondPacketBytes, thirdPacketBytes);
 
         List<ControlPacket> controlPackets = new ArrayList<ControlPacket>(3);
         while (buffer.readableBytes() > 0) {

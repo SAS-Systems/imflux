@@ -16,8 +16,9 @@
 
 package sas_systems.imflux.packet.rtcp;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
 
 /**
  * A report used in a report packet.
@@ -44,8 +45,8 @@ public class ReceptionReport {
     }
 
     // public static methods ------------------------------------------------------------------------------------------
-    public static ChannelBuffer encode(ReceptionReport block) {
-        ChannelBuffer buffer = ChannelBuffers.buffer(24); // 4 + 1 + 3 + 4 + 4 + 4 + 4
+    public static ByteBuf encode(ReceptionReport block) {
+        ByteBuf buffer = Unpooled.buffer(24); // 4 + 1 + 3 + 4 + 4 + 4 + 4
         buffer.writeInt((int) block.ssrc);
         buffer.writeByte(block.fractionLost);
         buffer.writeMedium(block.cumulativeNumberOfPacketsLost);
@@ -56,7 +57,7 @@ public class ReceptionReport {
         return buffer;
     }
 
-    public static ReceptionReport decode(ChannelBuffer buffer) {
+    public static ReceptionReport decode(ByteBuf buffer) {
         ReceptionReport block = new ReceptionReport();
         block.setSsrc(buffer.readUnsignedInt());
         block.setFractionLost(buffer.readUnsignedByte());
@@ -69,7 +70,7 @@ public class ReceptionReport {
     }
 
     // public methods -------------------------------------------------------------------------------------------------
-    public ChannelBuffer encode() {
+    public ByteBuf encode() {
         return encode(this);
     }
     

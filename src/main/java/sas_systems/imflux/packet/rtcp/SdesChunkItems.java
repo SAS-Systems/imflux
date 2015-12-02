@@ -16,8 +16,8 @@
 
 package sas_systems.imflux.packet.rtcp;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.util.CharsetUtil;
+import io.netty.buffer.ByteBuf;
+import io.netty.util.CharsetUtil;
 
 /**
  * This class serves as a factory for {@link SdesChunkItem}s and provides a method to decode these.
@@ -73,10 +73,10 @@ public class SdesChunkItems {
     /**
      * Decodes a single chunk item.
      * 
-     * @param buffer a ChannelBuffer containing the bytes
+     * @param buffer a ByteBuf containing the bytes
      * @return the SdesChunkItem of the proper type (see {@link SdesChunkItem.Type})
      */
-    public static SdesChunkItem decode(ChannelBuffer buffer) {
+    public static SdesChunkItem decode(ByteBuf buffer) {
         SdesChunkItem.Type type = SdesChunkItem.Type.fromByte(buffer.readByte());
         switch (type) {
             case NULL:
@@ -108,7 +108,7 @@ public class SdesChunkItems {
         }
     }
 
-    public static ChannelBuffer encode(SdesChunkItem item) {
+    public static ByteBuf encode(SdesChunkItem item) {
         return item.encode();
     }
 }

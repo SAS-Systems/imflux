@@ -16,12 +16,10 @@
 
 package sas_systems.imflux.packet.rtcp;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
 import java.math.BigInteger;
-
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-
-import sas_systems.imflux.util.ByteUtils;
 
 /**
  * A control packet of type SR (sender report):
@@ -86,7 +84,7 @@ public class SenderReportPacket extends AbstractReportPacket {
 
     // public static methods ------------------------------------------------------------------------------------------
     /**
-     * Decodes a control packet from a {@code ChannelBuffer}. This method is called by {@code ControlPacket.decode()}.
+     * Decodes a control packet from a {@code ByteBuf}. This method is called by {@code ControlPacket.decode()}.
      * 
      * @param buffer bytes, which still have to be decoded
      * @param hasPadding indicator for a padding at the end of the packet, which have to be discarded
@@ -94,7 +92,7 @@ public class SenderReportPacket extends AbstractReportPacket {
      * @param length remaining 32bit words
      * @return a new {@code SenderReportPacket} containing all information from the {@code buffer}
      */
-    public static SenderReportPacket decode(ChannelBuffer buffer, boolean hasPadding, byte innerBlocks, int length) {
+    public static SenderReportPacket decode(ByteBuf buffer, boolean hasPadding, byte innerBlocks, int length) {
         SenderReportPacket packet = new SenderReportPacket();
         
         packet.setSenderSsrc(buffer.readUnsignedInt());			// reads 4 bytes (one 32bit word) from the buffer
@@ -133,9 +131,9 @@ public class SenderReportPacket extends AbstractReportPacket {
      * @param currentCompoundLength only needed for the padding if {@code fixedBlockSize > 0}
      * @param fixedBlockSize set this size if the packet should have a fixed size, otherwise 0
      * @param packet the packet to be encoded
-     * @return a {@code ChannelBuffer} containing the packet as bytes
+     * @return a {@code ByteBuf} containing the packet as bytes
      */
-    public static ChannelBuffer encode(int currentCompoundLength, int fixedBlockSize, SenderReportPacket packet) {
+    public static ByteBuf encode(int currentCompoundLength, int fixedBlockSize, SenderReportPacket packet) {
         if ((currentCompoundLength < 0) || ((currentCompoundLength % 4) > 0)) {
             throw new IllegalArgumentException("Current compound length must be a non-negative multiple of 4");
         }
@@ -171,7 +169,7 @@ public class SenderReportPacket extends AbstractReportPacket {
         if (packet.reports != null) {
             size += packet.reports.size() * 24;
         }
-        ChannelBuffer buffer;
+        ByteBuf buffer;
 
         // If packet was configured to have padding, calculate padding and add it.
         int padding = 0;
@@ -188,7 +186,7 @@ public class SenderReportPacket extends AbstractReportPacket {
         size += padding;
 
         // Allocate the buffer and write contents
-        buffer = ChannelBuffers.buffer(size);
+        buffer = Unpooled.buffer(size);
         // First byte: Version (2b), Padding (1b), RR count (5b)
         byte b = packet.getVersion().getByte();
         if (padding > 0) {
@@ -239,20 +237,20 @@ public class SenderReportPacket extends AbstractReportPacket {
      * 
      * @param currentCompoundLength only needed for the padding if {@code fixedBlockSize > 0}
      * @param fixedBlockSize set this size if the packet should have a fixed size, otherwise 0
-     * @return a {@code ChannelBuffer} containing this packet as bytes
+     * @return a {@code ByteBuf} containing this packet as bytes
      */
     @Override
-    public ChannelBuffer encode(int currentCompoundLength, int fixedBlockSize) {
+    public ByteBuf encode(int currentCompoundLength, int fixedBlockSize) {
         return SenderReportPacket.encode(currentCompoundLength, fixedBlockSize, this);
     }
 
     /**
      * Encodes this {@code SenderReportPacket} with standard parameters.
      * 
-     * @return a {@code ChannelBuffer} containing this packet as bytes
+     * @return a {@code ByteBuf} containing this packet as bytes
      */
     @Override
-    public ChannelBuffer encode() {
+    public ByteBuf encode() {
         return SenderReportPacket.encode(0, 0, this);
     }
 

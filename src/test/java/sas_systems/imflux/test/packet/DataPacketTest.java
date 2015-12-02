@@ -20,10 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import io.netty.buffer.ByteBuf;
 
 import java.util.Arrays;
 
-import org.jboss.netty.buffer.ChannelBuffer;
 import org.junit.Test;
 
 import sas_systems.imflux.packet.DataPacket;
@@ -101,7 +101,7 @@ public class DataPacketTest {
         packet.setTimestamp(103700);
         packet.setSsrc(0x1fcc779a);
         packet.setData(new byte[]{(byte) 0xd5, (byte) 0xd5, (byte) 0xd5, (byte) 0xd5, (byte) 0xd5, (byte) 0xd5});
-        ChannelBuffer buffer = packet.encode();
+        ByteBuf buffer = packet.encode();
         assertTrue(Arrays.equals(ALAW_RTP_PACKET_SAMPLE, buffer.array()));
     }
 
@@ -122,7 +122,7 @@ public class DataPacketTest {
         packet.setData(new byte[]{0x6f, 0x6f, 0x6f, 0x6f});
 
         // encode and put into new packet
-        ChannelBuffer buffer = packet.encode();
+        ByteBuf buffer = packet.encode();
         DataPacket decoded = DataPacket.decode(buffer);
         
         // check identity
@@ -170,7 +170,7 @@ public class DataPacketTest {
         packet.setData(new byte[]{0x45, 0x45, 0x45, 0x45, 0x45});
         System.out.println("packet = " + packet);
 
-        ChannelBuffer encoded = packet.encode(64);
+        ByteBuf encoded = packet.encode(64);
         System.out.println(ByteUtils.writeArrayAsHex(encoded.array(), true));
         assertEquals(64, encoded.readableBytes());
 

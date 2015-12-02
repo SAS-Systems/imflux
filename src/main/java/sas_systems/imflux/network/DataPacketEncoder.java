@@ -16,16 +16,15 @@
 
 package sas_systems.imflux.network;
 
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandler;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.handler.codec.oneone.OneToOneEncoder;
-
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
 import sas_systems.imflux.packet.DataPacket;
 
 /**
  * A class (singleton) for decoding a {@link DataPacket}. It extends {@link OneToOneEncoder}.
+ * 
  * @see OneToOneEncoder
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
@@ -63,12 +62,12 @@ public class DataPacketEncoder extends OneToOneEncoder {
     @Override
     protected Object encode(ChannelHandlerContext ctx, Channel channel, Object msg) throws Exception {
         if (!(msg instanceof DataPacket)) {
-            return ChannelBuffers.EMPTY_BUFFER;
+            return Unpooled.EMPTY_BUFFER;
         }
 
         DataPacket packet = (DataPacket) msg;
         if (packet.getDataSize() == 0) {
-            return ChannelBuffers.EMPTY_BUFFER;
+            return Unpooled.EMPTY_BUFFER;
         }
         return packet.encode();
     }

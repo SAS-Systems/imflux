@@ -18,13 +18,11 @@ package sas_systems.imflux.test.packet.rtcp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
 import org.junit.Test;
 
-import sas_systems.imflux.packet.rtcp.ControlPacket;
-import sas_systems.imflux.packet.rtcp.ReceiverReportPacket;
 import sas_systems.imflux.packet.rtcp.SdesChunkItem;
 import sas_systems.imflux.packet.rtcp.SdesChunkItems;
 import sas_systems.imflux.packet.rtcp.SdesChunkPrivItem;
@@ -42,7 +40,7 @@ public class SdesChunkItemsTest {
     public void testDecode() throws Exception {
         // From partial wireshark capture
         String hexString = "010e6e756c6c406c6f63616c686f7374";
-        ChannelBuffer buffer = ChannelBuffers.wrappedBuffer(ByteUtils.convertHexStringToByteArray(hexString));
+        ByteBuf buffer = Unpooled.wrappedBuffer(ByteUtils.convertHexStringToByteArray(hexString));
 
         SdesChunkItem item = SdesChunkItems.decode(buffer);
         assertEquals(SdesChunkItem.Type.CNAME, item.getType());
@@ -52,7 +50,7 @@ public class SdesChunkItemsTest {
 
     @Test
     public void testEncodeNull() throws Exception {
-        ChannelBuffer buffer = SdesChunkItems.encode(SdesChunkItems.NULL_ITEM);
+        ByteBuf buffer = SdesChunkItems.encode(SdesChunkItems.NULL_ITEM);
         assertEquals(1, buffer.capacity());
         assertEquals(0x00, buffer.array()[0]);
     }
@@ -60,7 +58,7 @@ public class SdesChunkItemsTest {
     @Test
     public void testEncodeDecodeSimpleItem() throws Exception {
         String value = "cname value";
-        ChannelBuffer buffer = SdesChunkItems.encode(SdesChunkItems.createCnameItem(value));
+        ByteBuf buffer = SdesChunkItems.encode(SdesChunkItems.createCnameItem(value));
         SdesChunkItem item = SdesChunkItems.decode(buffer);
         assertEquals(SdesChunkItem.Type.CNAME, item.getType());
         assertEquals(value, item.getValue());
@@ -69,7 +67,7 @@ public class SdesChunkItemsTest {
     @Test
     public void testEncodeDecodeSimpleEmptyItem() throws Exception {
         String value = "";
-        ChannelBuffer buffer = SdesChunkItems.encode(SdesChunkItems.createNameItem(value));
+        ByteBuf buffer = SdesChunkItems.encode(SdesChunkItems.createNameItem(value));
         SdesChunkItem item = SdesChunkItems.decode(buffer);
         assertEquals(SdesChunkItem.Type.NAME, item.getType());
         assertEquals(value, item.getValue());
@@ -81,7 +79,7 @@ public class SdesChunkItemsTest {
         for (int i = 0; i < 255; i++) {
             value.append('a');
         }
-        ChannelBuffer buffer = SdesChunkItems.encode(SdesChunkItems.createCnameItem(value.toString()));
+        ByteBuf buffer = SdesChunkItems.encode(SdesChunkItems.createCnameItem(value.toString()));
         SdesChunkItem item = SdesChunkItems.decode(buffer);
         assertEquals(SdesChunkItem.Type.CNAME, item.getType());
         assertEquals(value.toString(), item.getValue());
@@ -105,7 +103,7 @@ public class SdesChunkItemsTest {
     public void testEncoderDecodePrivItem() throws Exception {
         String prefix = "prefixValue";
         String value = "someOtherThing";
-        ChannelBuffer buffer = SdesChunkItems.encode(SdesChunkItems.createPrivItem(prefix, value));
+        ByteBuf buffer = SdesChunkItems.encode(SdesChunkItems.createPrivItem(prefix, value));
         SdesChunkItem item = SdesChunkItems.decode(buffer);
         assertEquals(SdesChunkItem.Type.PRIV, item.getType());
         assertEquals(value, item.getValue());

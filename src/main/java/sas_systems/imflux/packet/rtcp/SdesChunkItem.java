@@ -16,9 +16,9 @@
 
 package sas_systems.imflux.packet.rtcp;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.util.CharsetUtil;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.util.CharsetUtil;
 
 /**
  * This class represents an item of a {@link SdesChunk} from a {@link SourceDescriptionPacket}.
@@ -53,12 +53,12 @@ public class SdesChunkItem {
     /**
      * Encodes this chunk item.
      * 
-     * @return a ChannelBuffer containing the bytes
+     * @return a ByteBuf containing the bytes
      */
-    public ChannelBuffer encode() {
+    public ByteBuf encode() {
         // Technically, this never happens as you're not allowed to add NULL items to a SdesChunk instance, but...
         if (this.type == Type.NULL) {
-            ChannelBuffer buffer = ChannelBuffers.buffer(1);
+            ByteBuf buffer = Unpooled.buffer(1);
             buffer.writeByte(0x00);
             return buffer;
         }
@@ -78,7 +78,7 @@ public class SdesChunkItem {
         }
 
         // Type (1b), length (1b), value (xb)
-        ChannelBuffer buffer = ChannelBuffers.buffer(2 + valueBytes.length);
+        ByteBuf buffer = Unpooled.buffer(2 + valueBytes.length);
         buffer.writeByte(this.type.getByte());
         buffer.writeByte(valueBytes.length);
         buffer.writeBytes(valueBytes);

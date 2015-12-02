@@ -16,8 +16,9 @@
 
 package sas_systems.imflux.packet;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +69,7 @@ public class DataPacket {
 
     private List<Long> contributingSourceIds;
 
-    private ChannelBuffer data;
+    private ByteBuf data;
 
     // constructors ---------------------------------------------------------------------------------------------------
     public DataPacket() {
@@ -83,17 +84,17 @@ public class DataPacket {
      * @return the DataPacket object
      */
     public static DataPacket decode(byte[] data) {
-        return decode(ChannelBuffers.wrappedBuffer(data));
+        return decode(Unpooled.wrappedBuffer(data)); 
     }
 
     /**
      * Decodes a {@code DataPacket}.
      * 
-     * @param data as a ChannelBuffer
+     * @param data as a ByteBuf
      * @return the DataPacket object
      * @throws IndexOutOfBoundsException
      */
-    public static DataPacket decode(ChannelBuffer buffer) throws IndexOutOfBoundsException {
+    public static DataPacket decode(ByteBuf buffer) throws IndexOutOfBoundsException {
         if (buffer.readableBytes() < 12) {
             throw new IllegalArgumentException("A RTP packet must be at least 12 octets long");
         }
@@ -154,9 +155,9 @@ public class DataPacket {
      * 
      * @param fixedBlockSize set this param, if the packet should have a fixed block size (have a padding)
      * @param packet the DataPacket to be encoded
-     * @return a {@link ChannelBuffer} containing the bytes
+     * @return a {@link ByteBuf} containing the bytes
      */
-    public static ChannelBuffer encode(int fixedBlockSize, DataPacket packet) {
+    public static ByteBuf encode(int fixedBlockSize, DataPacket packet) {
         int size = 12; // Fixed width
         if (packet.hasExtension()) {
             size += 4 + packet.getExtensionDataSize();
@@ -178,7 +179,7 @@ public class DataPacket {
         }
         size += padding;
 
-        ChannelBuffer buffer = ChannelBuffers.buffer(size);
+        ByteBuf buffer = Unpooled.buffer(size);
 
         // Version, Padding, eXtension, CSRC Count
         byte b = packet.getVersion().getByte();
@@ -240,18 +241,18 @@ public class DataPacket {
      * Encodes this DataPacket.
      * 
      * @param fixedBlockSize set this param, if the packet should have a fixed block size (have a padding)
-     * @return a {@link ChannelBuffer} containing the bytes
+     * @return a {@link ByteBuf} containing the bytes
      */
-    public ChannelBuffer encode(int fixedBlockSize) {
+    public ByteBuf encode(int fixedBlockSize) {
         return encode(fixedBlockSize, this);
     }
 
     /**
      * Encodes this DataPacket. Assume that no fixed block size should be used.
      * 
-     * @return a {@link ChannelBuffer} containing the bytes
+     * @return a {@link ByteBuf} containing the bytes
      */
-    public ChannelBuffer encode() {
+    public ByteBuf encode() {
         return encode(0, this);
     }
 
@@ -385,11 +386,11 @@ public class DataPacket {
         this.contributingSourceIds = contributingSourceIds;
     }
 
-    public ChannelBuffer getData() {
+    public ByteBuf getData() {
         return data;
     }
 
-    public void setData(ChannelBuffer data) {
+    public void setData(ByteBuf data) {
         this.data = data;
     }
 
@@ -398,7 +399,7 @@ public class DataPacket {
     }
 
     public void setData(byte[] data) {
-        this.data = ChannelBuffers.wrappedBuffer(data);
+        this.data = Unpooled.wrappedBuffer(data);
     }
 
     // low level overrides --------------------------------------------------------------------------------------------

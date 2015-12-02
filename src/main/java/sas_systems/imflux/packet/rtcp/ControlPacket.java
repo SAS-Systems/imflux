@@ -16,8 +16,7 @@
 
 package sas_systems.imflux.packet.rtcp;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import io.netty.buffer.ByteBuf;
 import sas_systems.imflux.packet.RtpVersion;
 
 /**
@@ -75,7 +74,7 @@ public abstract class ControlPacket {
      * @return a new {@code ControlPacket} containing all information from the {@code buffer}
      * @throws IllegalArgumentException
      */
-    public static ControlPacket decode(ChannelBuffer buffer) throws IllegalArgumentException {
+    public static ControlPacket decode(ByteBuf buffer) throws IllegalArgumentException {
     	// check buffer size
         if ((buffer.readableBytes() % 4) > 0) {
             throw new IllegalArgumentException("Invalid RTCP packet length: expecting multiple of 4 and got " +
@@ -117,9 +116,9 @@ public abstract class ControlPacket {
         }
     }
 
-    public abstract ChannelBuffer encode(int currentCompoundLength, int fixedBlockSize);
+    public abstract ByteBuf encode(int currentCompoundLength, int fixedBlockSize);
 
-    public abstract ChannelBuffer encode();
+    public abstract ByteBuf encode();
 
     // getters & setters ----------------------------------------------------------------------------------------------
     public RtpVersion getVersion() {

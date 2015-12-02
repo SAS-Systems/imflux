@@ -18,8 +18,8 @@ package sas_systems.imflux.test.packet.rtcp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import io.netty.buffer.ByteBuf;
 
-import org.jboss.netty.buffer.ChannelBuffer;
 import org.junit.Test;
 
 import sas_systems.imflux.packet.rtcp.SdesChunk;
@@ -51,7 +51,7 @@ public class SdesChunkTest {
         chunk.addItem(SdesChunkItems.createEmailItem("email"));
         chunk.addItem(SdesChunkItems.createPrivItem("prefix", "value"));
 
-        ChannelBuffer encoded = chunk.encode();
+        ByteBuf encoded = chunk.encode();
         // Must be 32 bit aligned.
         assertEquals(0, encoded.readableBytes() % 4);
         System.out.println("encoded readable bytes: " + encoded.readableBytes());
@@ -83,7 +83,7 @@ public class SdesChunkTest {
         	assertNotNull(e);
         }
 
-        ChannelBuffer encoded = chunk.encode();
+        ByteBuf encoded = chunk.encode();
         // Must be 32 bit aligned.
         assertEquals(0, encoded.readableBytes() % 4);
         System.out.println("encoded readable bytes: " + encoded.readableBytes());

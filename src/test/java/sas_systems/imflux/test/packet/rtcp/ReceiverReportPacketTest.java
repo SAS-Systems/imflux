@@ -19,9 +19,9 @@ package sas_systems.imflux.test.packet.rtcp;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
 import org.junit.Test;
 
 import sas_systems.imflux.packet.RtpVersion;
@@ -43,7 +43,7 @@ public class ReceiverReportPacketTest {
         // wireshark capture, from jlibrtp
         byte[] packetBytes = ByteUtils.convertHexStringToByteArray("80c90001e6aa996e");
 
-        ChannelBuffer buffer = ChannelBuffers.wrappedBuffer(packetBytes);
+        ByteBuf buffer = Unpooled.wrappedBuffer(packetBytes);
         ControlPacket controlPacket = ControlPacket.decode(buffer);
 
         assertEquals(ControlPacket.Type.RECEIVER_REPORT, controlPacket.getType());
@@ -79,7 +79,7 @@ public class ReceiverReportPacketTest {
         block.setExtendedHighestSequenceNumberReceived(25);
         packet.addReportBlock(block);
 
-        ChannelBuffer encoded = packet.encode();
+        ByteBuf encoded = packet.encode();
         assertEquals(0, encoded.readableBytes() % 4);
 
         ControlPacket controlPacket = ControlPacket.decode(encoded);
