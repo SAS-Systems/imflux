@@ -16,21 +16,25 @@
 
 package sas_systems.imflux.network;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageEncoder;
+
+import java.util.List;
+
 import sas_systems.imflux.packet.DataPacket;
 
 /**
- * A class (singleton) for decoding a {@link DataPacket}. It extends {@link OneToOneEncoder}.
+ * A class (singleton) for encoding a {@link DataPacket} to a {@link ByteBuf}. It extends {@link MessageToMessageEncoder}.
  * 
  * @see OneToOneEncoder
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
 @ChannelHandler.Sharable
-public class DataPacketEncoder extends OneToOneEncoder {
+public class DataPacketEncoder extends MessageToMessageEncoder<DataPacket> {
 
     // constructors ---------------------------------------------------------------------------------------------------
 	/**
@@ -50,26 +54,19 @@ public class DataPacketEncoder extends OneToOneEncoder {
 
     // OneToOneEncoder ------------------------------------------------------------------------------------------------
     /**
-     * TODO: Wann wird diese Methode aufgerufen und warum? (Netty framework?)
-     * Encodes a DataPacket if and only if {@code msg} is of type {@link DataPacket}. Otherwise an empty ChannelBuffer 
-     * is returned.
+     * Encodes a DataPacket if and only if {@code message} is of type {@link DataPacket}. Otherwise an empty ChannelBuffer 
+     * is added to the list.
      * 
      * @param ctx The context of the ChannelHandler
-     * @param channel 
-     * @param msg the message which should be encoded
-     * @return a ChannelBuffer containing the data of the DataPacket
+     * @param message the message which should be encoded
+     * @param out a list where all messages are written to
      */
     @Override
-    protected Object encode(ChannelHandlerContext ctx, Channel channel, Object msg) throws Exception {
-        if (!(msg instanceof DataPacket)) {
-            return Unpooled.EMPTY_BUFFER;
+    protected void encode(ChannelHandlerContext ctx, DataPacket message, List<Object> out) throws Exception {
+        if (message.getDataSize() == 0) {
+            out.add(Unpooled.EMPTY_BUFFER);
         }
-
-        DataPacket packet = (DataPacket) msg;
-        if (packet.getDataSize() == 0) {
-            return Unpooled.EMPTY_BUFFER;
-        }
-        return packet.encode();
+        out.add(message.encode());
     }
 
     // private classes ------------------------------------------------------------------------------------------------
