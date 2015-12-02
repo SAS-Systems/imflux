@@ -34,7 +34,7 @@ import sas_systems.imflux.packet.DataPacket;
 public class DataPacketDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     // constants ------------------------------------------------------------------------------------------------------
-    protected static final Logger LOG = Logger.getLogger(MessageToMessageDecoder.class);
+    protected static final Logger LOG = Logger.getLogger(ControlPacketDecoder.class);
 
     // OneToOneDecoder ------------------------------------------------------------------------------------------------
     /**
