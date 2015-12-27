@@ -45,7 +45,7 @@ public class ControlPacketDecoder extends ChannelInboundHandlerAdapter {
     // constants ------------------------------------------------------------------------------------------------------
     protected static final Logger LOG = Logger.getLogger(ControlPacketDecoder.class);
 
-    // ChannelUpstreamHandler -----------------------------------------------------------------------------------------
+    // ChannelInboundHandlerAdapter -----------------------------------------------------------------------------------
     /**
      * Decodes {@link ByteBuf}fers to {@link ControlPacket}s and then put them into a {@link CompoundControlPacket} to pass
      * it to the next {@link ChannelHandler} in the {@link ChannelPipeline}.

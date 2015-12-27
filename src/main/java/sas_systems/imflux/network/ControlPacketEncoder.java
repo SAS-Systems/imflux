@@ -60,7 +60,7 @@ public class ControlPacketEncoder extends ChannelOutboundHandlerAdapter {
         return InstanceHolder.INSTANCE;
     }
 
-    // ChannelOutboundHandler ---------------------------------------------------------------------------------------
+    // ChannelOutboundHandlerAdapter ----------------------------------------------------------------------------------
     /**
      * Encodes a {@link ControlPacket} or a {@link CompoundControlPacket} to a {@link ByteBuf} and than
      * calls {@link ChannelHandlerContext#write(Object)} to forward
