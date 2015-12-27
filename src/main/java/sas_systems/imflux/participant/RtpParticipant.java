@@ -27,6 +27,13 @@ import sas_systems.imflux.packet.rtcp.SdesChunk;
 import sas_systems.imflux.util.TimeUtils;
 
 /**
+ * Stores information about a participant containing among others:
+ * <ul>
+ * 	<li>Data destination</li>
+ * 	<li>Control information destination</li>
+ * 	<li>Information about last received packet.</li>
+ * </ul>
+ * Provides helper methods to create {@link RtpParticipant}-objects deduced from received packets.
  * 
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
