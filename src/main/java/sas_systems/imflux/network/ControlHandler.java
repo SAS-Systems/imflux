@@ -23,38 +23,38 @@ import io.netty.channel.SimpleChannelInboundHandler;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import sas_systems.imflux.packet.DataPacket;
+import sas_systems.imflux.packet.rtcp.CompoundControlPacket;
 
 /**
  * This class is another {@link ChannelHandler} in the {@link ChannelPipeline}. It counts all received 
- * {@link DataPacket}s and forwards them to the specified {@link DataPacketReceiver}-implementation.
+ * {@link CompoundControlPacket}s and forwards them to the specified {@link ControlPacketReceiver}-implementation.
  * 
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
-public class DataHandler extends SimpleChannelInboundHandler<DataPacket> {
-
+public class ControlHandler extends SimpleChannelInboundHandler<CompoundControlPacket> {
+	
     // internal vars --------------------------------------------------------------------------------------------------
     private final AtomicInteger counter;
-    private final DataPacketReceiver receiver;
+    private final ControlPacketReceiver receiver;
 
     // constructors ---------------------------------------------------------------------------------------------------
     /**
-     * Creates a new {@link DataHandler} forwarding the {@link DataPacket}s to the specified {@link DataPacketReceiver}-
-     * implementation.
-     * @param receiver concrete class implementing {@link DataPacketReceiver}
+     * Creates a new {@link ControlHandler} forwarding the {@link CompoundControlPacket}s to the specified 
+     * {@link ControlPacketReceiver}-implementation.
+     * 
+     * @param receiver concrete class implementing {@link ControlPacketReceiver}
      */
-    public DataHandler(DataPacketReceiver receiver) {
+    public ControlHandler(ControlPacketReceiver receiver) {
         this.receiver = receiver;
         this.counter = new AtomicInteger();
     }
-
+    
     // SimpleChannelUpstreamHandler -----------------------------------------------------------------------------------
     @Override
-	protected void channelRead0(ChannelHandlerContext ctx, DataPacket msg) throws Exception {
-		this.receiver.dataPacketReceived(ctx.channel().remoteAddress(), msg);
+	protected void channelRead0(ChannelHandlerContext ctx, CompoundControlPacket msg) throws Exception {
+    	this.receiver.controlPacketReceived(ctx.channel().remoteAddress(), msg);	
 	}
-    
     /**
      * To be compatible to io.Netty version 5.0:
      * {@code channelRead0(ChannelHandlerContext, I)} will be renamed to {@code messageReceived(ChannelHandlerContext, I)} in 5.0.
@@ -65,10 +65,10 @@ public class DataHandler extends SimpleChannelInboundHandler<DataPacket> {
      * @throws Exception    is thrown if an error occurred
      */
     //@Override
-	protected void messageReceived(ChannelHandlerContext ctx, DataPacket msg) throws Exception {
-		this.receiver.dataPacketReceived(ctx.channel().remoteAddress(), msg);
+	protected void messageReceived(ChannelHandlerContext ctx, CompoundControlPacket msg) throws Exception {
+    	this.receiver.controlPacketReceived(ctx.channel().remoteAddress(), msg);	
 	}
-
+    
     // public methods -------------------------------------------------------------------------------------------------
     /**
      * Return packet counter value.
@@ -78,6 +78,4 @@ public class DataHandler extends SimpleChannelInboundHandler<DataPacket> {
     public int getPacketsReceived() {
         return this.counter.get();
     }
-
-	
 }
