@@ -19,22 +19,18 @@ package sas_systems.imflux.test.participant;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import sas_systems.imflux.packet.DataPacket;
 import sas_systems.imflux.packet.rtcp.SdesChunk;
-import sas_systems.imflux.participant.DefaultParticipantDatabase;
-import sas_systems.imflux.participant.ParticipantEventListener;
 import sas_systems.imflux.participant.ParticipantOperation;
 import sas_systems.imflux.participant.RtpParticipant;
 import sas_systems.imflux.participant.RtpParticipantInfo;
