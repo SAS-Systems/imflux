@@ -102,6 +102,7 @@ public class SingleParticipantDatabase implements ParticipantDatabase {
 
     public RtpParticipant getOrCreateParticipantFromDataPacket(SocketAddress origin, DataPacket packet) {
         if (packet.getSsrc() == this.participant.getSsrc()) {
+        	this.participant.setLastDataOrigin(origin);
             return this.participant;
         }
 
@@ -110,6 +111,7 @@ public class SingleParticipantDatabase implements ParticipantDatabase {
 
     public RtpParticipant getOrCreateParticipantFromSdesChunk(SocketAddress origin, SdesChunk chunk) {
         if (chunk.getSsrc() == this.participant.getSsrc()) {
+        	this.participant.setLastControlOrigin(origin);
             return this.participant;
         }
 
