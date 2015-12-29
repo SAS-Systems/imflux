@@ -41,6 +41,7 @@ import sas_systems.imflux.util.TimeUtils;
 public class RtpParticipant {
 
     // constants ------------------------------------------------------------------------------------------------------
+	// TODO: not used?
     private static final int VALID_PACKETS_UNTIL_VALID_PARTICIPANT = 3;
 
     // configuration --------------------------------------------------------------------------------------------------
