@@ -41,14 +41,43 @@ public interface RtpSession extends DataPacketReceiver, ControlPacketReceiver {
 	 */
     String getId();
 
+    /**
+     * Payload type this session is handling. It must be between 0 and 127.
+     * 
+     * @return payload type as an integer
+     */
     int getPayloadType();
 
+    /**
+     * Initializes this session through binding data and control channels to this session. 
+     * 
+     * @return {@code true} if the RTP session was successfully established and is now running, 
+     * {@code false} otherwise
+     */
     boolean init();
 
+    /**
+     * Terminates this RTP session. This method is used to release all used resources.
+     */
     void terminate();
 
+    /**
+     * Creates a {@link DataPacket} of the given parameters and sends it through the data channel.
+     * 
+     * @param data bytes that should be sent
+     * @param timestamp Unix timestamp of the packet
+     * @param marked packet is marked?
+     * @return {@code true} if the data was sent and {@code false} otherwise
+     */
     boolean sendData(byte[] data, long timestamp, boolean marked);
-
+    
+    /**
+     * Sends a {@link DataPacket} through the data channel. <br/>
+     * Please check the packet by plausibility when implementing this method on your own.
+     * 
+     * @param packet the {@link DataPacket} to be sent
+     * @return {@code true} if the {@link DataPacket} was sent and {@code false} otherwise
+     */
     boolean sendDataPacket(DataPacket packet);
 
     boolean sendControlPacket(ControlPacket packet);
