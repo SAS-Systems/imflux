@@ -18,6 +18,8 @@ package sas_systems.imflux.session;
 
 import java.util.Map;
 
+import com.sun.org.apache.bcel.internal.classfile.Code;
+
 import sas_systems.imflux.network.ControlPacketReceiver;
 import sas_systems.imflux.network.DataPacketReceiver;
 import sas_systems.imflux.packet.DataPacket;
@@ -28,6 +30,7 @@ import sas_systems.imflux.participant.RtpParticipant;
 /**
  * Interface for a RTP session. <br/>
  * It is based on {@link DataPacketReceiver} and {@link ControlPacketReceiver}.
+ * TODO what does this interface?
  * 
  * @see DataPacketReceiver
  * @see ControlPacketReceiver
@@ -80,18 +83,60 @@ public interface RtpSession extends DataPacketReceiver, ControlPacketReceiver {
      */
     boolean sendDataPacket(DataPacket packet);
 
+    /**
+     * Sends a {@link ControlPacket} through the control channel of this RTP session. 
+     * 
+     * @param packet the {@link ControlPacket} to be sent
+     * @return {@code true} if a packet was sent and {@code false} otherwise
+     */
     boolean sendControlPacket(ControlPacket packet);
 
+    /**
+     * Sends a {@link CompoundControlPacket} through the control channel of this RTP session.
+     * A {@link CompoundControlPacket} consists at least of two {@link ControlPacket}s. See the 
+     * documentation for {@link CompoundControlPacket} for further details.
+     * 
+     * @param packet the {@link CompoundControlPacket} to be sent
+     * @return {@code true} if a packet was sent and {@code false} otherwise
+     */
     boolean sendControlPacket(CompoundControlPacket packet);
 
+    /**
+     * Returns the information about the local participant.
+     * 
+     * @return a {@link RtpParticipant} instance
+     */
     RtpParticipant getLocalParticipant();
 
+    /**
+     * Adds a new participant to this RTP Session.
+     * 
+     * @param remoteParticipant
+     * @return {@code true} if the participant was successfully added, {@code false} if not
+     */
     boolean addReceiver(RtpParticipant remoteParticipant);
 
+    /**
+     * Removes a participant from this RTP session. 
+     * 
+     * @param remoteParticipant
+     * @return {@code true} if the participant was removed, {@code false} otherwise
+     */
     boolean removeReceiver(RtpParticipant remoteParticipant);
 
+    /**
+     * Searches and returns a participant of this session with the corresponding SSRSC.
+     * 
+     * @param ssrsc
+     * @return the remote participant
+     */
     RtpParticipant getRemoteParticipant(long ssrsc);
 
+    /**
+     * Returns all participants of this RTP session without the local one.
+     * 
+     * @return {@link Map} containing the participants as values and their SSRSC as keys
+     */
     Map<Long, RtpParticipant> getRemoteParticipants();
 
 //    void addDataListener(RtpSessionDataListener listener);
