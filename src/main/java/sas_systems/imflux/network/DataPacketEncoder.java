@@ -52,7 +52,7 @@ public class DataPacketEncoder extends MessageToMessageEncoder<DataPacket> {
         return InstanceHolder.INSTANCE;
     }
 
-    // OneToOneEncoder ------------------------------------------------------------------------------------------------
+    // MessageToMessageEncoder ------------------------------------------------------------------------------------------------
     /**
      * Encodes a DataPacket if and only if {@code message} is of type {@link DataPacket}. Otherwise an empty ChannelBuffer 
      * is added to the list.
