@@ -17,26 +17,29 @@ package sas_systems.imflux.session;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ChannelFactory;
+import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.RecvByteBufAllocator;
-import io.netty.channel.RecvByteBufAllocator.Handle;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.HashedWheelTimer;
 import io.netty.util.Timeout;
 import io.netty.util.TimerTask;
 
+import java.math.BigInteger;
 import java.net.SocketAddress;
 import java.nio.channels.Channels;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -97,7 +100,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     protected final String id;
     protected final int payloadType;
     protected final HashedWheelTimer timer;
-    protected final OrderedMemoryAwareThreadPoolExecutor executor;
+//    protected final OrderedMemoryAwareThreadPoolExecutor executor;
     protected String host;
     protected boolean useNio;
     protected boolean discardOutOfOrder;
@@ -117,10 +120,10 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     protected final List<RtpSessionDataListener> dataListeners;
     protected final List<RtpSessionControlListener> controlListeners;
     protected final List<RtpSessionEventListener> eventListeners;
-    protected Bootstrap dataBootstrap;
-    protected Bootstrap controlBootstrap;
-    protected DatagramChannel dataChannel;
-    protected DatagramChannel controlChannel;
+    protected ServerBootstrap dataBootstrap;
+    protected ServerBootstrap controlBootstrap;
+    protected ChannelFuture dataChannelFuture;
+    protected ChannelFuture controlChannelFuture;
     protected final AtomicInteger sequence;
     protected final AtomicBoolean sentOrReceivedPackets;
     protected final AtomicInteger collisions;
@@ -132,21 +135,21 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     // constructors ---------------------------------------------------------------------------------------------------
 
     public AbstractRtpSession(String id, int payloadType, RtpParticipant local) {
-        this(id, payloadType, local, null, null);
+        this(id, payloadType, local, null/*, null*/);
     }
 
-    public AbstractRtpSession(String id, int payloadType, RtpParticipant local,
-                              HashedWheelTimer timer) {
-        this(id, payloadType, local, timer, null);
-    }
+//    public AbstractRtpSession(String id, int payloadType, RtpParticipant local,
+//                              HashedWheelTimer timer) {
+//        this(id, payloadType, local, timer, null);
+//    }
 
-    public AbstractRtpSession(String id, int payloadType, RtpParticipant local,
-                              OrderedMemoryAwareThreadPoolExecutor executor) {
-        this(id, payloadType, local, null, executor);
-    }
+//    public AbstractRtpSession(String id, int payloadType, RtpParticipant local,
+//                              OrderedMemoryAwareThreadPoolExecutor executor) {
+//        this(id, payloadType, local, null, executor);
+//    }
     
-    public AbstractRtpSession(String id, int payloadType, RtpParticipant local, HashedWheelTimer timer,
-                              OrderedMemoryAwareThreadPoolExecutor executor) {
+    public AbstractRtpSession(String id, int payloadType, RtpParticipant local, HashedWheelTimer timer/*,
+                              OrderedMemoryAwareThreadPoolExecutor executor*/) {
 		if ((payloadType < 0) || (payloadType > 127)) {
 			throw new IllegalArgumentException("PayloadTypes must be in range [0;127]");
 		}   		
@@ -159,7 +162,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         this.payloadType = payloadType;
         this.localParticipant = local;
         this.participantDatabase = this.createDatabase();
-        this.executor = executor;
+//        this.executor = executor;
         if (timer == null) {
             this.timer = new HashedWheelTimer(1, TimeUnit.SECONDS);
             this.internalTimer = true;
@@ -206,86 +209,84 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         if (this.running.get()) {
             return true;
         }
-
-        DatagramChannelFactory factory;
-        if (this.useNio) {
-            factory = new OioDatagramChannelFactory(Executors.newCachedThreadPool());
-        } else {
-            factory = new NioDatagramChannelFactory(Executors.newCachedThreadPool());
-        }
         
-        
-        EventLoopGroup bossGroup = new NioEventLoopGroup(5, Executors.defaultThreadFactory());
-        this.dataBootstrap = new Bootstrap();
-        this.dataBootstrap.group(bossGroup)
+        // create data channel bootstrap
+//        EventLoopGroup bossGroup = new NioEventLoopGroup(5, Executors.defaultThreadFactory()); // if we want to use others than the defaults
+        EventLoopGroup bossGroup = new NioEventLoopGroup();
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        this.dataBootstrap = new ServerBootstrap();
+        this.dataBootstrap.group(bossGroup, workerGroup)
 	        	.option(ChannelOption.SO_SNDBUF, this.sendBufferSize)
 	        	.option(ChannelOption.SO_RCVBUF, this.receiveBufferSize)
-	        	.channel(NioDatagramChannel.class) // TODO! 
-	        	.channelFactory(new ChannelFactory<Channel>() {
-
+	        	// option not set: "receiveBufferSizePredictorFactory", new FixedReceiveBufferSizePredictorFactory(this.receiveBufferSize)
+	        	.channel(NioServerSocketChannel.class) // TODO! really just a simple default channel? which one? -> otherwise use code below:
+//	        	.channelFactory(new ChannelFactory<Channel>() {
+//
+//					@Override
+//					public Channel newChannel() {
+//						// TODO Auto-generated method stub
+//						return null;
+//					}
+//				})
+	        	.childHandler(new ChannelInitializer<Channel>() { // is used to initialize the ChannelPipeline
 					@Override
-					public Channel newChannel() {
-						// TODO Auto-generated method stub
-						return null;
+					protected void initChannel(Channel ch) throws Exception {
+						ChannelPipeline pipeline = ch.pipeline();
+						pipeline.addLast("decoder", new DataPacketDecoder());
+		                pipeline.addLast("encoder", DataPacketEncoder.getInstance());
+//		                if (executor != null) {
+//		                    pipeline.addLast("executorHandler", new ExecutionHandler(executor));
+//		                }
+		                pipeline.addLast("handler", new DataHandler(AbstractRtpSession.this));
 					}
 				});
         
-        // create channel bootstraps
-        this.dataBootstrap = new ConnectionlessBootstrap(factory);
-        this.dataBootstrap.setOption("sendBufferSize", this.sendBufferSize);
-        this.dataBootstrap.setOption("receiveBufferSize", this.receiveBufferSize);
-        this.dataBootstrap.setOption("receiveBufferSizePredictorFactory",
-                                     new FixedReceiveBufferSizePredictorFactory(this.receiveBufferSize));
-        this.dataBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-            public ChannelPipeline getPipeline() throws Exception {
-                ChannelPipeline pipeline = Channels.pipeline();
-                pipeline.addLast("decoder", new DataPacketDecoder());
-                pipeline.addLast("encoder", DataPacketEncoder.getInstance());
-                if (executor != null) {
-                    pipeline.addLast("executorHandler", new ExecutionHandler(executor));
-                }
-                pipeline.addLast("handler", new DataHandler(AbstractRtpSession.this));
-                return pipeline;
-            }
-        });
-        this.controlBootstrap = new ConnectionlessBootstrap(factory);
-        this.controlBootstrap.setOption("sendBufferSize", this.sendBufferSize);
-        this.controlBootstrap.setOption("receiveBufferSize", this.receiveBufferSize);
-        this.controlBootstrap.setOption("receiveBufferSizePredictorFactory",
-                                        new FixedReceiveBufferSizePredictorFactory(this.receiveBufferSize));
-        this.controlBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-            public ChannelPipeline getPipeline() throws Exception {
-                ChannelPipeline pipeline = Channels.pipeline();
-                pipeline.addLast("decoder", new ControlPacketDecoder());
-                pipeline.addLast("encoder", ControlPacketEncoder.getInstance());
-                if (executor != null) {
-                    pipeline.addLast("executorHandler", new ExecutionHandler(executor));
-                }
-                pipeline.addLast("handler", new ControlHandler(AbstractRtpSession.this));
-                return pipeline;
-            }
-        });
+        // create control channel bootstrap
+        this.controlBootstrap = new ServerBootstrap();
+        this.controlBootstrap.group(bossGroup, workerGroup)
+	        	.option(ChannelOption.SO_SNDBUF, this.sendBufferSize)
+	        	.option(ChannelOption.SO_RCVBUF, this.receiveBufferSize)
+	        	// option not set: "receiveBufferSizePredictorFactory", new FixedReceiveBufferSizePredictorFactory(this.receiveBufferSize)
+	        	.channel(NioServerSocketChannel.class)
+	        	.childHandler(new ChannelInitializer<Channel>() { // is used to initialize the ChannelPipeline
+					@Override
+					protected void initChannel(Channel ch) throws Exception {
+						ChannelPipeline pipeline = ch.pipeline();
+						pipeline.addLast("decoder", new ControlPacketDecoder());
+		                pipeline.addLast("encoder", ControlPacketEncoder.getInstance());
+//		                if (executor != null) {
+//		                    pipeline.addLast("executorHandler", new ExecutionHandler(executor));
+//		                }
+		                pipeline.addLast("handler", new ControlHandler(AbstractRtpSession.this));
+					}
+				});
 
         // create data channel
         SocketAddress dataAddress = this.localParticipant.getDataDestination();
         try {
-            this.dataChannel = (DatagramChannel) this.dataBootstrap.bind(dataAddress);
+            this.dataChannelFuture = this.dataBootstrap.bind(dataAddress).sync();	// make nonblocking? bind() returns a ChannelFuture!
         } catch (Exception e) {
             LOG.error("Failed to bind data channel for session with id " + this.id, e);
-            this.dataBootstrap.releaseExternalResources();
-            this.controlBootstrap.releaseExternalResources();
+            bossGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
+            
+            bossGroup.terminationFuture().sync();
+            workerGroup.terminationFuture().sync();
             return false;
         }
         
         // create control channel
         SocketAddress controlAddress = this.localParticipant.getControlDestination();
         try {
-            this.controlChannel = (DatagramChannel) this.controlBootstrap.bind(controlAddress);
+            this.controlChannelFuture = this.controlBootstrap.bind(controlAddress).sync();
         } catch (Exception e) {
             LOG.error("Failed to bind control channel for session with id " + this.id, e);
-            this.dataChannel.close();
-            this.dataBootstrap.releaseExternalResources();
-            this.controlBootstrap.releaseExternalResources();
+            this.dataChannelFuture.channel().close();
+            bossGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
+            
+            bossGroup.terminationFuture().sync();
+            workerGroup.terminationFuture().sync();
             return false;
         }
 
@@ -572,7 +573,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     // protected helpers ----------------------------------------------------------------------------------------------
 
     protected void handleReportPacket(SocketAddress origin, AbstractReportPacket abstractReportPacket) {
-        if (abstractReportPacket.getReceptionReportCount() == 0) {
+        if (abstractReportPacket.getReportCount() == 0) {
             return;
         }
 
@@ -582,7 +583,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
             return;
         }
 
-        for (ReceptionReport receptionReport : abstractReportPacket.getReceptionReports()) {
+        for (ReceptionReport receptionReport : abstractReportPacket.getReports()) {
             // Ignore all reception reports except for the one who pertains to the local participant (only data that
             // matters here is the link between this participant and ourselves).
             if (receptionReport.getSsrc() == this.localParticipant.getSsrc()) {
@@ -721,15 +722,15 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     }
 
     protected void writeToData(DataPacket packet, SocketAddress destination) {
-        this.dataChannel.write(packet, destination);
+        this.dataChannelFuture.channel().writeAndFlush(packet);
     }
 
     protected void writeToControl(ControlPacket packet, SocketAddress destination) {
-        this.controlChannel.write(packet, destination);
+        this.controlChannelFuture.channel().writeAndFlush(packet);
     }
 
     protected void writeToControl(CompoundControlPacket packet, SocketAddress destination) {
-        this.controlChannel.write(packet, destination);
+        this.controlChannelFuture.channel().writeAndFlush(packet);
     }
 
     protected void joinSession(long currentSsrc) {
@@ -767,7 +768,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         } else {
             // Otherwise, build a sender report.
             SenderReportPacket senderPacket = new SenderReportPacket();
-            senderPacket.setNtpTimestamp(0); // FIXME
+            senderPacket.setNtpTimestamp(new BigInteger("0")); // FIXME
             senderPacket.setRtpTimestamp(System.currentTimeMillis()); // FIXME
             senderPacket.setSenderPacketCount(this.getSentPackets());
             senderPacket.setSenderOctetCount(this.getSentBytes());
@@ -784,7 +785,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
             block.setExtendedHighestSequenceNumberReceived(0); // FIXME
             block.setInterArrivalJitter(0); // FIXME
             block.setCumulativeNumberOfPacketsLost(0); // FIXME
-            packet.addReceptionReportBlock(block);
+            packet.addReportBlock(block);
         }
 
         return packet;
@@ -798,7 +799,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         if (info.getCname() == null) {
             info.setCname(new StringBuilder()
                     .append("efflux/").append(this.id).append('@')
-                    .append(this.dataChannel.getLocalAddress()).toString());
+                    .append(this.dataChannelFuture.channel().localAddress()).toString());
         }
         chunk.addItem(SdesChunkItems.createCnameItem(info.getCname()));
 
@@ -845,12 +846,10 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         this.controlListeners.clear();
 
         // Close data channel, send BYE RTCP packets and close control channel.
-        this.dataChannel.close();
+        this.dataChannelFuture.channel().close();
         this.leaveSession(this.localParticipant.getSsrc(), "Session terminated.");
-        this.controlChannel.close();
+        this.controlChannelFuture.channel().close();
 
-        this.dataBootstrap.releaseExternalResources();
-        this.controlBootstrap.releaseExternalResources();
         LOG.debug("RtpSession with id {} terminated.", this.id);
 
         for (RtpSessionEventListener listener : this.eventListeners) {
