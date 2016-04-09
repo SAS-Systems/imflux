@@ -66,7 +66,14 @@ import sas_systems.imflux.participant.RtpParticipantInfo;
  * Defines standard and common functionality for a RTCP/RTP session. A RTP session 
  * manages two channels:
  * <ul>
- * 	<li>{@link #da}
+ * 	<li>{@link #dataChannelFuture} for data exchange</li>
+ * 	<li>{@link #controlChannelFuture} for control commands</li>
+ * </ul>
+ * <p>
+ * This class has a default RTCP handling implementation, which is used by default.<br/>
+ * You can deactivate this functionality with {@code setAutomatedRtcpHandling(false)}.
+ * TODO: describe RTCP handling
+ * </p>
  * 
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
@@ -170,6 +177,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         }
 
         this.running = new AtomicBoolean(false);
+        // CopyOnWriteArrayList to make this class thread-safe
         this.dataListeners = new CopyOnWriteArrayList<RtpSessionDataListener>();
         this.controlListeners = new CopyOnWriteArrayList<RtpSessionControlListener>();
         this.eventListeners = new CopyOnWriteArrayList<RtpSessionEventListener>();
