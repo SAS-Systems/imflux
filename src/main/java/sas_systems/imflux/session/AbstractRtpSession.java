@@ -15,8 +15,6 @@
  */
 package sas_systems.imflux.session;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.bootstrap.ChannelFactory;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -25,8 +23,6 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.DatagramChannel;
-import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.HashedWheelTimer;
 import io.netty.util.Timeout;
@@ -34,13 +30,9 @@ import io.netty.util.TimerTask;
 
 import java.math.BigInteger;
 import java.net.SocketAddress;
-import java.nio.channels.Channels;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -71,7 +63,10 @@ import sas_systems.imflux.participant.RtpParticipant;
 import sas_systems.imflux.participant.RtpParticipantInfo;
 
 /**
- * 
+ * Defines standard and common functionality for a RTCP/RTP session. A RTP session 
+ * manages two channels:
+ * <ul>
+ * 	<li>{@link #da}
  * 
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
@@ -79,12 +74,10 @@ import sas_systems.imflux.participant.RtpParticipantInfo;
 public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 
     // constants ------------------------------------------------------------------------------------------------------
-
     protected static final Logger LOG = Logger.getLogger(AbstractRtpSession.class);
     protected static final String VERSION = "imflux_0.1_26032016";
 
     // configuration defaults -----------------------------------------------------------------------------------------
-
     // TODO not working with USE_NIO = false
     protected static final boolean USE_NIO = true;
     protected static final boolean DISCARD_OUT_OF_ORDER = true;
@@ -97,12 +90,11 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     protected static final int PARTICIPANT_DATABASE_CLEANUP = 10;
 
     // configuration --------------------------------------------------------------------------------------------------
-
     protected final String id;
     protected final int payloadType;
     protected final HashedWheelTimer timer;
 //    protected final OrderedMemoryAwareThreadPoolExecutor executor;
-    protected String host;
+//    protected String host; // not used
     protected boolean useNio;
     protected boolean discardOutOfOrder;
     protected int bandwidthLimit;
@@ -114,7 +106,6 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     protected int participantDatabaseCleanup;
 
     // internal vars --------------------------------------------------------------------------------------------------
-
     protected final AtomicBoolean running;
     protected final RtpParticipant localParticipant;
     protected final ParticipantDatabase participantDatabase;
@@ -134,7 +125,6 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     protected final boolean internalTimer;
 
     // constructors ---------------------------------------------------------------------------------------------------
-
     public AbstractRtpSession(String id, int payloadType, RtpParticipant local) {
         this(id, payloadType, local, null/*, null*/);
     }
@@ -149,6 +139,13 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 //        this(id, payloadType, local, null, executor);
 //    }
     
+    /**
+     * 
+     * @param id
+     * @param payloadType 
+     * @param local information about the local participant
+     * @param timer timer for periodic RTCP report sending, if the timer is shared across the application
+     */
     public AbstractRtpSession(String id, int payloadType, RtpParticipant local, HashedWheelTimer timer/*,
                               OrderedMemoryAwareThreadPoolExecutor executor*/) {
 		if ((payloadType < 0) || (payloadType > 127)) {
@@ -194,12 +191,17 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     }
 
     // RtpSession -----------------------------------------------------------------------------------------------------
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getId() {
         return id;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getPayloadType() {
         return this.payloadType;
@@ -250,7 +252,14 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 	        	.option(ChannelOption.SO_SNDBUF, this.sendBufferSize)
 	        	.option(ChannelOption.SO_RCVBUF, this.receiveBufferSize)
 	        	// option not set: "receiveBufferSizePredictorFactory", new FixedReceiveBufferSizePredictorFactory(this.receiveBufferSize)
-	        	.channel(NioServerSocketChannel.class)
+	        	.channel(NioServerSocketChannel.class) // TODO! really just a simple default channel? which one? -> otherwise use code below:
+//	        	.channelFactory(new ChannelFactory<Channel>() {
+//
+//					@Override
+//					public Channel newChannel() {
+//						return null;
+//					}
+//				})
 	        	.childHandler(new ChannelInitializer<Channel>() { // is used to initialize the ChannelPipeline
 					@Override
 					protected void initChannel(Channel ch) throws Exception {
@@ -273,8 +282,12 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
             
-            bossGroup.terminationFuture().sync();
-            workerGroup.terminationFuture().sync();
+            try {
+				bossGroup.terminationFuture().sync();
+				workerGroup.terminationFuture().sync();
+			} catch (InterruptedException e1) {
+				LOG.error("EventLoopGroup termination failed: {}", e1);
+			}
             return false;
         }
         
@@ -288,8 +301,12 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
             
-            bossGroup.terminationFuture().sync();
-            workerGroup.terminationFuture().sync();
+            try {
+				bossGroup.terminationFuture().sync();
+				workerGroup.terminationFuture().sync();
+			} catch (InterruptedException e1) {
+				LOG.error("EventLoopGroup termination failed: {}", e1);
+			}
             return false;
         }
 
@@ -311,7 +328,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
             }
         }, this.participantDatabaseCleanup, TimeUnit.SECONDS);
         
-        // Add the RTCP generator.
+        // Add the periodic RTCP report generator.
         if (this.automatedRtcpHandling) {
             this.timer.newTimeout(this, this.updatePeriodicRtcpSendInterval(), TimeUnit.SECONDS);
         }
@@ -799,31 +816,33 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * This method sends a {@link ControlPacket} through the control channel of this session
      * to <strong>all</strong> participants.
      * <br/>
-     * <strong>All {@link ControlPacket}s must be sent within a {@link CompoundControlPacket}!</strong>
+     * <strong>All {@link ControlPacket}s must be sent within a {@link CompoundControlPacket}!
+     * Use with caution.</strong><br/>
+     * This method is only recommended for packets of type {@link ControlPacket.Type.APP_DATA}
      * 
      * @param packet the {@link ControlPacket} to be sent
      * @param participant participant information
      */
-//    protected void internalSendControl(final ControlPacket packet) {
-//        this.participantDatabase.doWithReceivers(new ParticipantOperation() {
-//            @Override
-//            public void doWithParticipant(RtpParticipant participant) throws Exception {
-//                if (!participant.isReceiver() || participant.receivedBye()) {
-//                    return;
-//                }
-//                try {
-//                    writeToControl(packet, participant.getControlDestination());
-//                } catch (Exception e) {
-//                    LOG.error("Failed to send RTCP packet to participants in session with id {}.", id);
-//                }
-//            }
-//
-//            @Override
-//            public String toString() {
-//                return "internalSendControl() for session with id " + id;
-//            }
-//        });
-//    }
+    protected void internalSendControl(final ControlPacket packet) {
+        this.participantDatabase.doWithReceivers(new ParticipantOperation() {
+            @Override
+            public void doWithParticipant(RtpParticipant participant) throws Exception {
+                if (!participant.isReceiver() || participant.receivedBye()) {
+                    return;
+                }
+                try {
+                    writeToControl(packet, participant.getControlDestination());
+                } catch (Exception e) {
+                    LOG.error("Failed to send RTCP packet to participants in session with id {}.", id);
+                }
+            }
+
+            @Override
+            public String toString() {
+                return "internalSendControl() for session with id " + id;
+            }
+        });
+    }
 
     /**
      * This method sends a {@link CompoundControlPacket} through the control channel of this
@@ -883,21 +902,32 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         this.controlChannelFuture.channel().writeAndFlush(packet);
     }
 
-    protected void joinSession(long currentSsrc) {
+    /**
+     * Joins the current session with the given SSRC by sending an empty receiver
+     * report packet. This only works if {@code automatedRtcpHandling} is turned on.
+     * 
+     * @param currentSsrc SSRC of this (local) participant
+     */
+    protected void joinSession(final long currentSsrc) {
         if (!this.automatedRtcpHandling) {
             return;
         }
         // Joining a session, so send an empty receiver report.
-        ReceiverReportPacket emptyReceiverReport = new ReceiverReportPacket();
+        final ReceiverReportPacket emptyReceiverReport = new ReceiverReportPacket();
         emptyReceiverReport.setSenderSsrc(currentSsrc);
         // Send also an SDES packet in the compound RTCP packet.
-        SourceDescriptionPacket sdesPacket = this.buildSdesPacket(currentSsrc);
-
-        CompoundControlPacket compoundPacket = new CompoundControlPacket(emptyReceiverReport, sdesPacket);
-        this.internalSendControl(compoundPacket);
+        final SourceDescriptionPacket sdesPacket = this.buildSdesPacket(currentSsrc);
+        
+        this.internalSendControl(new CompoundControlPacket(emptyReceiverReport, sdesPacket));
     }
 
-    protected void leaveSession(final long currentSsrc, String motive) {
+    /**
+     * Leaves the current session by sending a bye packet.
+     * 
+     * @param currentSsrc 
+     * @param motive reason for leaving the session
+     */
+    protected void leaveSession(final long currentSsrc, final String motive) {
         if (!this.automatedRtcpHandling) {
             return;
         }
@@ -910,6 +940,16 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         this.internalSendControl(new CompoundControlPacket(sdesPacket, byePacket));
     }
 
+    /**
+     * Creates a new report packet. <br/>
+     * If no packets were sent with this session before, a {@link ReceiverReportPacket} is
+     * created, otherwise it is a {@link SenderReportPacket}.
+     * 
+     * @param currentSsrc this (local) participants SSRC
+     * @param context receiver of this report packet
+     * @return If no packets were sent with this session before, a {@link ReceiverReportPacket} is 
+     * returned, otherwise it is a {@link SenderReportPacket}.
+     */
     protected AbstractReportPacket buildReportPacket(long currentSsrc, RtpParticipant context) {
         AbstractReportPacket packet;
         if (this.getSentPackets() == 0) {
@@ -941,6 +981,14 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return packet;
     }
 
+    /**
+     * Extracts the source description information from {@link #localParticipant} to
+     * generate a {@link SourceDescriptionPacket}. The SSRC is set manually to prevent
+     * lightheaded mistakes.
+     * 
+     * @param currentSsrc
+     * @return a {@link SourceDescriptionPacket}
+     */
     protected SourceDescriptionPacket buildSdesPacket(long currentSsrc) {
         SourceDescriptionPacket sdesPacket = new SourceDescriptionPacket();
         SdesChunk chunk = new SdesChunk(currentSsrc);
@@ -982,12 +1030,18 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return sdesPacket;
     }
 
+    /**
+     * Stops this session by stopping all timers, leaving the session and closing 
+     * all closables to release all used resources.
+     * 
+     * @param cause
+     */
     protected synchronized void terminate(Throwable cause) {
-        // Always set to false, even it if was already set at false.
+        // Always set to false, even if it was already set to false.
         if (!this.running.getAndSet(false)) {
             return;
         }
-
+        
         if (this.internalTimer) {
             this.timer.stop();
         }
@@ -997,10 +1051,10 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 
         // Close data channel, send BYE RTCP packets and close control channel.
         this.dataChannelFuture.channel().close();
-        this.leaveSession(this.localParticipant.getSsrc(), "Session terminated.");
+        this.leaveSession(this.localParticipant.getSsrc(), "Session terminated, because: " + cause.toString());
         this.controlChannelFuture.channel().close();
 
-        LOG.debug("RtpSession with id {} terminated.", this.id);
+        LOG.debug("RtpSession with id {} terminated. Cause: {}", this.id, cause);
 
         for (RtpSessionEventListener listener : this.eventListeners) {
             listener.sessionTerminated(this, cause);
@@ -1031,26 +1085,31 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     }
 
     // getters & setters ----------------------------------------------------------------------------------------------
-
     public boolean isRunning() {
         return this.running.get();
     }
 
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        if (this.running.get()) {
-            throw new IllegalArgumentException("Cannot modify property after initialisation");
-        }
-        this.host = host;
-    }
+//    public String getHost() {
+//        return host;
+//    }
+//
+//    /**
+//     * Can only be modified before initialization.
+//     */
+//    public void setHost(String host) {
+//        if (this.running.get()) {
+//            throw new IllegalArgumentException("Cannot modify property after initialisation");
+//        }
+//        this.host = host;
+//    }
 
     public boolean useNio() {
         return useNio;
     }
-
+    
+    /**
+     * Can only be modified before initialization.
+     */
     public void setUseNio(boolean useNio) {
         if (this.running.get()) {
             throw new IllegalArgumentException("Cannot modify property after initialisation");
@@ -1062,6 +1121,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return discardOutOfOrder;
     }
 
+    /**
+     * Can only be modified before initialization.
+     */
     public void setDiscardOutOfOrder(boolean discardOutOfOrder) {
         if (this.running.get()) {
             throw new IllegalArgumentException("Cannot modify property after initialisation");
@@ -1073,6 +1135,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return bandwidthLimit;
     }
 
+    /**
+     * Can only be modified before initialization.
+     */
     public void setBandwidthLimit(int bandwidthLimit) {
         if (this.running.get()) {
             throw new IllegalArgumentException("Cannot modify property after initialisation");
@@ -1084,6 +1149,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return sendBufferSize;
     }
 
+    /**
+     * Can only be modified before initialization.
+     */
     public void setSendBufferSize(int sendBufferSize) {
         if (this.running.get()) {
             throw new IllegalArgumentException("Cannot modify property after initialisation");
@@ -1095,6 +1163,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return receiveBufferSize;
     }
 
+    /**
+     * Can only be modified before initialization.
+     */
     public void setReceiveBufferSize(int receiveBufferSize) {
         if (this.running.get()) {
             throw new IllegalArgumentException("Cannot modify property after initialisation");
@@ -1106,6 +1177,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return maxCollisionsBeforeConsideringLoop;
     }
 
+    /**
+     * Can only be modified before initialization.
+     */
     public void setMaxCollisionsBeforeConsideringLoop(int maxCollisionsBeforeConsideringLoop) {
         if (this.running.get()) {
             throw new IllegalArgumentException("Cannot modify property after initialisation");
@@ -1117,6 +1191,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return automatedRtcpHandling;
     }
 
+    /**
+     * Can only be modified before initialization.
+     */
     public void setAutomatedRtcpHandling(boolean automatedRtcpHandling) {
         if (this.running.get()) {
             throw new IllegalArgumentException("Cannot modify property after initialisation");
@@ -1128,6 +1205,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return tryToUpdateOnEverySdes;
     }
 
+    /**
+     * Can only be modified before initialization.
+     */
     public void setTryToUpdateOnEverySdes(boolean tryToUpdateOnEverySdes) {
         if (this.running.get()) {
             throw new IllegalArgumentException("Cannot modify property after initialisation");
@@ -1147,6 +1227,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return participantDatabaseCleanup;
     }
 
+    /**
+     * Can only be modified before initialization.
+     */
     public void setParticipantDatabaseCleanup(int participantDatabaseCleanup) {
         if (this.running.get()) {
             throw new IllegalArgumentException("Cannot modify property after initialisation");

@@ -168,7 +168,17 @@ public interface RtpSession extends DataPacketReceiver, ControlPacketReceiver {
 	 */
     void removeControlListener(RtpSessionControlListener listener);
 
-//    void addEventListener(RtpSessionEventListener listener);
-//
-//    void removeEventListener(RtpSessionEventListener listener);
+    /**
+     * Adds a {@link RtpSessionEventListener} to this session. It
+     * gets notified on different session events.
+     * 
+     * @param listener
+     */
+    void addEventListener(RtpSessionEventListener listener);
+    
+    /**
+	 * Removes the {@link RtpSessionControlListener} from the session.
+	 * @param listener
+	 */
+    void removeEventListener(RtpSessionEventListener listener);
 }
