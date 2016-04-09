@@ -19,6 +19,7 @@ import sas_systems.imflux.network.DataPacketEncoder;
 import sas_systems.imflux.packet.rtcp.ByePacket;
 import sas_systems.imflux.packet.rtcp.CompoundControlPacket;
 import sas_systems.imflux.packet.rtcp.SenderReportPacket;
+import sas_systems.imflux.session.AbstractRtpSession;
 
 
 public class SessionTest {

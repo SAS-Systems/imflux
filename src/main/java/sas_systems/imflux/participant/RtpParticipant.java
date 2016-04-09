@@ -195,6 +195,10 @@ public class RtpParticipant {
         this.lastReceptionInstant = TimeUtils.now();
     }
 
+    /**
+     * Checks whether data and control destination are set or not.
+     * @return {@code true} if both are set, {@code false} otherwise
+     */
     public boolean isReceiver() {
         return (this.dataDestination != null) && (this.controlDestination != null);
     }

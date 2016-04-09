@@ -18,8 +18,6 @@ package sas_systems.imflux.session;
 
 import java.util.Map;
 
-import com.sun.org.apache.bcel.internal.classfile.Code;
-
 import sas_systems.imflux.network.ControlPacketReceiver;
 import sas_systems.imflux.network.DataPacketReceiver;
 import sas_systems.imflux.packet.DataPacket;
@@ -29,8 +27,9 @@ import sas_systems.imflux.participant.RtpParticipant;
 
 /**
  * Interface for a RTP session. <br/>
- * It is based on {@link DataPacketReceiver} and {@link ControlPacketReceiver}.
- * TODO what does this interface?
+ * It is based on {@link DataPacketReceiver} and {@link ControlPacketReceiver} 
+ * and encapsulates the actions for a RTP session. There can be different
+ * implementations (see {@link MultiParticipantSession}).
  * 
  * @see DataPacketReceiver
  * @see ControlPacketReceiver
@@ -139,14 +138,36 @@ public interface RtpSession extends DataPacketReceiver, ControlPacketReceiver {
      */
     Map<Long, RtpParticipant> getRemoteParticipants();
 
-//    void addDataListener(RtpSessionDataListener listener);
-//
-//    void removeDataListener(RtpSessionDataListener listener);
-//
-//    void addControlListener(RtpSessionControlListener listener);
-//
-//    void removeControlListener(RtpSessionControlListener listener);
-//
+    /**
+     * Adds a {@link RtpSessionDataListener} to this session. It's 
+     * {@code dataPacketReceived()}-method is called when a new
+     * {@link DataPacket} was received and decoded.
+     * 
+     * @param listener
+     */
+    void addDataListener(RtpSessionDataListener listener);
+
+    /**
+	 * Removes the {@link RtpSessionDataListener} from the session.
+	 * @param listener
+	 */
+    void removeDataListener(RtpSessionDataListener listener);
+
+    /**
+     * Adds a {@link RtpSessionControlListener} to this session. It's 
+     * {@code controlPacketReceived()}-method is called when a new
+     * {@link CompoundControlPacket} was received and decoded.
+     * 
+     * @param listener
+     */
+    void addControlListener(RtpSessionControlListener listener);
+
+    /**
+	 * Removes the {@link RtpSessionControlListener} from the session.
+	 * @param listener
+	 */
+    void removeControlListener(RtpSessionControlListener listener);
+
 //    void addEventListener(RtpSessionEventListener listener);
 //
 //    void removeEventListener(RtpSessionEventListener listener);

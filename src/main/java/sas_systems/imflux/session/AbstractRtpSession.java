@@ -35,6 +35,7 @@ import io.netty.util.TimerTask;
 import java.math.BigInteger;
 import java.net.SocketAddress;
 import java.nio.channels.Channels;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
@@ -204,6 +205,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return this.payloadType;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public synchronized boolean init() {
         if (this.running.get()) {
@@ -224,7 +228,6 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 //
 //					@Override
 //					public Channel newChannel() {
-//						// TODO Auto-generated method stub
 //						return null;
 //					}
 //				})
@@ -264,7 +267,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         // create data channel
         SocketAddress dataAddress = this.localParticipant.getDataDestination();
         try {
-            this.dataChannelFuture = this.dataBootstrap.bind(dataAddress).sync();	// make nonblocking? bind() returns a ChannelFuture!
+            this.dataChannelFuture = this.dataBootstrap.bind(dataAddress).sync();	// TODO: make nonblocking? bind() returns a ChannelFuture!
         } catch (Exception e) {
             LOG.error("Failed to bind data channel for session with id " + this.id, e);
             bossGroup.shutdownGracefully();
@@ -320,11 +323,17 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void terminate() {
         this.terminate(RtpSessionEventListener.TERMINATE_CALLED);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean sendData(byte[] data, long timestamp, boolean marked) {
         if (!this.running.get()) {
@@ -340,6 +349,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return this.sendDataPacket(packet);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean sendDataPacket(DataPacket packet) {
         if (!this.running.get()) {
@@ -355,6 +367,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean sendControlPacket(ControlPacket packet) {
         // Only allow sending explicit RTCP packets if all the following conditions are met:
@@ -372,6 +387,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean sendControlPacket(CompoundControlPacket packet) {
         if (this.running.get() && !this.automatedRtcpHandling) {
@@ -382,47 +400,74 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public RtpParticipant getLocalParticipant() {
         return this.localParticipant;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean addReceiver(RtpParticipant remoteParticipant) {
         return (remoteParticipant.getSsrc() != this.localParticipant.getSsrc()) &&
                this.participantDatabase.addReceiver(remoteParticipant);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean removeReceiver(RtpParticipant remoteParticipant) {
         return this.participantDatabase.removeReceiver(remoteParticipant);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public RtpParticipant getRemoteParticipant(long ssrc) {
         return this.participantDatabase.getParticipant(ssrc);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Map<Long, RtpParticipant> getRemoteParticipants() {
         return this.participantDatabase.getMembers();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void addDataListener(RtpSessionDataListener listener) {
         this.dataListeners.add(listener);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void removeDataListener(RtpSessionDataListener listener) {
         this.dataListeners.remove(listener);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void addControlListener(RtpSessionControlListener listener) {
         this.controlListeners.add(listener);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void removeControlListener(RtpSessionControlListener listener) {
         this.controlListeners.remove(listener);
@@ -439,7 +484,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     }
 
     // DataPacketReceiver ---------------------------------------------------------------------------------------------
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void dataPacketReceived(SocketAddress origin, DataPacket packet) {
         if (!this.running.get()) {
@@ -451,6 +498,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
             return;
         }
 
+        // collision and loop detection:
         if (packet.getSsrc() == this.localParticipant.getSsrc()) {
             // Sending data to ourselves? Consider this a loop and bail out!
             if (origin.equals(this.localParticipant.getDataDestination())) {
@@ -509,7 +557,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     }
 
     // ControlPacketReceiver ------------------------------------------------------------------------------------------
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void controlPacketReceived(SocketAddress origin, CompoundControlPacket packet) {
         if (!this.running.get()) {
@@ -517,10 +567,10 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         }
 
         if (!this.automatedRtcpHandling) {
+        	// dispatch to the control listeners if automatedRtcpHandling is disabled
             for (RtpSessionControlListener listener : this.controlListeners) {
                 listener.controlPacketReceived(this, packet);
             }
-
             return;
         }
 
@@ -537,6 +587,8 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
                     this.handleByePacket(origin, (ByePacket) controlPacket);
                     break;
                 case APP_DATA:
+                	// dispatch APP_DATA control packets to the control listeners
+                	// these packets are application specific 
                     for (RtpSessionControlListener listener : this.controlListeners) {
                         listener.appDataReceived(this, (AppDataPacket) controlPacket);
                     }
@@ -547,19 +599,27 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     }
 
     // Runnable from TimerTask ----------------------------------------------------------------------------------------
-
+    /**
+     * {@inheritDoc}
+     * <br/>
+     * Sends for each remote participant a report containing the status
+     * of this session participant. 
+     */
     @Override
     public void run(Timeout timeout) throws Exception {
         if (!this.running.get()) {
             return;
         }
-
+        // send status update per remote participant
         final long currentSsrc = this.localParticipant.getSsrc();
         final SourceDescriptionPacket sdesPacket = buildSdesPacket(currentSsrc);
         this.participantDatabase.doWithReceivers(new ParticipantOperation() {
             @Override
             public void doWithParticipant(RtpParticipant participant) throws Exception {
                 AbstractReportPacket report = buildReportPacket(currentSsrc, participant);
+                // FIXME: really to all other participants?
+                // i would use:
+//                writeToControl(new CompoundControlPacket(report, sdesPacket), participant.getControlDestination());
                 internalSendControl(new CompoundControlPacket(report, sdesPacket));
             }
         });
@@ -571,12 +631,19 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     }
 
     // protected helpers ----------------------------------------------------------------------------------------------
-
+    /**
+     * <h1>automatedRtcpHandling</h1>
+     * This method handles {@link SenderReportPacket}s and {@link ReceiverReportPacket}s.
+     * It extracts the information of the packet and uses it to control the session.
+     * 
+     * @param origin origin of the packet
+     * @param abstractReportPacket the report packet to handle
+     */
     protected void handleReportPacket(SocketAddress origin, AbstractReportPacket abstractReportPacket) {
         if (abstractReportPacket.getReportCount() == 0) {
             return;
         }
-
+        
         RtpParticipant context = this.participantDatabase.getParticipant(abstractReportPacket.getSenderSsrc());
         if (context == null) {
             // Ignore; RTCP-SDES or RTP packet must first be received.
@@ -587,17 +654,25 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
             // Ignore all reception reports except for the one who pertains to the local participant (only data that
             // matters here is the link between this participant and ourselves).
             if (receptionReport.getSsrc() == this.localParticipant.getSsrc()) {
-                // TODO
+                // TODO handle reports
             }
         }
 
         // For sender reports, also handle the sender information.
         if (abstractReportPacket.getType().equals(ControlPacket.Type.SENDER_REPORT)) {
             SenderReportPacket senderReport = (SenderReportPacket) abstractReportPacket;
-            // TODO
+            // TODO handle SenderReportPacket
         }
     }
 
+    /**
+     * This method handles the source description packets. They contain information about
+     * the remote participant and therefore the objects in the {@link ParticipantDatabase} 
+     * are updated if required.
+     * 
+     * @param origin source of the packet
+     * @param packet the source description packet
+     */
     protected void handleSdesPacket(SocketAddress origin, SourceDescriptionPacket packet) {
         for (SdesChunk chunk : packet.getChunks()) {
             RtpParticipant participant = this.participantDatabase.getOrCreateParticipantFromSdesChunk(origin, chunk);
@@ -618,6 +693,13 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         }
     }
 
+    /**
+     * This method handles {@link ByePacket}s and therefore marks the corresponding
+     * participant in the {@link ParticipantDatabase} as left.
+     * 
+     * @param origin
+     * @param packet
+     */
     protected void handleByePacket(SocketAddress origin, ByePacket packet) {
         for (Long ssrc : packet.getSsrcList()) {
             RtpParticipant participant = this.participantDatabase.getParticipant(ssrc);
@@ -632,13 +714,24 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
                   packet.getSsrcList(), this.id, packet. getReasonForLeaving());
     }
 
+    /**
+     * Instantiates a {@link ParticipantDatabase} and returns it. This method must be implemented
+     * by inheriting classes.
+     * 
+     * @return a reference to the reated {@link ParticipantDatabase}
+     */
     protected abstract ParticipantDatabase createDatabase();
 
+    /**
+     * This method sends a {@link DataPacket} through the data channel of this session
+     * to <strong>all</strong> participants.
+     * @param packet the {@link DataPacket}
+     */
     protected void internalSendData(final DataPacket packet) {
         this.participantDatabase.doWithReceivers(new ParticipantOperation() {
             @Override
             public void doWithParticipant(RtpParticipant participant) throws Exception {
-                if (participant.receivedBye()) {
+                if (!participant.isReceiver() || participant.receivedBye()) {
                     return;
                 }
                 try {
@@ -655,18 +748,41 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         });
     }
 
-    protected void internalSendControl(ControlPacket packet, RtpParticipant participant) {
-        if (!participant.isReceiver() || participant.receivedBye()) {
-            return;
-        }
+    /**
+     * This method sends a {@link ControlPacket} through the control channel of this session
+     * to a <strong>specific</strong> participant.
+     * <br/>
+     * <strong>All {@link ControlPacket}s must be sent within a {@link CompoundControlPacket}!</strong>
+     * 
+     * @param packet the {@link ControlPacket} to be sent
+     * @param participant participant information
+     */
+//    protected void internalSendControl(ControlPacket packet, RtpParticipant participant) {
+//        if (!participant.isReceiver() || participant.receivedBye()) {
+//            return;
+//        }
+//        if(!packet.getType().equals(ControlPacket.Type.RECEIVER_REPORT) 
+//        		&& !packet.getType().equals(ControlPacket.Type.SENDER_REPORT)) {
+//        	AbstractReportPacket reportPacket = this.buildReportPacket(this.localParticipant.getSsrc(), this.localParticipant);
+//        	SourceDescriptionPacket sdesPacket = this.buildSdesPacket(this.localParticipant.getSsrc());
+//            internalSendControl(new CompoundControlPacket(reportPacket, packet));
+//        }
+//        
+//
+////        try {
+////            this.writeToControl(packet, participant.getControlDestination());
+////        } catch (Exception e) {
+////            LOG.error("Failed to send RTCP packet to {} in session with id {}.", participant, this.id);
+////        }
+//    }
 
-        try {
-            this.writeToControl(packet, participant.getControlDestination());
-        } catch (Exception e) {
-            LOG.error("Failed to send RTCP packet to {} in session with id {}.", participant, this.id);
-        }
-    }
-
+    /**
+     * This method sends a {@link CompoundControlPacket} through the control channel of this
+     * session to a <strong>specific</strong>  participant.
+     * 
+     * @param packet the {@link CompoundControlPacket} to be sent
+     * @param participant participant information
+     */
     protected void internalSendControl(CompoundControlPacket packet, RtpParticipant participant) {
         if (!participant.isReceiver() || participant.receivedBye()) {
             return;
@@ -678,33 +794,49 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
             LOG.error("Failed to send RTCP compound packet to {} in session with id {}.", participant, this.id);
         }
     }
+    
+    /**
+     * This method sends a {@link ControlPacket} through the control channel of this session
+     * to <strong>all</strong> participants.
+     * <br/>
+     * <strong>All {@link ControlPacket}s must be sent within a {@link CompoundControlPacket}!</strong>
+     * 
+     * @param packet the {@link ControlPacket} to be sent
+     * @param participant participant information
+     */
+//    protected void internalSendControl(final ControlPacket packet) {
+//        this.participantDatabase.doWithReceivers(new ParticipantOperation() {
+//            @Override
+//            public void doWithParticipant(RtpParticipant participant) throws Exception {
+//                if (!participant.isReceiver() || participant.receivedBye()) {
+//                    return;
+//                }
+//                try {
+//                    writeToControl(packet, participant.getControlDestination());
+//                } catch (Exception e) {
+//                    LOG.error("Failed to send RTCP packet to participants in session with id {}.", id);
+//                }
+//            }
+//
+//            @Override
+//            public String toString() {
+//                return "internalSendControl() for session with id " + id;
+//            }
+//        });
+//    }
 
-    protected void internalSendControl(final ControlPacket packet) {
-        this.participantDatabase.doWithReceivers(new ParticipantOperation() {
-            @Override
-            public void doWithParticipant(RtpParticipant participant) throws Exception {
-                if (participant.receivedBye()) {
-                    return;
-                }
-                try {
-                    writeToControl(packet, participant.getControlDestination());
-                } catch (Exception e) {
-                    LOG.error("Failed to send RTCP packet to participants in session with id {}.", id);
-                }
-            }
-
-            @Override
-            public String toString() {
-                return "internalSendControl() for session with id " + id;
-            }
-        });
-    }
-
+    /**
+     * This method sends a {@link CompoundControlPacket} through the control channel of this
+     * session to <strong>all</strong> participant.
+     * 
+     * @param packet the {@link CompoundControlPacket} to be sent
+     * @param participant participant information
+     */
     protected void internalSendControl(final CompoundControlPacket packet) {
         this.participantDatabase.doWithReceivers(new ParticipantOperation() {
             @Override
             public void doWithParticipant(RtpParticipant participant) throws Exception {
-                if (participant.receivedBye()) {
+                if (!participant.isReceiver() || participant.receivedBye()) {
                     return;
                 }
                 try {
@@ -721,14 +853,32 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         });
     }
 
+    /**
+     * Write the packets information to the data channel
+     * 
+     * @param packet
+     * @param destination TODO: destination currently not used!?
+     */
     protected void writeToData(DataPacket packet, SocketAddress destination) {
         this.dataChannelFuture.channel().writeAndFlush(packet);
     }
 
+    /**
+     * Write the packets information to the control channel
+     * 
+     * @param packet
+     * @param destination TODO: destination currently not used!?
+     */
     protected void writeToControl(ControlPacket packet, SocketAddress destination) {
         this.controlChannelFuture.channel().writeAndFlush(packet);
     }
 
+    /**
+     * Write the packets information to the control channel
+     * 
+     * @param packet
+     * @param destination TODO: destination currently not used!?
+     */
     protected void writeToControl(CompoundControlPacket packet, SocketAddress destination) {
         this.controlChannelFuture.channel().writeAndFlush(packet);
     }
