@@ -711,7 +711,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
                 // If this participant wasn't created from an SDES packet, then update its participant's description.
                 if (participant.getInfo().updateFromSdesChunk(chunk)) {
                     for (RtpSessionEventListener listener : this.eventListeners) {
-                        listener.participantDataUpdated(this, participant);
+                        listener.participantInformationUpdated(this, participant);
                     }
                 }
             }
