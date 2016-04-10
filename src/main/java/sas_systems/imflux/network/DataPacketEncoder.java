@@ -65,8 +65,9 @@ public class DataPacketEncoder extends MessageToMessageEncoder<DataPacket> {
     protected void encode(ChannelHandlerContext ctx, DataPacket message, List<Object> out) throws Exception {
         if (message.getDataSize() == 0) {
             out.add(Unpooled.EMPTY_BUFFER);
+        } else {
+        	out.add(message.encode());
         }
-        out.add(message.encode());
     }
 
     // private classes ------------------------------------------------------------------------------------------------

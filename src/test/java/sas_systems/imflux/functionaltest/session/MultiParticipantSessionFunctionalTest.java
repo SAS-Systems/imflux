@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Bruno de Carvalho
+ * Copyright 2015 Sebastian Schmidl
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,41 @@
 
 package sas_systems.imflux.functionaltest.session;
 
-import com.biasedbit.efflux.packet.DataPacket;
-import com.biasedbit.efflux.participant.RtpParticipant;
-import com.biasedbit.efflux.participant.RtpParticipantInfo;
-import org.junit.After;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.After;
+import org.junit.Test;
+
+import sas_systems.imflux.packet.DataPacket;
+import sas_systems.imflux.participant.RtpParticipant;
+import sas_systems.imflux.participant.RtpParticipantInfo;
+import sas_systems.imflux.session.MultiParticipantSession;
+import sas_systems.imflux.session.RtpSession;
+import sas_systems.imflux.session.RtpSessionDataListener;
 
 /**
- * @author <a:mailto="bruno.carvalho@wit-software.com" />Bruno de Carvalho</a>
+ * Functional test for the class {@link MultiParticipantSession}.
+ * 
+ * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
+ * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
 public class MultiParticipantSessionFunctionalTest {
 
-    private static final byte N = 5;
+	/**
+	 * Number of sessions.
+	 */
+    private static final int N = 5;
 
     private MultiParticipantSession[] sessions;
 
+    /**
+     * Terminate all RTP sessions after each test-method.
+     */
     @After
     public void tearDown() {
         if (this.sessions != null) {
@@ -49,24 +62,35 @@ public class MultiParticipantSessionFunctionalTest {
         }
     }
 
+    /**
+     * Create N {@link MultiParticipantSession}s and link them. Afterwards send data 
+     * from each session to the others.
+     * 
+     * @throws Exception
+     */
     @Test
     public void testDeliveryToAllParticipants() throws Exception {
         this.sessions = new MultiParticipantSession[N];
         final AtomicInteger[] counters = new AtomicInteger[N];
         final CountDownLatch latch = new CountDownLatch(N);
 
-        for (byte i = 0; i < N; i++) {
-            RtpParticipant participant = RtpParticipant
-                    .createReceiver(new RtpParticipantInfo(i), "127.0.0.1", 10000 + (i * 2), 20001 + (i * 2));
-            this.sessions[i] = new MultiParticipantSession("session" + i, 8, participant);
+        // create N sessions and initialize them
+        for (int i = 0; i < N; i++) {
+            final RtpParticipant localParticipant = RtpParticipant.createReceiver(
+            		new RtpParticipantInfo(i), 
+            		"127.0.0.1", 
+            		10000 + (i * 2), 
+            		20001 + (i * 2));
+            this.sessions[i] = new MultiParticipantSession("session" + i, 8, localParticipant);
             assertTrue(this.sessions[i].init());
+            
             final AtomicInteger counter = new AtomicInteger();
             counters[i] = counter;
+            
             this.sessions[i].addDataListener(new RtpSessionDataListener() {
-
                 @Override
                 public void dataPacketReceived(RtpSession session, RtpParticipantInfo participant, DataPacket packet) {
-                    System.err.println(session.getId() + " received data from " + participant + ": " + packet);
+                    System.out.println(session.getId() + " received data from " + participant + ": " + packet);
                     if (counter.incrementAndGet() == ((N - 1) * 2)) {
                         // Release the latch once all N-1 messages (because it wont receive the message it sends) are
                         // received.
@@ -77,29 +101,34 @@ public class MultiParticipantSessionFunctionalTest {
         }
 
         // All sessions set up, now add all participants to the other sessions
-        for (byte i = 0; i < N; i++) {
-            for (byte j = 0; j < N; j++) {
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
                 if (j == i) {
                     continue;
                 }
 
                 // You can NEVER add the same participant to two distinct sessions otherwise you'll ruin it (as both
                 // will be messing in the same participant).
-                RtpParticipant participant = RtpParticipant
-                    .createReceiver(new RtpParticipantInfo(j), "127.0.0.1", 10000 + (j * 2), 20001 + (j * 2));
-                System.err.println("Adding " + participant + " to session " + this.sessions[i].getId());
+                final RtpParticipant participant = RtpParticipant.createReceiver(
+                		new RtpParticipantInfo(j), 
+                		"127.0.0.1", 
+                		10000 + (j * 2), 
+                		20001 + (j * 2));
+                System.out.println("Adding " + participant + " to session " + this.sessions[i].getId());
                 assertTrue(this.sessions[i].addReceiver(participant));
             }
+            System.out.println();
         }
 
+        // send data
         byte[] deadbeef = {(byte) 0xde, (byte) 0xad, (byte) 0xbe, (byte) 0xef};
-        for (byte i = 0; i < N; i++) {
+        for (int i = 0; i < N; i++) {
             assertTrue(this.sessions[i].sendData(deadbeef, 0x45, false));
             assertTrue(this.sessions[i].sendData(deadbeef, 0x45, false));
         }
 
+        // wait for the Threads to finish and check counters
         latch.await(5000L, TimeUnit.MILLISECONDS);
-
         for (byte i = 0; i < N; i++) {
             assertEquals(((N - 1) * 2), counters[i].get());
         }

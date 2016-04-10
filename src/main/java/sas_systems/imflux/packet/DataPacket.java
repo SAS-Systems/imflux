@@ -17,7 +17,6 @@
 package sas_systems.imflux.packet;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 
 import java.util.ArrayList;
@@ -90,7 +89,7 @@ public class DataPacket {
     /**
      * Decodes a {@code DataPacket}.
      * 
-     * @param data as a ByteBuf
+     * @param buffer as a ByteBuf
      * @return the DataPacket object
      * @throws IndexOutOfBoundsException
      */
