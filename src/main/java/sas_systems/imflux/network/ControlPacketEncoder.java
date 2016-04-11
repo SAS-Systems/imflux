@@ -82,6 +82,7 @@ public class ControlPacketEncoder extends ChannelOutboundHandlerAdapter {
                 ByteBuf compoundBuffer = Unpooled.wrappedBuffer(buffers);
                 ctx.write(compoundBuffer, promise);
             }
+            ctx.flush();
         } catch (Exception e) {
             LOG.error("Failed to encode compound RTCP packet to send.", e);
         }

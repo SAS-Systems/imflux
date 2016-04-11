@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>sas_systems</groupId>
 	<artifactId>imflux</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<!-- TODO project name -->
 	<name>imflux</name>
 	<description>
@@ -32,7 +32,7 @@
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
-			<version>4.0.33.Final</version>
+			<version>4.0.36.Final</version>
 		</dependency>
 		
 		<!-- UnitTesting Framework: -->
@@ -94,15 +94,40 @@
 		</testResources>
 		<plugins>
 			<plugin>
-				<groupId>org.mortbay.jetty</groupId>
-				<artifactId>maven-jetty-plugin</artifactId>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.7.6.201602180812</version>
+				    <executions>
+				        <execution>
+				            <id>prepare-agent</id>
+				            <goals>
+				                <goal>prepare-agent</goal>
+				            </goals>
+				        </execution>
+				    </executions>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.jetty</groupId>
+				<artifactId>jetty-maven-plugin</artifactId>
+				<version>9.3.8.v20160314</version>
+			</plugin>
+			
+			<plugin>
+			    <groupId>org.eluder.coveralls</groupId>
+			    <artifactId>coveralls-maven-plugin</artifactId>
+			    <version>4.1.0</version>
+			    <configuration>
+			        <repoToken>$COVERALLS_KEY</repoToken>
+			    </configuration>
 			</plugin>
 		</plugins>
 	</build>
 
 	<properties>
 		<wicket.version>1.3.2</wicket.version>
-		<jetty.version>6.1.4</jetty.version>
+		<jetty.version>9.3.8</jetty.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    	<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
 
 </project>

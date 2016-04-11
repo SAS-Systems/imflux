@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Bruno de Carvalho
+ * Copyright 2015 Sebastian Schmidl
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,26 @@ package sas_systems.imflux.network;
 import java.net.SocketAddress;
 
 import sas_systems.imflux.packet.rtcp.CompoundControlPacket;
+import sas_systems.imflux.packet.rtcp.ControlPacket;
 
 /**
- * Interface for ... TODO: describe functionality
+ * Interface for forwarding received {@link ControlPacket}s 
+ * (better: {@link CompoundControlPacket}s) to. This interface is used
+ * by the {@link ControlHandler}. 
  * 
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
 public interface ControlPacketReceiver {
 
+	/**
+	 * This method is called by {@link ControlHandler} when he has received a 
+	 * {@link CompoundControlPacket}. The implementing class has to define 
+	 * actions which should be performed when a {@link CompoundControlPacket} 
+	 * was received.
+	 * 
+	 * @param origin source of the packet
+	 * @param packet the {@link CompoundControlPacket}
+	 */
     void controlPacketReceived(SocketAddress origin, CompoundControlPacket packet);
 }

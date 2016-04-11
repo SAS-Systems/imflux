@@ -16,6 +16,9 @@
 
 package sas_systems.imflux.participant;
 
+import sas_systems.imflux.packet.DataPacket;
+import sas_systems.imflux.packet.rtcp.SourceDescriptionPacket;
+
 /**
  * Interface for an event listener who's listening on events from the {@link DefaultParticipantDatabase}.
  * You can use it to perform actions after a participant was created or deleted.
@@ -25,9 +28,26 @@ package sas_systems.imflux.participant;
  */
 public interface ParticipantEventListener {
 
+	/**
+	 * This method is called when a new participant was created and added from a
+	 * {@link SourceDescriptionPacket}.
+	 * 
+	 * @param participant the new participant
+	 */
     void participantCreatedFromSdesChunk(RtpParticipant participant);
 
+    /**
+     * This method is called when a new participant was created and added from a
+     * {@link DataPacket}.
+     * 
+     * @param participant the new participant
+     */
     void participantCreatedFromDataPacket(RtpParticipant participant);
 
+    /**
+     * This method is called when a participant is removed from the 
+     * {@link ParticipantDatabase}
+     * @param participant
+     */
     void participantDeleted(RtpParticipant participant);
 }

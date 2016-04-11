@@ -1,3 +1,6 @@
+# configuration file for TravisCI
+
+
 # Notes:
 #  - you can skip a build by adding [ci skip] to the commit message 
 #
@@ -7,8 +10,8 @@ language: java
 
 # test for these JDK versions and environments
 jdk:
-   - oraclejdk8
-   - oraclejdk7
+#   - oraclejdk8
+#   - oraclejdk7
    - openjdk7
 
 # only build these branches (RegEx is also valid, eg. /^deploy.*$/):
@@ -16,6 +19,7 @@ branches:
   only:
     - master
     - deploy
+    - coverallsTest
     - travisTest
    
 # container-based build:
@@ -34,7 +38,9 @@ sudo: false
 
 #script:
 
-#after_success:
+# run test reports and send to coveralls
+after_success:
+    - mvn clean test jacoco:report coveralls:report
   
 #after_failure:
 
