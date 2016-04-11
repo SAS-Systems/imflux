@@ -10,8 +10,8 @@ language: java
 
 # test for these JDK versions and environments
 jdk:
-   - oraclejdk8
-   - oraclejdk7
+#   - oraclejdk8
+#   - oraclejdk7
    - openjdk7
 
 # only build these branches (RegEx is also valid, eg. /^deploy.*$/):
