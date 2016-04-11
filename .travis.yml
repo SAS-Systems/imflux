@@ -16,6 +16,7 @@ branches:
   only:
     - master
     - deploy
+    - coverallsTest
     - travisTest
    
 # container-based build:
