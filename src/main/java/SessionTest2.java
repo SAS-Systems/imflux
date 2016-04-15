@@ -38,6 +38,7 @@ import sas_systems.imflux.packet.rtcp.ControlPacket;
 import sas_systems.imflux.packet.rtcp.SdesChunk;
 import sas_systems.imflux.packet.rtcp.SdesChunkItems;
 import sas_systems.imflux.packet.rtcp.SourceDescriptionPacket;
+import sas_systems.imflux.participant.RtpParticipant;
 import sas_systems.imflux.participant.RtpParticipantInfo;
 import sas_systems.imflux.util.ByteUtils;
 
@@ -96,18 +97,20 @@ public class SessionTest2 implements DataPacketReceiver, ControlPacketReceiver {
 						});
 						pipeline.addLast("decoder1", new DataPacketDecoder());
 //		                pipeline.addLast("encoder", DataPacketEncoder.getInstance());
-						pipeline.addLast("encoder", new MessageToMessageEncoder<DataPacket>() {
+						pipeline.addLast("encoder", new MessageToMessageEncoder<AddressedEnvelope<DataPacket, SocketAddress>>() {
 							@Override
-							protected void encode(ChannelHandlerContext ctx, DataPacket msg, List<Object> out) throws Exception {
+							protected void encode(ChannelHandlerContext ctx, AddressedEnvelope<DataPacket, SocketAddress> packet, List<Object> out) throws Exception {
+								// encode the DataPacket here and forward the destination specification only
+								DataPacket msg = packet.content();
 								ByteBuf response;
 								if (msg.getDataSize() == 0) {
 									response = Unpooled.EMPTY_BUFFER;
 						        } else {
 						        	response = msg.encode();
 						        }
-				                
+				                SocketAddress local = ctx.channel().localAddress();
 								AddressedEnvelope<ByteBuf, SocketAddress> ae = 
-										new DefaultAddressedEnvelope<ByteBuf, SocketAddress>(response, dataAddressRemote, dataAddressLocal);
+										new DefaultAddressedEnvelope<ByteBuf, SocketAddress>(response, packet.recipient(), local);
 								out.add(ae);
 							}
 		                });
@@ -120,7 +123,6 @@ public class SessionTest2 implements DataPacketReceiver, ControlPacketReceiver {
 
         // create data channel
         try {
-//        	dataChannel = dataBootstrap.connect(dataAddressRemote, dataAddressLocal).sync();
             dataChannel = dataBootstrap.bind(dataAddressLocal).sync();	// make nonblocking? bind() returns a ChannelFuture!
 //            DatagramChannel dc = (DatagramChannel) dataChannel.channel();
 //            dc.joinGroup(Inet4Address.getByName("localhost"));
@@ -169,18 +171,21 @@ public class SessionTest2 implements DataPacketReceiver, ControlPacketReceiver {
 						});
 						pipeline.addLast("decoder1", new ControlPacketDecoder());
 //						pipeline.addLast("encoder", ControlPacketEncoder.getInstance());
-		                pipeline.addLast("encoder", new MessageToMessageEncoder<CompoundControlPacket>() {
+		                pipeline.addLast("encoder", new MessageToMessageEncoder<AddressedEnvelope<CompoundControlPacket, SocketAddress>>() {
 							@Override
-							protected void encode(ChannelHandlerContext ctx, CompoundControlPacket msg, List<Object> out) throws Exception {
-								List<ControlPacket> packets = ((CompoundControlPacket) msg).getControlPackets();
+							protected void encode(ChannelHandlerContext ctx, AddressedEnvelope<CompoundControlPacket, SocketAddress> packet, List<Object> out) throws Exception {
+								// encode CompountControlPacket here and forward destination (recipient) of the packet
+								CompoundControlPacket msg = packet.content();
+								List<ControlPacket> packets = msg.getControlPackets();
 				                ByteBuf[] buffers = new ByteBuf[packets.size()];
 				                for (int i = 0; i < buffers.length; i++) {
 				                    buffers[i] = packets.get(i).encode();
 				                }
 				                ByteBuf compoundBuffer = Unpooled.wrappedBuffer(buffers);
 				                
+				                SocketAddress local = ctx.channel().localAddress();
 								AddressedEnvelope<ByteBuf, SocketAddress> ae = 
-										new DefaultAddressedEnvelope<ByteBuf, SocketAddress>(compoundBuffer, controlAddressRemote, controlAddressLocal);
+										new DefaultAddressedEnvelope<ByteBuf, SocketAddress>(compoundBuffer, packet.recipient(), local);
 								out.add(ae);
 							}
 		                });
@@ -190,7 +195,6 @@ public class SessionTest2 implements DataPacketReceiver, ControlPacketReceiver {
 
         // create data channel
         try {
-//        	controlChannel = controlBootstrap.connect(controlAddressRemote, controlAddressLocal).sync();
             controlChannel = controlBootstrap.bind(controlAddressLocal).sync();	// make nonblocking? bind() returns a ChannelFuture!
         } catch (Exception e) {
             bossGroup.shutdownGracefully();
@@ -207,7 +211,9 @@ public class SessionTest2 implements DataPacketReceiver, ControlPacketReceiver {
         data.setSsrc(0);
         data.setData(deadbeef);
         data.setMarker(false);
-        dataChannel.channel().writeAndFlush(data);
+        // send addressedEnvelope for destination specification
+        final AddressedEnvelope<DataPacket, SocketAddress> packet = new DefaultAddressedEnvelope<DataPacket, SocketAddress>(data, dataAddressRemote);
+        dataChannel.channel().writeAndFlush(packet);
         
         // test control:
         final RtpParticipantInfo info = new RtpParticipantInfo(0);
@@ -226,7 +232,9 @@ public class SessionTest2 implements DataPacketReceiver, ControlPacketReceiver {
         byePacket.setReasonForLeaving("Gewollt");
 
         final CompoundControlPacket controlPacket = new CompoundControlPacket(sdesPacket, byePacket);
-        controlChannel.channel().writeAndFlush(controlPacket);
+        // send addressedEnvelope for destination specification
+        final AddressedEnvelope<CompoundControlPacket, SocketAddress> packet2 = new DefaultAddressedEnvelope<CompoundControlPacket, SocketAddress>(controlPacket, controlAddressRemote);
+        controlChannel.channel().writeAndFlush(packet2);
 	}
 	
 	public static void main(String args[]) throws Exception {
@@ -338,5 +346,4 @@ public class SessionTest2 implements DataPacketReceiver, ControlPacketReceiver {
 		LoggerFactory.getLogger(SessionTest2.class).error("! ControlPacketReceiver received: " + packet);
 		
 	}
-
 }
