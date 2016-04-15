@@ -230,24 +230,23 @@ public class SessionTest2 implements DataPacketReceiver, ControlPacketReceiver {
 	}
 	
 	public static void main(String args[]) throws Exception {
-		SessionTest2 session = new SessionTest2();
-		
 		DatagramSocket dataSocket = new DatagramSocket(new InetSocketAddress("localhost", 59000));
 		DatagramSocket controlSocket = new DatagramSocket(new InetSocketAddress("localhost", 59001));
 		
+		SessionTest2 session = new SessionTest2();
 		
 		// receive data
 		byte[] receiveBuf = new byte[512];
 		DatagramPacket data = new DatagramPacket(receiveBuf, receiveBuf.length);
-//		dataSocket.receive(data);
-//		System.out.println("main() received data:");
-//		System.out.println(" - from: " + data.getAddress() + ":" + data.getPort());
-//		System.out.println(" - data: " + ByteUtils.convertToHex(receiveBuf));
-//		DataPacket dataPacket = DataPacket.decode(data.getData());
-//		System.out.println(" - " + dataPacket);
-//		byte[] toBePrint = new byte[4];
-//		dataPacket.getData().readBytes(toBePrint);
-//		System.out.println(" - DataPacket-data (first 4 bytes): " + ByteUtils.convertToHex(toBePrint));
+		dataSocket.receive(data);
+		System.out.println("main() received data:");
+		System.out.println(" - from: " + data.getAddress() + ":" + data.getPort());
+		System.out.println(" - data: " + ByteUtils.convertToHex(receiveBuf));
+		DataPacket dataPacket = DataPacket.decode(data.getData());
+		System.out.println(" - " + dataPacket);
+		byte[] toBePrint = new byte[4];
+		dataPacket.getData().readBytes(toBePrint);
+		System.out.println(" - DataPacket-data (first 4 bytes): " + ByteUtils.convertToHex(toBePrint));
 		
 		// send data back
 		byte[] deadbeef = {(byte) 0xde, (byte) 0xad, (byte) 0xbe, (byte) 0xef};
