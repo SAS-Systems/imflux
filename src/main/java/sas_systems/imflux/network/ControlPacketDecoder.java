@@ -73,9 +73,15 @@ public class ControlPacketDecoder extends ChannelInboundHandlerAdapter {
         // While there's data to read, keep on decoding.
         while (buffer.readableBytes() > 0) {
             try {
-                controlPacketList.add(ControlPacket.decode(buffer));
+            	// to steps to prevent adding null
+            	ControlPacket packet = ControlPacket.decode(buffer);
+            	if(packet == null){
+            		continue;
+            	}
+                controlPacketList.add(packet);
             } catch (Exception e1) {
                 LOG.debug("Exception caught while decoding RTCP packet.", e1);
+                break;
             }
         }
 

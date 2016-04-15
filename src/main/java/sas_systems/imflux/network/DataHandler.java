@@ -52,7 +52,7 @@ public class DataHandler extends SimpleChannelInboundHandler<DataPacket> {
     // SimpleChannelUpstreamHandler -----------------------------------------------------------------------------------
     @Override
 	protected void channelRead0(ChannelHandlerContext ctx, DataPacket msg) throws Exception {
-		this.receiver.dataPacketReceived(ctx.channel().remoteAddress(), msg);
+    	this.messageReceived(ctx, msg);
 	}
     
     /**

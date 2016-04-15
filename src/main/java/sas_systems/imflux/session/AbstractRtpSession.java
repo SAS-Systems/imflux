@@ -122,8 +122,8 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     protected final List<RtpSessionDataListener> dataListeners;
     protected final List<RtpSessionControlListener> controlListeners;
     protected final List<RtpSessionEventListener> eventListeners;
-    protected ServerBootstrap dataBootstrap;
-    protected ServerBootstrap controlBootstrap;
+    protected EventLoopGroup bossGroup;
+    protected EventLoopGroup workerGroup;
     protected ChannelFuture dataChannelFuture;
     protected ChannelFuture controlChannelFuture;
     protected final AtomicInteger sequence;
@@ -229,10 +229,10 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         
         // create data channel bootstrap
 //        EventLoopGroup bossGroup = new NioEventLoopGroup(5, Executors.defaultThreadFactory()); // if we want to use others than the defaults
-        EventLoopGroup bossGroup = new NioEventLoopGroup();
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
-        this.dataBootstrap = new ServerBootstrap();
-        this.dataBootstrap.group(bossGroup, workerGroup)
+        this.bossGroup = new NioEventLoopGroup();
+        this.workerGroup = new NioEventLoopGroup();
+        ServerBootstrap dataBootstrap = new ServerBootstrap();
+        dataBootstrap.group(this.bossGroup, this.workerGroup)
 	        	.option(ChannelOption.SO_SNDBUF, this.sendBufferSize)
 	        	.option(ChannelOption.SO_RCVBUF, this.receiveBufferSize)
 	        	// option not set: "receiveBufferSizePredictorFactory", new FixedReceiveBufferSizePredictorFactory(this.receiveBufferSize)
@@ -258,8 +258,8 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 				});
         
         // create control channel bootstrap
-        this.controlBootstrap = new ServerBootstrap();
-        this.controlBootstrap.group(bossGroup, workerGroup)
+        ServerBootstrap controlBootstrap = new ServerBootstrap();
+        controlBootstrap.group(this.bossGroup, this.workerGroup)
 	        	.option(ChannelOption.SO_SNDBUF, this.sendBufferSize)
 	        	.option(ChannelOption.SO_RCVBUF, this.receiveBufferSize)
 	        	// option not set: "receiveBufferSizePredictorFactory", new FixedReceiveBufferSizePredictorFactory(this.receiveBufferSize)
@@ -287,15 +287,15 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         // create data channel
         SocketAddress dataAddress = this.localParticipant.getDataDestination();
         try {
-            this.dataChannelFuture = this.dataBootstrap.bind(dataAddress).sync();	// TODO: make nonblocking? bind() returns a ChannelFuture!
+            this.dataChannelFuture = dataBootstrap.bind(dataAddress).sync();	// TODO: make nonblocking? bind() returns a ChannelFuture!
         } catch (Exception e) {
             LOG.error("Failed to bind data channel for session with id " + this.id, e);
-            bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
+            this.bossGroup.shutdownGracefully();
+            this.workerGroup.shutdownGracefully();
             
             try {
-				bossGroup.terminationFuture().sync();
-				workerGroup.terminationFuture().sync();
+            	this.bossGroup.terminationFuture().sync();
+            	this.workerGroup.terminationFuture().sync();
 			} catch (InterruptedException e1) {
 				LOG.error("EventLoopGroup termination failed: {}", e1);
 			}
@@ -305,16 +305,16 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         // create control channel
         SocketAddress controlAddress = this.localParticipant.getControlDestination();
         try {
-            this.controlChannelFuture = this.controlBootstrap.bind(controlAddress).sync();
+            this.controlChannelFuture = controlBootstrap.bind(controlAddress).sync();
         } catch (Exception e) {
             LOG.error("Failed to bind control channel for session with id " + this.id, e);
             this.dataChannelFuture.channel().close();
-            bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
+            this.bossGroup.shutdownGracefully();
+            this.workerGroup.shutdownGracefully();
             
             try {
-				bossGroup.terminationFuture().sync();
-				workerGroup.terminationFuture().sync();
+            	this.bossGroup.terminationFuture().sync();
+            	this.workerGroup.terminationFuture().sync();
 			} catch (InterruptedException e1) {
 				LOG.error("EventLoopGroup termination failed: {}", e1);
 			}
@@ -1065,6 +1065,15 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         this.leaveSession(this.localParticipant.getSsrc(), "Session terminated, because: " + cause.toString());
         this.controlChannelFuture.channel().close();
 
+        this.bossGroup.shutdownGracefully();
+        this.workerGroup.shutdownGracefully();
+        
+        try {
+        	this.bossGroup.terminationFuture().sync();
+        	this.workerGroup.terminationFuture().sync();
+		} catch (InterruptedException e1) {
+			LOG.error("EventLoopGroup termination failed: {}", e1);
+		}
         LOG.debug("RtpSession with id {} terminated. Cause: {}", this.id, cause);
 
         for (RtpSessionEventListener listener : this.eventListeners) {

@@ -53,7 +53,7 @@ public class ControlHandler extends SimpleChannelInboundHandler<CompoundControlP
     // SimpleChannelUpstreamHandler -----------------------------------------------------------------------------------
     @Override
 	protected void channelRead0(ChannelHandlerContext ctx, CompoundControlPacket msg) throws Exception {
-    	this.receiver.controlPacketReceived(ctx.channel().remoteAddress(), msg);	
+    	this.messageReceived(ctx, msg);
 	}
     /**
      * To be compatible to io.Netty version 5.0:
