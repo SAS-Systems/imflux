@@ -286,13 +286,13 @@ public class SessionTest implements DataPacketReceiver, ControlPacketReceiver {
 
 	@Override
 	public void dataPacketReceived(SocketAddress origin, DataPacket packet) {
-		LoggerFactory.getLogger(SessionTest.class).error("! DataPacketReceiver received: " + packet);
+		LoggerFactory.getLogger(SessionTest2.class).error("! DataPacketReceiver received: " + packet + " from " + origin);
 	}
 
 	@Override
 	public void controlPacketReceived(SocketAddress origin,
 			CompoundControlPacket packet) {
-		LoggerFactory.getLogger(SessionTest.class).error("! ControlPacketReceiver received: " + packet);
+		LoggerFactory.getLogger(SessionTest2.class).error("! ControlPacketReceiver received: " + packet + " from " + origin);
 		
 	}
 
