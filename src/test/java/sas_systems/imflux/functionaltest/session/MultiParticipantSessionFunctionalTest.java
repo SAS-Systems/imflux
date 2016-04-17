@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
 import org.junit.Test;
+import org.junit.internal.runners.statements.Fail;
 
 import sas_systems.imflux.packet.DataPacket;
 import sas_systems.imflux.participant.RtpParticipant;
@@ -128,7 +129,7 @@ public class MultiParticipantSessionFunctionalTest {
         }
 
         // wait for the Threads to finish and check counters
-        latch.await(5000L, TimeUnit.MILLISECONDS);
+        assertTrue("Latch timed out!", latch.await(5000L, TimeUnit.MILLISECONDS));
         for (byte i = 0; i < N; i++) {
             assertEquals(((N - 1) * 2), counters[i].get());
         }
