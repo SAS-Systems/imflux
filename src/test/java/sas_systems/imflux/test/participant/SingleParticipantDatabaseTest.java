@@ -26,6 +26,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -42,6 +43,15 @@ import sas_systems.imflux.participant.SingleParticipantDatabase;
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
 public class SingleParticipantDatabaseTest {
+	
+	private static final Exception error;
+	
+	static {
+		error = new Exception("Forced error");
+        StackTraceElement[] stackTrace = {
+        		new StackTraceElement("sas_systems...SingleParticipantDatabaseTest", "someTestMethod", "SingleParticipantDatabaseTest.java", 52)};
+        error.setStackTrace(stackTrace);
+	}
 
     private SingleParticipantDatabase database;
 
@@ -64,6 +74,16 @@ public class SingleParticipantDatabaseTest {
         this.database.setParticipant(participant);
         assertTrue(this.database.addReceiver(participant));
         assertTrue(this.database.getReceivers().contains(participant));
+        assertTrue(this.database.getMembers().containsValue(participant));
+        
+    }
+    
+    @Test
+    public void testGetParticipant() throws Exception {
+    	RtpParticipant participant = RtpParticipant.createReceiver("localhost", 8000, 8001);
+    	this.database.setParticipant(participant);
+    	long ssrc = participant.getSsrc();
+    	assertTrue(this.database.getParticipant(ssrc).equals(participant));
     }
 
     @Test
@@ -90,6 +110,52 @@ public class SingleParticipantDatabaseTest {
         });
 
         assertTrue(doSomething.get());
+    }
+    
+    @Test
+    public void testDoWithReceiversFailes() throws Exception {
+        this.testAddReceiver();
+
+        System.out.println("Force logging error:");
+        try {
+	        this.database.doWithReceivers(new ParticipantOperation() {
+	            public void doWithParticipant(RtpParticipant participant) throws Exception {
+	                throw error;
+	            }
+	        });
+        } catch(Exception e) {
+        	Assert.fail("All Exceptions must be catched inside the doWithReceivers");
+        }
+    }
+    
+    @Test
+    public void testDoWithParticipants() throws Exception {
+        this.testAddReceiver();
+
+        final AtomicBoolean doSomething = new AtomicBoolean();
+        this.database.doWithParticipants(new ParticipantOperation() {
+            public void doWithParticipant(RtpParticipant participant) throws Exception {
+                doSomething.set(true);
+            }
+        });
+
+        assertTrue(doSomething.get());
+    }
+    
+    @Test
+    public void testDoWithParticipantsFailes() throws Exception {
+        this.testAddReceiver();
+        
+        System.out.println("Force logging error:");
+        try {
+	        this.database.doWithParticipants(new ParticipantOperation() {
+	            public void doWithParticipant(RtpParticipant participant) throws Exception {
+	                throw error;
+	            }
+	        });
+        } catch(Exception e) {
+        	Assert.fail("All Exceptions must be catched inside doWithParticipants");
+        }
     }
 
     @Test
