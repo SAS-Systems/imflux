@@ -129,7 +129,7 @@ public class MultiParticipantSessionFunctionalTest {
         }
 
         // wait for the Threads to finish and check counters
-        assertTrue("Latch timed out!", latch.await(5000L, TimeUnit.MILLISECONDS));
+        assertTrue("Latch timed out!", latch.await(20000L, TimeUnit.MILLISECONDS));
         for (byte i = 0; i < N; i++) {
             assertEquals(((N - 1) * 2), counters[i].get());
         }
