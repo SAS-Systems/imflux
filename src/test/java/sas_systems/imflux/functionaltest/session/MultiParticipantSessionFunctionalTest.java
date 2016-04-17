@@ -20,12 +20,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
 import org.junit.Test;
-import org.junit.internal.runners.statements.Fail;
 
 import sas_systems.imflux.packet.DataPacket;
 import sas_systems.imflux.participant.RtpParticipant;
@@ -54,13 +55,33 @@ public class MultiParticipantSessionFunctionalTest {
      */
     @After
     public void tearDown() {
+    	System.out.println("Shutting down sessions...");
+    	// use thread pool to concurrently shutdown the sessions, because this takes a lot of time...
+    	ExecutorService exec = Executors.newFixedThreadPool(5);
+    	
         if (this.sessions != null) {
-            for (MultiParticipantSession session : this.sessions) {
-                if (session != null) {
-                    session.terminate();
-                }
+            for (final MultiParticipantSession session : this.sessions) {
+            	exec.execute(new Runnable() {
+        			@Override
+        			public void run() {
+        				if (session != null) {
+        					System.out.println("...waiting for session" + session.getId() + " to terminate...");
+                            session.terminate();
+                        }
+        			}
+        		});
             }
+            exec.shutdown();
+            try {
+				exec.awaitTermination(5000L, TimeUnit.MILLISECONDS);
+			} catch (InterruptedException e) {
+				System.out.println("Shutdown interrupted!");
+				exec.shutdownNow();
+				exec = null;
+			}
+            
         }
+        System.out.println("\n...finished!");
     }
 
     /**
@@ -91,7 +112,7 @@ public class MultiParticipantSessionFunctionalTest {
             this.sessions[i].addDataListener(new RtpSessionDataListener() {
                 @Override
                 public void dataPacketReceived(RtpSession session, RtpParticipantInfo participant, DataPacket packet) {
-                    System.out.println(session.getId() + " received data from " + participant + ": " + packet);
+                    System.out.println("\t" + session.getId() + " received data from " + participant + ": " + packet);
                     if (counter.incrementAndGet() == ((N - 1) * 2)) {
                         // Release the latch once all N-1 messages (because it wont receive the message it sends) are
                         // received.
@@ -127,9 +148,12 @@ public class MultiParticipantSessionFunctionalTest {
             assertTrue(this.sessions[i].sendData(deadbeef, 0x45, false));
             assertTrue(this.sessions[i].sendData(deadbeef, 0x45, false));
         }
+        System.out.println("Wait for latch.....");
 
         // wait for the Threads to finish and check counters
-        assertTrue("Latch timed out!", latch.await(20000L, TimeUnit.MILLISECONDS));
+        if(!latch.await(5000L, TimeUnit.MILLISECONDS))
+        	System.out.println("! Latch timed out !");
+        System.out.println(".. latch finished!\n");
         for (byte i = 0; i < N; i++) {
             assertEquals(((N - 1) * 2), counters[i].get());
         }
