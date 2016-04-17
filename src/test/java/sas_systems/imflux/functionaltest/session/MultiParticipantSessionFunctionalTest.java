@@ -113,7 +113,7 @@ public class MultiParticipantSessionFunctionalTest {
                 @Override
                 public void dataPacketReceived(RtpSession session, RtpParticipantInfo participant, DataPacket packet) {
                     System.out.println("\t" + session.getId() + " received data from " + participant + ": " + packet);
-                    if (counter.incrementAndGet() == ((N - 1) * 2)) {
+                    if (counter.incrementAndGet() == ((N - 1)/* * 2*/)) {
                         // Release the latch once all N-1 messages (because it wont receive the message it sends) are
                         // received.
                         latch.countDown();
@@ -146,7 +146,7 @@ public class MultiParticipantSessionFunctionalTest {
         byte[] deadbeef = {(byte) 0xde, (byte) 0xad, (byte) 0xbe, (byte) 0xef};
         for (int i = 0; i < N; i++) {
             assertTrue(this.sessions[i].sendData(deadbeef, 0x45, false));
-            assertTrue(this.sessions[i].sendData(deadbeef, 0x45, false));
+//            assertTrue(this.sessions[i].sendData(deadbeef, 0x45, false));
         }
         System.out.println("Wait for latch.....");
 
@@ -155,7 +155,7 @@ public class MultiParticipantSessionFunctionalTest {
         	System.out.println("! Latch timed out !");
         System.out.println(".. latch finished!\n");
         for (byte i = 0; i < N; i++) {
-            assertEquals(((N - 1) * 2), counters[i].get());
+            assertEquals(((N - 1)/* * 2*/), counters[i].get());
         }
     }
 }
