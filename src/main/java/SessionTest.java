@@ -1,12 +1,13 @@
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.AddressedEnvelope;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.DefaultAddressedEnvelope;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.oio.OioEventLoopGroup;
 import io.netty.channel.socket.oio.OioDatagramChannel;
@@ -20,14 +21,14 @@ import java.util.List;
 
 import org.slf4j.LoggerFactory;
 
-import sas_systems.imflux.network.ControlHandler;
-import sas_systems.imflux.network.ControlPacketDecoder;
-import sas_systems.imflux.network.ControlPacketEncoder;
 import sas_systems.imflux.network.ControlPacketReceiver;
-import sas_systems.imflux.network.DataHandler;
-import sas_systems.imflux.network.DataPacketDecoder;
-import sas_systems.imflux.network.DataPacketEncoder;
 import sas_systems.imflux.network.DataPacketReceiver;
+import sas_systems.imflux.network.udp.UdpControlHandler;
+import sas_systems.imflux.network.udp.UdpControlPacketDecoder;
+import sas_systems.imflux.network.udp.UdpControlPacketEncoder;
+import sas_systems.imflux.network.udp.UdpDataHandler;
+import sas_systems.imflux.network.udp.UdpDataPacketDecoder;
+import sas_systems.imflux.network.udp.UdpDataPacketEncoder;
 import sas_systems.imflux.packet.DataPacket;
 import sas_systems.imflux.packet.rtcp.ByePacket;
 import sas_systems.imflux.packet.rtcp.CompoundControlPacket;
@@ -73,22 +74,12 @@ public class SessionTest implements DataPacketReceiver, ControlPacketReceiver {
 					@Override
 					protected void initChannel(OioDatagramChannel ch) throws Exception {
 						ChannelPipeline pipeline = ch.pipeline();
-						pipeline.addLast("decoder0", new ChannelInboundHandlerAdapter(){
-							@Override
-							public void channelRead(ChannelHandlerContext ctx, Object msg) {
-								if (!(msg instanceof io.netty.channel.socket.DatagramPacket)) {
-						            return;
-						        }
-								io.netty.channel.socket.DatagramPacket packet = (io.netty.channel.socket.DatagramPacket) msg;
-								ctx.fireChannelRead(packet.content());
-							}
-						});
-						pipeline.addLast("decoder1", new DataPacketDecoder());
-		                pipeline.addLast("encoder", DataPacketEncoder.getInstance());
+						pipeline.addLast("decoder1", UdpDataPacketDecoder.getInstance());
+		                pipeline.addLast("encoder", UdpDataPacketEncoder.getInstance());
 //		                if (executor != null) {
 //		                    pipeline.addLast("executorHandler", new ExecutionHandler(executor));
 //		                }
-		                pipeline.addLast("handler", new DataHandler(SessionTest.this));
+		                pipeline.addLast("handler", new UdpDataHandler(SessionTest.this));
 					}
 				});
 
@@ -109,12 +100,12 @@ public class SessionTest implements DataPacketReceiver, ControlPacketReceiver {
             return;
         }
         
-        
+        Class<? extends Channel> channelType = OioDatagramChannel.class;
         Bootstrap controlBootstrap = new Bootstrap();
         controlBootstrap.group(bossGroup)
 	        	.option(ChannelOption.SO_SNDBUF, 512)
 	        	.option(ChannelOption.SO_RCVBUF, 512)
-	        	.channel(OioDatagramChannel.class) // TODO! really just a simple default channel? which one? -> otherwise use code below:
+	        	.channel(channelType) // TODO! really just a simple default channel? which one? -> otherwise use code below:
 //	        	.channelFactory(new ChannelFactory<OioDatagramChannel>() { 
 //
 //					@Override
@@ -126,19 +117,9 @@ public class SessionTest implements DataPacketReceiver, ControlPacketReceiver {
 					@Override
 					protected void initChannel(OioDatagramChannel ch) throws Exception {
 						ChannelPipeline pipeline = ch.pipeline();
-						pipeline.addLast("decoder0", new ChannelInboundHandlerAdapter(){
-							@Override
-							public void channelRead(ChannelHandlerContext ctx, Object msg) {
-								if (!(msg instanceof io.netty.channel.socket.DatagramPacket)) {
-						            return;
-						        }
-								io.netty.channel.socket.DatagramPacket packet = (io.netty.channel.socket.DatagramPacket) msg;
-								ctx.fireChannelRead(packet.content());
-							}
-						});
-						pipeline.addLast("decoder1", new ControlPacketDecoder());
-		                pipeline.addLast("encoder", ControlPacketEncoder.getInstance());
-		                pipeline.addLast("handler", new ControlHandler(SessionTest.this));
+						pipeline.addLast("decoder1", UdpControlPacketDecoder.getInstance());
+		                pipeline.addLast("encoder", UdpControlPacketEncoder.getInstance());
+		                pipeline.addLast("handler", new UdpControlHandler(SessionTest.this));
 					}
 				});
 
@@ -163,7 +144,8 @@ public class SessionTest implements DataPacketReceiver, ControlPacketReceiver {
         data.setSsrc(0);
         data.setData(deadbeef);
         data.setMarker(false);
-        dataChannel.channel().writeAndFlush(data);
+        final AddressedEnvelope<DataPacket, SocketAddress> packet = new DefaultAddressedEnvelope<DataPacket, SocketAddress>(data, dataAddressRemote);
+        dataChannel.channel().writeAndFlush(packet);
         
         // test control:
         final RtpParticipantInfo info = new RtpParticipantInfo(0);
@@ -182,7 +164,8 @@ public class SessionTest implements DataPacketReceiver, ControlPacketReceiver {
         byePacket.setReasonForLeaving("Gewollt");
 
         final CompoundControlPacket controlPacket = new CompoundControlPacket(sdesPacket, byePacket);
-        controlChannel.channel().writeAndFlush(controlPacket);
+        final AddressedEnvelope<CompoundControlPacket, SocketAddress> packet2 = new DefaultAddressedEnvelope<CompoundControlPacket, SocketAddress>(controlPacket, controlAddressRemote);
+        controlChannel.channel().writeAndFlush(packet2);
 	}
 	
 	public static void main(String args[]) throws Exception {
@@ -244,14 +227,14 @@ public class SessionTest implements DataPacketReceiver, ControlPacketReceiver {
         if (info.getCname() == null) {
             info.setCname(new StringBuilder()
                     .append("DatagramSocket/").append(1).append('@')
-                    .append(new InetSocketAddress("localhost", 49001)).toString());
+                    .append(new InetSocketAddress("localhost", 59001)).toString());
         }
         chunk.addItem(SdesChunkItems.createCnameItem(info.getCname()));
         sdesPacket.addItem(chunk);
         
         final ByePacket byePacket = new ByePacket();
         byePacket.addSsrc(info.getSsrc());
-        byePacket.setReasonForLeaving("Bestätigung");
+        byePacket.setReasonForLeaving("Bestï¿½tigung");
 
         ByteBuf[] buffers = new ByteBuf[2];
         buffers[0] = sdesPacket.encode();
