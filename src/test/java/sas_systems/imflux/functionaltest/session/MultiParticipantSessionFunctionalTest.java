@@ -143,7 +143,7 @@ public class MultiParticipantSessionFunctionalTest {
         }
 
         // send data
-        byte[] deadbeef = {(byte) 0xde, (byte) 0xad, (byte) 0xbe, (byte) 0xef};
+        final byte[] deadbeef = {(byte) 0xde, (byte) 0xad, (byte) 0xbe, (byte) 0xef};
         for (int i = 0; i < N; i++) {
             assertTrue(this.sessions[i].sendData(deadbeef, 0x45, false));
 //            assertTrue(this.sessions[i].sendData(deadbeef, 0x45, false));
@@ -219,7 +219,7 @@ public class MultiParticipantSessionFunctionalTest {
         }
 
         // send data
-        byte[] deadbeef = {(byte) 0xde, (byte) 0xad, (byte) 0xbe, (byte) 0xef};
+        final byte[] deadbeef = {(byte) 0xde, (byte) 0xad, (byte) 0xbe, (byte) 0xef};
         for (int i = 0; i < N; i++) {
             assertTrue(this.sessions[i].sendData(deadbeef, 0x45, false));
 //            assertTrue(this.sessions[i].sendData(deadbeef, 0x45, false));
