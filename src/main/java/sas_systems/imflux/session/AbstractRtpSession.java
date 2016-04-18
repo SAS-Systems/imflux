@@ -868,7 +868,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     }
 
     /**
-     * Write the packets information to the data channel
+     * Writes the packets information to the data channel
      * 
      * @param packet
      * @param destination
