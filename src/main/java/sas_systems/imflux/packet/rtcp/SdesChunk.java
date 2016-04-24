@@ -67,7 +67,7 @@ public class SdesChunk {
         SdesChunk chunk = new SdesChunk();
         chunk.ssrc = buffer.readUnsignedInt();
 
-        // Because some genious thought that 32bit alignment would be cool, we must count the amount of bytes remaining
+        // Because some genius thought that 32bit alignment would be cool, we must count the amount of bytes remaining
         // after decoding each SdesChunkItem so that when we read the end/null item, we know how many more bytes we
         // must read to discard the padding bytes (hit the 32bit alignment barrier).
         int read = 0;
