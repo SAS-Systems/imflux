@@ -35,7 +35,7 @@ import sas_systems.imflux.packet.DataPacket;
 import sas_systems.imflux.packet.rtcp.SdesChunk;
 import sas_systems.imflux.participant.DefaultParticipantDatabase;
 import sas_systems.imflux.participant.ParticipantEventListener;
-import sas_systems.imflux.participant.ParticipantOperation;
+import sas_systems.imflux.participant.ParticipantCommand;
 import sas_systems.imflux.participant.RtpParticipant;
 
 /**
@@ -85,8 +85,8 @@ public class DefaultParticipantDatabaseTest {
         this.testAddReceiver();
 
         final AtomicBoolean doSomething = new AtomicBoolean();
-        this.database.doWithReceivers(new ParticipantOperation() {
-            public void doWithParticipant(RtpParticipant participant) throws Exception {
+        this.database.doWithReceivers(new ParticipantCommand() {
+            public void execute(RtpParticipant participant) throws Exception {
                 doSomething.set(true);
             }
         });

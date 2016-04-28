@@ -96,12 +96,12 @@ public class DefaultParticipantDatabase implements ParticipantDatabase {
         return Collections.unmodifiableMap(this.members);
     }
 
-    public void doWithReceivers(ParticipantOperation operation) {
+    public void doWithReceivers(ParticipantCommand operation) {
         this.lock.readLock().lock();
         try {
             for (RtpParticipant receiver : this.receivers) {
                 try {
-                    operation.doWithParticipant(receiver);
+                    operation.execute(receiver);
                 } catch (Exception e) {
                     LOG.error("Failed to perform operation {} on receiver {}.", e, operation, receiver);
                 }
@@ -111,12 +111,12 @@ public class DefaultParticipantDatabase implements ParticipantDatabase {
         }
     }
 
-    public void doWithParticipants(ParticipantOperation operation) {
+    public void doWithParticipants(ParticipantCommand operation) {
         this.lock.readLock().lock();
         try {
             for (RtpParticipant member : this.members.values()) {
                 try {
-                    operation.doWithParticipant(member);
+                    operation.execute(member);
                 } catch (Exception e) {
                     LOG.error("Failed to perform operation {} on member {}.", e, operation, member);
                 }

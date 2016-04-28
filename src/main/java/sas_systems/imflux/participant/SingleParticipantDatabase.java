@@ -68,17 +68,17 @@ public class SingleParticipantDatabase implements ParticipantDatabase {
         return map;
     }
 
-    public void doWithReceivers(ParticipantOperation operation) {
+    public void doWithReceivers(ParticipantCommand operation) {
         try {
-            operation.doWithParticipant(this.participant);
+            operation.execute(this.participant);
         } catch (Exception e) {
             LOG.error("Failed to perform operation {} on remote participant {}.", e, operation, this.participant);
         }
     }
 
-    public void doWithParticipants(ParticipantOperation operation) {
+    public void doWithParticipants(ParticipantCommand operation) {
         try {
-            operation.doWithParticipant(this.participant);
+            operation.execute(this.participant);
         } catch (Exception e) {
             LOG.error("Failed to perform operation {} on remote participant {}.", e, operation, this.participant);
         }

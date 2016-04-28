@@ -18,12 +18,12 @@ package sas_systems.imflux.participant;
 
 /**
  * Interface for performing an action on a {@link RtpParticipant} stored in the 
- * {@link DefaultParticipantDatabase}.
+ * {@link ParticipantDatabase}.
  * 
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
-public interface ParticipantOperation {
+public interface ParticipantCommand {
 
 	/**
 	 * Implement the action here.
@@ -31,5 +31,5 @@ public interface ParticipantOperation {
 	 * @param participant
 	 * @throws Exception
 	 */
-    void doWithParticipant(RtpParticipant participant) throws Exception;
+    void execute(RtpParticipant participant) throws Exception;
 }

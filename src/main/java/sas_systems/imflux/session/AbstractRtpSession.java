@@ -62,7 +62,7 @@ import sas_systems.imflux.packet.rtcp.SdesChunkItems;
 import sas_systems.imflux.packet.rtcp.SenderReportPacket;
 import sas_systems.imflux.packet.rtcp.SourceDescriptionPacket;
 import sas_systems.imflux.participant.ParticipantDatabase;
-import sas_systems.imflux.participant.ParticipantOperation;
+import sas_systems.imflux.participant.ParticipantCommand;
 import sas_systems.imflux.participant.RtpParticipant;
 import sas_systems.imflux.participant.RtpParticipantInfo;
 
@@ -625,9 +625,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         // send status update per remote participant
         final long currentSsrc = this.localParticipant.getSsrc();
         final SourceDescriptionPacket sdesPacket = buildSdesPacket(currentSsrc);
-        this.participantDatabase.doWithReceivers(new ParticipantOperation() {
+        this.participantDatabase.doWithReceivers(new ParticipantCommand() {
             @Override
-            public void doWithParticipant(RtpParticipant participant) throws Exception {
+            public void execute(RtpParticipant participant) throws Exception {
                 AbstractReportPacket report = buildReportPacket(currentSsrc, participant);
                 // FIXME: really to all other participants?
                 // i would use:
@@ -740,9 +740,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * @param packet the {@link DataPacket}
      */
     protected void internalSendData(final DataPacket packet) {
-        this.participantDatabase.doWithReceivers(new ParticipantOperation() {
+        this.participantDatabase.doWithReceivers(new ParticipantCommand() {
             @Override
-            public void doWithParticipant(RtpParticipant participant) throws Exception {
+            public void execute(RtpParticipant participant) throws Exception {
                 if (!participant.isReceiver() || participant.receivedBye()) {
                     return;
                 }
@@ -819,9 +819,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * @param participant participant information
      */
     protected void internalSendControl(final ControlPacket packet) {
-        this.participantDatabase.doWithReceivers(new ParticipantOperation() {
+        this.participantDatabase.doWithReceivers(new ParticipantCommand() {
             @Override
-            public void doWithParticipant(RtpParticipant participant) throws Exception {
+            public void execute(RtpParticipant participant) throws Exception {
                 if (!participant.isReceiver() || participant.receivedBye()) {
                     return;
                 }
@@ -847,9 +847,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * @param participant participant information
      */
     protected void internalSendControl(final CompoundControlPacket packet) {
-        this.participantDatabase.doWithReceivers(new ParticipantOperation() {
+        this.participantDatabase.doWithReceivers(new ParticipantCommand() {
             @Override
-            public void doWithParticipant(RtpParticipant participant) throws Exception {
+            public void execute(RtpParticipant participant) throws Exception {
                 if (!participant.isReceiver() || participant.receivedBye()) {
                     return;
                 }

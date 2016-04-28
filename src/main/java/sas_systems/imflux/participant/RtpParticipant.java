@@ -38,7 +38,7 @@ import sas_systems.imflux.util.TimeUtils;
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
-public class RtpParticipant {
+public class RtpParticipant implements ParticipantCommandTargetObject {
 
     // constants ------------------------------------------------------------------------------------------------------
 	// TODO: not used?

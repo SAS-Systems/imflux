@@ -32,7 +32,7 @@ import org.junit.Test;
 
 import sas_systems.imflux.packet.DataPacket;
 import sas_systems.imflux.packet.rtcp.SdesChunk;
-import sas_systems.imflux.participant.ParticipantOperation;
+import sas_systems.imflux.participant.ParticipantCommand;
 import sas_systems.imflux.participant.RtpParticipant;
 import sas_systems.imflux.participant.RtpParticipantInfo;
 import sas_systems.imflux.participant.SingleParticipantDatabase;
@@ -103,8 +103,8 @@ public class SingleParticipantDatabaseTest {
         this.testAddReceiver();
 
         final AtomicBoolean doSomething = new AtomicBoolean();
-        this.database.doWithReceivers(new ParticipantOperation() {
-            public void doWithParticipant(RtpParticipant participant) throws Exception {
+        this.database.doWithReceivers(new ParticipantCommand() {
+            public void execute(RtpParticipant participant) throws Exception {
                 doSomething.set(true);
             }
         });
@@ -118,8 +118,8 @@ public class SingleParticipantDatabaseTest {
 
         System.out.println("Force logging error:");
         try {
-	        this.database.doWithReceivers(new ParticipantOperation() {
-	            public void doWithParticipant(RtpParticipant participant) throws Exception {
+	        this.database.doWithReceivers(new ParticipantCommand() {
+	            public void execute(RtpParticipant participant) throws Exception {
 	                throw error;
 	            }
 	        });
@@ -133,8 +133,8 @@ public class SingleParticipantDatabaseTest {
         this.testAddReceiver();
 
         final AtomicBoolean doSomething = new AtomicBoolean();
-        this.database.doWithParticipants(new ParticipantOperation() {
-            public void doWithParticipant(RtpParticipant participant) throws Exception {
+        this.database.doWithParticipants(new ParticipantCommand() {
+            public void execute(RtpParticipant participant) throws Exception {
                 doSomething.set(true);
             }
         });
@@ -148,8 +148,8 @@ public class SingleParticipantDatabaseTest {
         
         System.out.println("Force logging error:");
         try {
-	        this.database.doWithParticipants(new ParticipantOperation() {
-	            public void doWithParticipant(RtpParticipant participant) throws Exception {
+	        this.database.doWithParticipants(new ParticipantCommand() {
+	            public void execute(RtpParticipant participant) throws Exception {
 	                throw error;
 	            }
 	        });

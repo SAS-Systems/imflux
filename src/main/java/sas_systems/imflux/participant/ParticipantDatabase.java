@@ -24,13 +24,13 @@ import sas_systems.imflux.packet.DataPacket;
 import sas_systems.imflux.packet.rtcp.SdesChunk;
 
 /**
- * Interface <br/>
+ * Interface for a participant database<br/>
  * Implementations of this interface should store and manage the participants.
  * 
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
-public interface ParticipantDatabase {
+public interface ParticipantDatabase extends ParticipantCommandInvoker {
 
     String getId();
 
@@ -51,12 +51,13 @@ public interface ParticipantDatabase {
     /**
      * Performs the specified operation on all receivers.
      */
-    void doWithReceivers(ParticipantOperation operation);
+    void doWithReceivers(ParticipantCommand operation);
 
     /**
      * Performs the specified operation on all members (existing participants).
      */
-    void doWithParticipants(ParticipantOperation operation);
+    @Override
+    void doWithParticipants(ParticipantCommand operation);
 
     /**
      * Adds a participant as a receiver to the database.
