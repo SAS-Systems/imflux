@@ -62,6 +62,7 @@ public class DataPacket {
     private int sequenceNumber;
     private long timestamp;
     private long ssrc;
+    private int size;
 
     private short extensionHeaderData;
     private byte[] extensionData;
@@ -157,13 +158,7 @@ public class DataPacket {
      * @return a {@link ByteBuf} containing the bytes
      */
     public static ByteBuf encode(int fixedBlockSize, DataPacket packet) {
-        int size = 12; // Fixed width
-        if (packet.hasExtension()) {
-            size += 4 + packet.getExtensionDataSize();
-        }
-        size += packet.getContributingSourcesCount() * 4;
-        size += packet.getDataSize();
-
+    	int size = packet.getSize(fixedBlockSize);
         // If packet was configured to have padding (fixed block size), calculate padding and add it.
         int padding = 0;
         if (fixedBlockSize > 0) {
@@ -176,7 +171,6 @@ public class DataPacket {
                 padding = 0;
             }
         }
-        size += padding;
 
         ByteBuf buffer = Unpooled.buffer(size);
 
@@ -268,7 +262,7 @@ public class DataPacket {
             return 0;
         }
 
-        return this.data.capacity();
+        return this.data.readableBytes();
     }
 
     public int getExtensionDataSize() {
@@ -394,13 +388,46 @@ public class DataPacket {
     }
 
     public byte[] getDataAsArray() {
-        return this.data.array();
+    	if(this.data.hasArray())
+    		return this.data.array();
+    	
+    	byte[] bytes = new byte[this.data.readableBytes()];
+    	this.data.readBytes(bytes);
+    	return bytes;
     }
 
     public void setData(byte[] data) {
         this.data = Unpooled.wrappedBuffer(data);
     }
 
+    public int getSize(int fixedBlockSize) {
+    	if(this.size == 0) {
+	    	int size = 12; // Fixed width
+	        if (this.hasExtension()) {
+	            size += 4 + this.getExtensionDataSize();
+	        }
+	        size += this.getContributingSourcesCount() * 4;
+	        size += this.getDataSize();
+	
+	        // If packet was configured to have padding (fixed block size), calculate padding and add it.
+	        int padding = 0;
+	        if (fixedBlockSize > 0) {
+	            // If padding modulus is > 0 then the padding is equal to:
+	            // (global size of the compound RTCP packet) mod (block size)
+	            // Block size alignment might be necessary for some encryption algorithms
+	            // RFC section 6.4.1
+	            padding = fixedBlockSize - (size % fixedBlockSize);
+	            if (padding == fixedBlockSize) {
+	                padding = 0;
+	            }
+	        }
+	        size += padding;
+	        this.size = size;
+	    }
+    	
+        return this.size;
+    }
+    
     // low level overrides --------------------------------------------------------------------------------------------
     @Override
     public String toString() {

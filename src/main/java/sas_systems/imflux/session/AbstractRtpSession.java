@@ -369,6 +369,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         if (!this.running.get()) {
             return false;
         }
+        // overwrite payloadType
         if (!(this.payloadType == packet.getPayloadType())) {
         	packet.setPayloadType(this.payloadType);
         }
@@ -532,7 +533,12 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
             // and avoided).
             // http://tools.ietf.org/html/rfc3550#section-8.1, last paragraph
             if (this.sentOrReceivedPackets.getAndSet(true)) {
-                this.leaveSession(oldSsrc, "SSRC collision detected; rejoining with new SSRC.");
+                this.leaveSession(oldSsrc, "SSRC collision detected; rejoining with new SSRC: " + newSsrc);
+                // reset counters
+                this.sentByteCounter.set(0L);
+                this.sentPacketCounter.set(0L);
+                this.collisions.set(0);		// start counting collisions from 0
+                
                 this.joinSession(newSsrc);
             }
 
@@ -615,7 +621,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * {@inheritDoc}
      * <br/>
      * Sends for each remote participant a report containing the status
-     * of this session participant. 
+     * of this sessions participant. 
      */
     @Override
     public void run(Timeout timeout) throws Exception {
@@ -667,6 +673,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
             // matters here is the link between this participant and ourselves).
             if (receptionReport.getSsrc() == this.localParticipant.getSsrc()) {
                 // TODO handle reports
+            	
             }
         }
 
@@ -730,7 +737,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * Instantiates a {@link ParticipantDatabase} and returns it. This method must be implemented
      * by inheriting classes.
      * 
-     * @return a reference to the reated {@link ParticipantDatabase}
+     * @return a reference to the created {@link ParticipantDatabase}
      */
     protected abstract ParticipantDatabase createDatabase();
 
@@ -740,6 +747,8 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * @param packet the {@link DataPacket}
      */
     protected void internalSendData(final DataPacket packet) {
+        this.incrementSentPackets();
+        this.incrementSentBytes(packet.getDataSize());
         this.participantDatabase.doWithReceivers(new ParticipantOperation() {
             @Override
             public void doWithParticipant(RtpParticipant participant) throws Exception {
@@ -875,7 +884,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      */
     protected void writeToData(DataPacket packet, SocketAddress destination) {
     	final AddressedEnvelope<DataPacket, SocketAddress> envelope = new DefaultAddressedEnvelope<DataPacket, SocketAddress>(packet, destination);
-        this.dataChannel.writeAndFlush(envelope);
+    	this.dataChannel.writeAndFlush(envelope);
     }
 
     /**
