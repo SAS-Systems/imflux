@@ -58,7 +58,7 @@ public class RtpParticipant {
     private boolean receivedSdes;
     private final AtomicLong receivedByteCounter;
     private final AtomicLong receivedPacketCounter;
-    private final AtomicInteger validPacketCounter;
+    private final AtomicInteger validPacketCounter; //TODO
 
     // constructors ---------------------------------------------------------------------------------------------------
     /**

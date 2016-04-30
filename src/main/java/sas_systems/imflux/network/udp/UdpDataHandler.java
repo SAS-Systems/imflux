@@ -14,45 +14,56 @@
  * limitations under the License.
  */
 
-package sas_systems.imflux.network;
+package sas_systems.imflux.network.udp;
 
+import io.netty.channel.AddressedEnvelope;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.socket.SocketChannel;
 
+import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import sas_systems.imflux.packet.rtcp.CompoundControlPacket;
+import sas_systems.imflux.network.DataPacketReceiver;
+import sas_systems.imflux.packet.DataPacket;
 
 /**
  * This class is another {@link ChannelHandler} in the {@link ChannelPipeline}. It counts all received 
- * {@link CompoundControlPacket}s and forwards them to the specified {@link ControlPacketReceiver}-implementation.
+ * {@link DataPacket}s and forwards them to the specified {@link DataPacketReceiver}-implementation.
+ * <p/>
+ * This handler deals with the {@link DataPacket}s wrapped into an {@link AddressedEnvelope} to
+ * get the sender address when the {@link SocketChannel} is not connected to a remote (just bound to the 
+ * local address and port).
  * 
- * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
-public class ControlHandler extends SimpleChannelInboundHandler<CompoundControlPacket> {
+public class UdpDataHandler extends SimpleChannelInboundHandler<AddressedEnvelope<DataPacket, SocketAddress>> {
 	
     // internal vars --------------------------------------------------------------------------------------------------
     private final AtomicInteger counter;
-    private final ControlPacketReceiver receiver;
+    private final DataPacketReceiver receiver;
 
     // constructors ---------------------------------------------------------------------------------------------------
     /**
-     * Creates a new {@link ControlHandler} forwarding the {@link CompoundControlPacket}s to the specified 
-     * {@link ControlPacketReceiver}-implementation.
+     * Creates a new {@link UdpDataHandler} forwarding the {@link DataPacket}s to the specified 
+     * {@link DataPacketReceiver}-implementation.
+     * <p/>
+     * This handler deals with the {@link DataPacket}s wrapped into an {@link AddressedEnvelope} to
+	 * get the sender address when the {@link SocketChannel} is not connected to a remote (just bound to the 
+	 * local address and port).
      * 
-     * @param receiver concrete class implementing {@link ControlPacketReceiver}
+     * @param receiver concrete class implementing {@link DataPacketReceiver}
      */
-    public ControlHandler(ControlPacketReceiver receiver) {
+    public UdpDataHandler(DataPacketReceiver receiver) {
         this.receiver = receiver;
         this.counter = new AtomicInteger();
     }
     
     // SimpleChannelUpstreamHandler -----------------------------------------------------------------------------------
     @Override
-	protected void channelRead0(ChannelHandlerContext ctx, CompoundControlPacket msg) throws Exception {
+	protected void channelRead0(ChannelHandlerContext ctx, AddressedEnvelope<DataPacket, SocketAddress> msg) throws Exception {
     	this.messageReceived(ctx, msg);
 	}
     /**
@@ -60,13 +71,15 @@ public class ControlHandler extends SimpleChannelInboundHandler<CompoundControlP
      * {@code channelRead0(ChannelHandlerContext, I)} will be renamed to {@code messageReceived(ChannelHandlerContext, I)} in 5.0.
      * 
      * @param ctx           the {@link ChannelHandlerContext} which this {@link SimpleChannelInboundHandler}/
-     *                      {@link DataHandler} belongs to
+     *                      {@link UdpDataHandler} belongs to
      * @param msg           the message to handle
      * @throws Exception    is thrown if an error occurred
      */
     //@Override
-	protected void messageReceived(ChannelHandlerContext ctx, CompoundControlPacket msg) throws Exception {
-    	this.receiver.controlPacketReceived(ctx.channel().remoteAddress(), msg);	
+	protected void messageReceived(ChannelHandlerContext ctx, AddressedEnvelope<DataPacket, SocketAddress> msg) throws Exception {
+		final DataPacket packet = msg.content();
+		final SocketAddress sender = msg.sender();
+    	this.receiver.dataPacketReceived(sender, packet);	
 	}
     
     // public methods -------------------------------------------------------------------------------------------------

@@ -39,7 +39,7 @@ public class Logger {
      *
      * @param clazz Name of the class to log.
      */
-    public Logger(Class clazz) {
+    public Logger(@SuppressWarnings("rawtypes") Class clazz) {
         this.logger = LoggerFactory.getLogger(clazz);
     }
 
@@ -56,7 +56,7 @@ public class Logger {
      *
      * @return Logger for a class.
      */
-    public static Logger getLogger(Class clazz) {
+    public static Logger getLogger(@SuppressWarnings("rawtypes")Class clazz) {
         return new Logger(clazz);
     }
 

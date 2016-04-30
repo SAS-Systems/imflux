@@ -2,15 +2,14 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.AddressedEnvelope;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.DefaultAddressedEnvelope;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.oio.OioEventLoopGroup;
-import io.netty.channel.socket.oio.OioDatagramChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioDatagramChannel;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -40,57 +39,52 @@ import sas_systems.imflux.participant.RtpParticipantInfo;
 import sas_systems.imflux.util.ByteUtils;
 
 /**
- * Session test with an OiODatagramChannel and connecting the channel not only
- * to the local address but also to the remote address.
+ * Session test with an NiODatagramChannel and binding the channel
+ * to the local address. Each packet is send to a specified remote address,
+ * therefore it is possible to use one channel to communicate with different
+ * participants.
  * <p/>
  * Works!
  * 
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
-public class SessionTest implements DataPacketReceiver, ControlPacketReceiver {
+public class SessionTest2 implements DataPacketReceiver, ControlPacketReceiver {
 	
 	private EventLoopGroup bossGroup;
 	private EventLoopGroup workerGroup;
 	private ChannelFuture dataChannel;
 	private ChannelFuture controlChannel;
 
-	public SessionTest() throws InterruptedException {
-		this.bossGroup = new OioEventLoopGroup();
-        this.workerGroup = new OioEventLoopGroup();
+	public SessionTest2() throws InterruptedException {
+		this.bossGroup = new NioEventLoopGroup();
+        this.workerGroup = new NioEventLoopGroup();
         
+        SocketAddress dataAddressLocal = new InetSocketAddress("localhost", 58000);
+        SocketAddress dataAddressRemote = new InetSocketAddress("localhost", 59000);
         Bootstrap dataBootstrap = new Bootstrap();
         dataBootstrap.group(bossGroup)
 	        	.option(ChannelOption.SO_SNDBUF, 512)
 	        	.option(ChannelOption.SO_RCVBUF, 512)
-	        	.channel(OioDatagramChannel.class) // TODO! really just a simple default channel? which one? -> otherwise use code below:
-//	        	.channelFactory(new ChannelFactory<OioDatagramChannel>() { 
-//
-//					@Override
-//					public OioDatagramChannel newChannel() {
-//						return new OioDatagramChannel();
-//					}
-//				})
-	        	.handler(new ChannelInitializer<OioDatagramChannel>() { // is used to initialize the ChannelPipeline
+	        	.channel(NioDatagramChannel.class)
+	        	.handler(new ChannelInitializer<NioDatagramChannel>() { // is used to initialize the ChannelPipeline
 					@Override
-					protected void initChannel(OioDatagramChannel ch) throws Exception {
+					protected void initChannel(NioDatagramChannel ch) throws Exception {
 						ChannelPipeline pipeline = ch.pipeline();
-						pipeline.addLast("decoder1", UdpDataPacketDecoder.getInstance());
-		                pipeline.addLast("encoder", UdpDataPacketEncoder.getInstance());
-//		                if (executor != null) {
-//		                    pipeline.addLast("executorHandler", new ExecutionHandler(executor));
-//		                }
-		                pipeline.addLast("handler", new UdpDataHandler(SessionTest.this));
+//						pipeline.addFirst("OutboundListener", new ChannelOutboundHandlerAdapter() {
+//							@Override
+//							public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+//								super.write(ctx, msg, promise);
+//							}
+//						});
+						pipeline.addLast("decoder", UdpDataPacketDecoder.getInstance());
+						pipeline.addLast("encoder", UdpDataPacketEncoder.getInstance());
+						pipeline.addLast("handler", new UdpDataHandler(SessionTest2.this));
 					}
 				});
 
         // create data channel
-        SocketAddress dataAddressLocal = new InetSocketAddress("localhost", 58000);
-        SocketAddress dataAddressRemote = new InetSocketAddress("localhost", 59000);
         try {
-        	dataChannel = dataBootstrap.connect(dataAddressRemote, dataAddressLocal).sync();
-//            dataChannel = dataBootstrap.bind(dataAddress).sync();	// make nonblocking? bind() returns a ChannelFuture!
-//            DatagramChannel dc = (DatagramChannel) dataChannel.channel();
-//            dc.joinGroup(Inet4Address.getByName("localhost"));
+            dataChannel = dataBootstrap.bind(dataAddressLocal).sync();	// make nonblocking? bind() returns a ChannelFuture!
         } catch (Exception e) {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
@@ -100,35 +94,32 @@ public class SessionTest implements DataPacketReceiver, ControlPacketReceiver {
             return;
         }
         
-        Class<? extends Channel> channelType = OioDatagramChannel.class;
+        SocketAddress controlAddressLocal = new InetSocketAddress("localhost", 58001);
+        SocketAddress controlAddressRemote = new InetSocketAddress("localhost", 59001);
         Bootstrap controlBootstrap = new Bootstrap();
         controlBootstrap.group(bossGroup)
 	        	.option(ChannelOption.SO_SNDBUF, 512)
 	        	.option(ChannelOption.SO_RCVBUF, 512)
-	        	.channel(channelType) // TODO! really just a simple default channel? which one? -> otherwise use code below:
-//	        	.channelFactory(new ChannelFactory<OioDatagramChannel>() { 
-//
-//					@Override
-//					public OioDatagramChannel newChannel() {
-//						return new OioDatagramChannel();
-//					}
-//				})
-	        	.handler(new ChannelInitializer<OioDatagramChannel>() { // is used to initialize the ChannelPipeline
+	        	.channel(NioDatagramChannel.class)
+	        	.handler(new ChannelInitializer<NioDatagramChannel>() { // is used to initialize the ChannelPipeline
 					@Override
-					protected void initChannel(OioDatagramChannel ch) throws Exception {
+					protected void initChannel(NioDatagramChannel ch) throws Exception {
 						ChannelPipeline pipeline = ch.pipeline();
-						pipeline.addLast("decoder1", UdpControlPacketDecoder.getInstance());
-		                pipeline.addLast("encoder", UdpControlPacketEncoder.getInstance());
-		                pipeline.addLast("handler", new UdpControlHandler(SessionTest.this));
+//						pipeline.addFirst("OutboundListener", new ChannelOutboundHandlerAdapter() {
+//							@Override
+//							public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+//								super.write(ctx, msg, promise);
+//							}
+//						});
+						pipeline.addLast("decoder", UdpControlPacketDecoder.getInstance());
+						pipeline.addLast("encoder", UdpControlPacketEncoder.getInstance());
+						pipeline.addLast("handler", new UdpControlHandler(SessionTest2.this));
 					}
 				});
 
         // create data channel
-        SocketAddress controlAddressLocal = new InetSocketAddress("localhost", 58001);
-        SocketAddress controlAddressRemote = new InetSocketAddress("localhost", 59001);
         try {
-        	controlChannel = controlBootstrap.connect(controlAddressRemote, controlAddressLocal).sync();
-//            controlChannel = controlBootstrap.bind(controlAddress).sync();	// make nonblocking? bind() returns a ChannelFuture!
+            controlChannel = controlBootstrap.bind(controlAddressLocal).sync();
         } catch (Exception e) {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
@@ -144,6 +135,7 @@ public class SessionTest implements DataPacketReceiver, ControlPacketReceiver {
         data.setSsrc(0);
         data.setData(deadbeef);
         data.setMarker(false);
+        // send addressedEnvelope for destination specification
         final AddressedEnvelope<DataPacket, SocketAddress> packet = new DefaultAddressedEnvelope<DataPacket, SocketAddress>(data, dataAddressRemote);
         dataChannel.channel().writeAndFlush(packet);
         
@@ -164,16 +156,16 @@ public class SessionTest implements DataPacketReceiver, ControlPacketReceiver {
         byePacket.setReasonForLeaving("Gewollt");
 
         final CompoundControlPacket controlPacket = new CompoundControlPacket(sdesPacket, byePacket);
+        // send addressedEnvelope for destination specification
         final AddressedEnvelope<CompoundControlPacket, SocketAddress> packet2 = new DefaultAddressedEnvelope<CompoundControlPacket, SocketAddress>(controlPacket, controlAddressRemote);
         controlChannel.channel().writeAndFlush(packet2);
 	}
 	
 	public static void main(String args[]) throws Exception {
-		SessionTest session = new SessionTest();
-		
 		DatagramSocket dataSocket = new DatagramSocket(new InetSocketAddress("localhost", 59000));
 		DatagramSocket controlSocket = new DatagramSocket(new InetSocketAddress("localhost", 59001));
 		
+		SessionTest2 session = new SessionTest2();
 		
 		// receive data
 		byte[] receiveBuf = new byte[512];
@@ -212,7 +204,6 @@ public class SessionTest implements DataPacketReceiver, ControlPacketReceiver {
                 controlPacketList.add(ControlPacket.decode(buf));
             } catch (Exception e1) {
             	// ignore silently
-//                System.err.println(e1);
                 break;
             }
         }
@@ -227,14 +218,14 @@ public class SessionTest implements DataPacketReceiver, ControlPacketReceiver {
         if (info.getCname() == null) {
             info.setCname(new StringBuilder()
                     .append("DatagramSocket/").append(1).append('@')
-                    .append(new InetSocketAddress("localhost", 59001)).toString());
+                    .append(new InetSocketAddress("localhost", 49001)).toString());
         }
         chunk.addItem(SdesChunkItems.createCnameItem(info.getCname()));
         sdesPacket.addItem(chunk);
         
         final ByePacket byePacket = new ByePacket();
         byePacket.addSsrc(info.getSsrc());
-        byePacket.setReasonForLeaving("Bestï¿½tigung");
+        byePacket.setReasonForLeaving("Bestätigung");
 
         ByteBuf[] buffers = new ByteBuf[2];
         buffers[0] = sdesPacket.encode();
@@ -278,5 +269,4 @@ public class SessionTest implements DataPacketReceiver, ControlPacketReceiver {
 		LoggerFactory.getLogger(SessionTest2.class).error("! ControlPacketReceiver received: " + packet + " from " + origin);
 		
 	}
-
 }

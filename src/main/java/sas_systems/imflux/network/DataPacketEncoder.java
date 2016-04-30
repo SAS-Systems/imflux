@@ -29,7 +29,7 @@ import sas_systems.imflux.packet.DataPacket;
 /**
  * A class (singleton) for encoding a {@link DataPacket} to a {@link ByteBuf}. It extends {@link MessageToMessageEncoder}.
  * 
- * @see OneToOneEncoder
+ * @see MessageToMessageEncoder
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */

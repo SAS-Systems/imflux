@@ -93,7 +93,9 @@ public class CompoundControlPacket {
         StringBuilder builder = new StringBuilder();
         builder.append("CompoundControlPacket{\n");
         for (ControlPacket packet : this.controlPackets) {
-            builder.append("  ").append(packet.toString()).append('\n');
+            builder.append("  ")
+            	.append(packet!=null?packet.toString():"null")
+            	.append('\n');
         }
         return builder.append('}').toString();
     }
