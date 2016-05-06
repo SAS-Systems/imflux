@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package sas_systems.imflux.session;
+package sas_systems.imflux.session.rtp;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.AddressedEnvelope;

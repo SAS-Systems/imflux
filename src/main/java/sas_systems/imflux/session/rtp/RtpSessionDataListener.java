@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package sas_systems.imflux.session;
+package sas_systems.imflux.session.rtp;
 
 import sas_systems.imflux.packet.DataPacket;
 import sas_systems.imflux.participant.RtpParticipantInfo;
