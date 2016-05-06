@@ -15,6 +15,7 @@
  */
 package sas_systems.imflux.session.rtsp;
 
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -40,6 +41,10 @@ import io.netty.handler.codec.rtsp.RtspMethods;
 import sas_systems.imflux.logging.Logger;
 import sas_systems.imflux.network.RtspHandler;
 
+/**
+ * A simple RTSP session created on a TCP channel. 
+ * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
+ */
 public class SimpleRtspSession implements RtspSession {
 	
 	// constants ------------------------------------------------------------------------------------------------------
@@ -47,6 +52,8 @@ public class SimpleRtspSession implements RtspSession {
     private static final String VERSION = "imflux_0.2_17042016";
     
     // configuration defaults -----------------------------------------------------------------------------------------
+    private static final boolean USE_NIO = true;
+    private static final String RTSP_HOST = "localhost";
     private static final int RTSP_PORT = 554; // or: 8554
     private static final int SEND_BUFFER_SIZE = 1500;
     private static final int RECEIVE_BUFFER_SIZE = 1500;
@@ -65,9 +72,19 @@ public class SimpleRtspSession implements RtspSession {
 	private EventLoopGroup bossGroup;
 	private EventLoopGroup workerGroup;
 
-	public SimpleRtspSession(int port) {
-		this.useNio = true;
-		this.localAddress = port;
+	// constructors ---------------------------------------------------------------------------------------------------
+	public SimpleRtspSession(String id) {
+		this(id, new InetSocketAddress(RTSP_HOST, RTSP_PORT));
+	}
+	
+	public SimpleRtspSession(String id, SocketAddress loAddress) {
+		this.id = id;
+		this.localAddress = loAddress;
+		this.running = new AtomicBoolean(false);
+		
+		this.useNio = USE_NIO;
+		this.sendBufferSize = SEND_BUFFER_SIZE;
+		this.receiveBufferSize = RECEIVE_BUFFER_SIZE;
 	}
 	
 	// RtspSession ----------------------------------------------------------------------------------------------------
@@ -138,8 +155,7 @@ public class SimpleRtspSession implements RtspSession {
 
 	@Override
 	public void terminate() {
-		// TODO Auto-generated method stub
-		
+		terminate1();
 	}
 
 	// RtspPacketReceiver ---------------------------------------------------------------------------------------------
@@ -199,9 +215,8 @@ public class SimpleRtspSession implements RtspSession {
 	// private helpers ------------------------------------------------------------------------------------------------
 	/**
      * Stops this session by closing all closables and stopping the thread groups to release all used resources.
-     * 
      */
-    protected synchronized void terminate1() {
+    private synchronized void terminate1() {
         // Always set to false, even if it was already set to false.
         if (!this.running.getAndSet(false)) {
             return;
@@ -240,4 +255,32 @@ public class SimpleRtspSession implements RtspSession {
         }
         this.useNio = useNio;		
 	}
+	
+	public int getSendBufferSize() {
+        return sendBufferSize;
+    }
+
+    /**
+     * Can only be modified before initialization.
+     */
+    public void setSendBufferSize(int sendBufferSize) {
+        if (this.running.get()) {
+            throw new IllegalArgumentException("Cannot modify property after initialisation");
+        }
+        this.sendBufferSize = sendBufferSize;
+    }
+
+    public int getReceiveBufferSize() {
+        return receiveBufferSize;
+    }
+
+    /**
+     * Can only be modified before initialization.
+     */
+    public void setReceiveBufferSize(int receiveBufferSize) {
+        if (this.running.get()) {
+            throw new IllegalArgumentException("Cannot modify property after initialisation");
+        }
+        this.receiveBufferSize = receiveBufferSize;
+    }
 }
