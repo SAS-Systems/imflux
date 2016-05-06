@@ -24,6 +24,7 @@ import sas_systems.imflux.packet.DataPacket;
 import sas_systems.imflux.packet.rtcp.CompoundControlPacket;
 import sas_systems.imflux.packet.rtcp.ControlPacket;
 import sas_systems.imflux.participant.RtpParticipant;
+import sas_systems.imflux.session.Session;
 
 /**
  * Interface for a RTP session. <br/>
@@ -36,32 +37,14 @@ import sas_systems.imflux.participant.RtpParticipant;
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
-public interface RtpSession extends DataPacketReceiver, ControlPacketReceiver {
+public interface RtpSession extends Session, DataPacketReceiver, ControlPacketReceiver {
 	
-	/**
-	 * @return ID of the implementing class
-	 */
-    String getId();
-
     /**
      * Payload type this session is handling. It must be between 0 and 127.
      * 
      * @return payload type as an integer
      */
     int getPayloadType();
-
-    /**
-     * Initializes this session through binding data and control channels to this session. 
-     * 
-     * @return {@code true} if the RTP session was successfully established and is now running, 
-     * {@code false} otherwise
-     */
-    boolean init();
-
-    /**
-     * Terminates this RTP session. This method is used to release all used resources.
-     */
-    void terminate();
 
     /**
      * Creates a {@link DataPacket} of the given parameters and sends it through the data channel.

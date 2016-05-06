@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package sas_systems.imflux.session.rtsp;
+package sas_systems.imflux.network;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import sas_systems.imflux.session.rtsp.RtspPacketReceiver;
 
 public class RtspHandler extends SimpleChannelInboundHandler<HttpMessage>{
 
