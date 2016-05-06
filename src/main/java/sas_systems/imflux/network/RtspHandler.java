@@ -64,7 +64,7 @@ public class RtspHandler extends SimpleChannelInboundHandler<HttpMessage>{
 	protected void messageReceived(ChannelHandlerContext ctx, HttpMessage msg) throws Exception {
 		if(msg instanceof HttpRequest) {
 			HttpRequest request = (HttpRequest) msg;
-			receiver.requestReceived(request);
+			receiver.requestReceived(ctx.channel(), request);
 		}
 		if(msg instanceof HttpResponse) {
 			HttpResponse response = (HttpResponse) msg;

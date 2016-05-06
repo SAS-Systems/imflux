@@ -17,9 +17,10 @@ package sas_systems.imflux.session.rtsp;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.Map.Entry;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -33,10 +34,15 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.oio.OioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.oio.OioServerSocketChannel;
+import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.rtsp.RtspDecoder;
 import io.netty.handler.codec.rtsp.RtspEncoder;
+import io.netty.handler.codec.rtsp.RtspHeaders;
 import io.netty.handler.codec.rtsp.RtspMethods;
 import sas_systems.imflux.logging.Logger;
 import sas_systems.imflux.network.RtspHandler;
@@ -53,10 +59,16 @@ public class SimpleRtspSession implements RtspSession {
     
     // configuration defaults -----------------------------------------------------------------------------------------
     private static final boolean USE_NIO = true;
+    private static final boolean AUTOMATED_RTSP_HANDLING = true;
     private static final String RTSP_HOST = "localhost";
     private static final int RTSP_PORT = 554; // or: 8554
     private static final int SEND_BUFFER_SIZE = 1500;
     private static final int RECEIVE_BUFFER_SIZE = 1500;
+    private static final String OPTIONS_STRING = RtspMethods.DESCRIBE.name() + ", " + 
+									    		RtspMethods.SETUP.name() + ", " +
+									    		RtspMethods.TEARDOWN.name() + ", " +
+									    		RtspMethods.PLAY.name() + ", " +
+									    		RtspMethods.PAUSE.name();
     
     // configuration --------------------------------------------------------------------------------------------------
     private final String id;
@@ -64,13 +76,17 @@ public class SimpleRtspSession implements RtspSession {
 	private boolean useNio;
 	private int sendBufferSize;
     private int receiveBufferSize;
-	
+    private boolean automatedRtspHandling;
+    private String optionsString;
 	
 	// internal vars --------------------------------------------------------------------------------------------------
     private final AtomicBoolean running;
+    private final AtomicInteger sequence;
 	private Channel channel;
 	private EventLoopGroup bossGroup;
 	private EventLoopGroup workerGroup;
+	private List<RtspRequestListener> requestListener;
+	private List<RtspResponseListener> responseListener;
 
 	// constructors ---------------------------------------------------------------------------------------------------
 	public SimpleRtspSession(String id) {
@@ -81,10 +97,17 @@ public class SimpleRtspSession implements RtspSession {
 		this.id = id;
 		this.localAddress = loAddress;
 		this.running = new AtomicBoolean(false);
+		this.sequence = new AtomicInteger(0);
+		
+		// CopyOnWriteArrayList to make this class thread-safe
+        this.requestListener = new CopyOnWriteArrayList<RtspRequestListener>();
+        this.responseListener = new CopyOnWriteArrayList<RtspResponseListener>();
 		
 		this.useNio = USE_NIO;
 		this.sendBufferSize = SEND_BUFFER_SIZE;
 		this.receiveBufferSize = RECEIVE_BUFFER_SIZE;
+		this.automatedRtspHandling = AUTOMATED_RTSP_HANDLING;
+		this.optionsString = OPTIONS_STRING;
 	}
 	
 	// RtspSession ----------------------------------------------------------------------------------------------------
@@ -157,23 +180,39 @@ public class SimpleRtspSession implements RtspSession {
 	public void terminate() {
 		terminate1();
 	}
+	
+	@Override
+	public void addRequestListener(RtspRequestListener listener) {
+		this.requestListener.add(listener);
+	}
+	
+	@Override
+	public void removeRequestListener(RtspRequestListener listener) {
+		this.requestListener.remove(listener);
+	}
+	
+	@Override
+	public void addResponseListener(RtspResponseListener listener) {
+		this.responseListener.add(listener);
+	}
+	
+	@Override
+	public void removeResponseListener(RtspResponseListener listener) {
+		this.responseListener.remove(listener);	
+	}
 
 	// RtspPacketReceiver ---------------------------------------------------------------------------------------------
 	@Override
-	public void requestReceived(HttpRequest request) {
+	public void requestReceived(Channel channel, HttpRequest request) {
 		if(!request.getDecoderResult().isSuccess())
 			return;
 		
 		System.out.println(request);
 		
+		
+		
 		if(request.getMethod().equals(RtspMethods.OPTIONS)) {
-			System.out.println("OPTIONS request");
-			request.headers().forEach(new Consumer<Entry<String, String>>() {
-				@Override
-				public void accept(Entry<String, String> t) {
-					System.out.println("Header: " + t.getKey() + ": " + t.getValue());
-				}
-			});
+			handleOptionsRequest(channel, request);
 		}
 		if(request.getMethod().equals(RtspMethods.DESCRIBE)) {
 			System.out.println("DESCRIBE request");
@@ -233,6 +272,26 @@ public class SimpleRtspSession implements RtspSession {
 			LOG.error("EventLoopGroup termination failed: {}", e1);
 		}
     }
+    
+
+	private void handleOptionsRequest(Channel channel, HttpRequest request) {
+		if(!automatedRtspHandling) {
+			// forward messages
+			for (RtspRequestListener listener : this.requestListener) {
+				listener.optionsRequestReceived(request.headers());
+			}
+			return;
+		}
+		
+		// handle options request
+		String sequence = request.headers().get(RtspHeaders.Names.CSEQ);
+		DefaultHttpResponse response = new DefaultHttpResponse(request.getProtocolVersion(), HttpResponseStatus.OK);
+		HttpHeaders headers = response.headers();
+		headers.add(RtspHeaders.Names.CSEQ, sequence)
+			.add(RtspHeaders.Names.PUBLIC, optionsString);
+		
+		channel.write(response);
+	}
         
 	// getters & setters ----------------------------------------------------------------------------------------------
 	@Override
@@ -283,4 +342,32 @@ public class SimpleRtspSession implements RtspSession {
         }
         this.receiveBufferSize = receiveBufferSize;
     }
+
+	public boolean isAutomatedRtspHandling() {
+		return automatedRtspHandling;
+	}
+
+	/**
+     * Can only be modified before initialization.
+     */
+	public void setAutomatedRtspHandling(boolean automatedRtspHandling) {
+		if (this.running.get()) {
+            throw new IllegalArgumentException("Cannot modify property after initialisation");
+        }
+		this.automatedRtspHandling = automatedRtspHandling;
+	}
+
+	public String getOptionsString() {
+		return optionsString;
+	}
+
+	/**
+     * Can only be modified before initialization.
+     */
+	public void setOptionsString(String optionsString) {
+		if (this.running.get()) {
+            throw new IllegalArgumentException("Cannot modify property after initialisation");
+        }
+		this.optionsString = optionsString;
+	}
 }

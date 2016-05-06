@@ -30,5 +30,33 @@ import sas_systems.imflux.session.Session;
  */
 public interface RtspSession extends Session, RtspPacketReceiver {
 
-	
+	/**
+     * Adds a {@link RtspRequestListener} to this session. It's 
+     * methods are called when corresponding RTSP requests are
+     * received from a client.
+     * 
+     * @param listener
+     */
+    void addRequestListener(RtspRequestListener listener);
+
+    /**
+	 * Removes the {@link RtspRequestListener} from the session.
+	 * @param listener
+	 */
+    void removeRequestListener(RtspRequestListener listener);
+    
+    /**
+     * Adds a {@link RtspResponseListener} to this session. It's 
+     * methods are called when corresponding RTSP requests are
+     * received from a client.
+     * 
+     * @param listener
+     */
+    void addResponseListener(RtspResponseListener listener);
+
+    /**
+	 * Removes the {@link RtspResponseListener} from the session.
+	 * @param listener
+	 */
+    void removeResponseListener(RtspResponseListener listener);
 }

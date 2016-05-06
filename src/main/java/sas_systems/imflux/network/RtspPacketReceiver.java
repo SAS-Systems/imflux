@@ -15,6 +15,7 @@
  */
 package sas_systems.imflux.network;
 
+import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
@@ -33,9 +34,10 @@ public interface RtspPacketReceiver {
 	 * is called from the {@link RtspHandler} if he has received a 
 	 * corresponding packet.
 	 * 
+	 * @param channel the channel to write the response to
 	 * @param packet the received {@link HttpRequest}
 	 */
-	public void requestReceived(HttpRequest request);
+	public void requestReceived(Channel channel, HttpRequest request);
 
 	/**
 	 * The implementing class has to define actions which should be 
