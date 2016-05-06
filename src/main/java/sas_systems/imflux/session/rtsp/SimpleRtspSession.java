@@ -15,12 +15,16 @@
  */
 package sas_systems.imflux.session.rtsp;
 
+import java.net.SocketAddress;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
@@ -33,31 +37,59 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.rtsp.RtspDecoder;
 import io.netty.handler.codec.rtsp.RtspEncoder;
 import io.netty.handler.codec.rtsp.RtspMethods;
+import sas_systems.imflux.logging.Logger;
 import sas_systems.imflux.network.RtspHandler;
-import sas_systems.imflux.network.RtspPacketReceiver;
-import sas_systems.imflux.session.Session;
 
-public class SimpleRtspSession implements Session, RtspPacketReceiver {
+public class SimpleRtspSession implements RtspSession {
 	
-	private final int port;
+	// constants ------------------------------------------------------------------------------------------------------
+    private static final Logger LOG = Logger.getLogger(SimpleRtspSession.class);
+    private static final String VERSION = "imflux_0.2_17042016";
+    
+    // configuration defaults -----------------------------------------------------------------------------------------
+    private static final int RTSP_PORT = 554; // or: 8554
+    private static final int SEND_BUFFER_SIZE = 1500;
+    private static final int RECEIVE_BUFFER_SIZE = 1500;
+    
+    // configuration --------------------------------------------------------------------------------------------------
+    private final String id;
+	private final SocketAddress localAddress;
 	private boolean useNio;
+	private int sendBufferSize;
+    private int receiveBufferSize;
+	
+	
+	// internal vars --------------------------------------------------------------------------------------------------
+    private final AtomicBoolean running;
 	private Channel channel;
 	private EventLoopGroup bossGroup;
 	private EventLoopGroup workerGroup;
 
 	public SimpleRtspSession(int port) {
 		this.useNio = true;
-		this.port = port;
-		init();
+		this.localAddress = port;
 	}
 	
+	// RtspSession ----------------------------------------------------------------------------------------------------
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getId() {
+		return this.id;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
 	public synchronized boolean init() {
+		if(this.running.get()) {
+			return true;
+		}
 		
+		// create bootstrap
 		Class<? extends ServerChannel> channelType;
-        
         if(useNio) {
-            // create bootstrap
-//          EventLoopGroup bossGroup = new NioEventLoopGroup(5, Executors.defaultThreadFactory()); // if we want to use others than the defaults
 	        this.workerGroup = new NioEventLoopGroup();
 	        this.bossGroup = new NioEventLoopGroup();
 	        channelType = NioServerSocketChannel.class;
@@ -69,6 +101,8 @@ public class SimpleRtspSession implements Session, RtspPacketReceiver {
         
 		ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(this.bossGroup, this.workerGroup)
+		        .option(ChannelOption.SO_SNDBUF, this.sendBufferSize)
+		    	.option(ChannelOption.SO_RCVBUF, this.receiveBufferSize)
 	        	.channel(channelType)
 	        	.childHandler(new ChannelInitializer<Channel>() { // is used to initialize the ChannelPipeline
 					@Override
@@ -79,14 +113,36 @@ public class SimpleRtspSession implements Session, RtspPacketReceiver {
 						pipeline.addLast("handler", new RtspHandler(SimpleRtspSession.this));
 					}
 				});
+        // create channel
         try {
-			channel = bootstrap.bind(port).sync().channel();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+        	ChannelFuture future = bootstrap.bind(this.localAddress);
+            this.channel = future.sync().channel(); // wait for future to complete and retrieve channel
+
+        } catch (Exception e) {
+            LOG.error("Failed to bind RTSP channel for session with id " + this.id, e);
+            this.workerGroup.shutdownGracefully();
+            this.bossGroup.shutdownGracefully();
+            
+            try {
+            	this.workerGroup.terminationFuture().sync();
+            	this.bossGroup.terminationFuture().sync();
+			} catch (InterruptedException e1) {
+				LOG.error("EventLoopGroup termination failed: {}", e1);
+			}
+            return false;
+        }
+        LOG.debug("RTSP channel bound for RtspSession with id {}.", this.id);
+        this.running.set(true);
         return true;
 	}
 
+	@Override
+	public void terminate() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	// RtspPacketReceiver ---------------------------------------------------------------------------------------------
 	@Override
 	public void requestReceived(HttpRequest request) {
 		if(!request.getDecoderResult().isSuccess())
@@ -140,16 +196,48 @@ public class SimpleRtspSession implements Session, RtspPacketReceiver {
 		System.out.println(response);
 	}
 
+	// private helpers ------------------------------------------------------------------------------------------------
+	/**
+     * Stops this session by closing all closables and stopping the thread groups to release all used resources.
+     * 
+     */
+    protected synchronized void terminate1() {
+        // Always set to false, even if it was already set to false.
+        if (!this.running.getAndSet(false)) {
+            return;
+        }
+        
+        // close channel
+        this.channel.close();
+        this.workerGroup.shutdownGracefully();
+        this.bossGroup.shutdownGracefully();
+        try {
+        	this.workerGroup.terminationFuture().sync();
+        	this.bossGroup.terminationFuture().sync();
+		} catch (InterruptedException e1) {
+			LOG.error("EventLoopGroup termination failed: {}", e1);
+		}
+    }
+        
+	// getters & setters ----------------------------------------------------------------------------------------------
 	@Override
-	public String getId() {
-		// TODO Auto-generated method stub
-		return null;
+	public boolean isRunning() {
+		return this.running.get();
 	}
 
 	@Override
-	public void terminate() {
-		// TODO Auto-generated method stub
-		
+	public boolean useNio() {
+		return this.useNio;
 	}
 
+	/**
+     * Can only be modified before initialization.
+     */
+	@Override
+	public void setUseNio(boolean useNio) {
+		if (this.running.get()) {
+            throw new IllegalArgumentException("Cannot modify property after initialisation");
+        }
+        this.useNio = useNio;		
+	}
 }

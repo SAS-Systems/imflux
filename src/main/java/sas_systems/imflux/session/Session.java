@@ -39,4 +39,10 @@ public interface Session {
      * Terminates this RTP session. This method is used to release all used resources.
      */
     void terminate();
+    
+    boolean isRunning();
+    
+    boolean useNio();
+    
+    void setUseNio(boolean useNio);
 }

@@ -28,10 +28,11 @@ import sas_systems.imflux.session.Session;
 
 /**
  * Interface for a RTP session. <br/>
- * It is based on {@link DataPacketReceiver} and {@link ControlPacketReceiver} 
+ * It is based on {@link DataPacketReceiver}, {@link Session} and {@link ControlPacketReceiver} 
  * and encapsulates the actions for a RTP session. There can be different
  * implementations (see {@link MultiParticipantSession}).
  * 
+ * @see Session
  * @see DataPacketReceiver
  * @see ControlPacketReceiver
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>

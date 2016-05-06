@@ -1088,10 +1088,12 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     }
 
     // getters & setters ----------------------------------------------------------------------------------------------
+    @Override
     public boolean isRunning() {
         return this.running.get();
     }
 
+    @Override
     public boolean useNio() {
         return useNio;
     }
@@ -1099,6 +1101,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     /**
      * Can only be modified before initialization.
      */
+    @Override
     public void setUseNio(boolean useNio) {
         if (this.running.get()) {
             throw new IllegalArgumentException("Cannot modify property after initialisation");
