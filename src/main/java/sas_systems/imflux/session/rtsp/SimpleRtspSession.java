@@ -36,6 +36,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.oio.OioServerSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -44,6 +45,8 @@ import io.netty.handler.codec.rtsp.RtspDecoder;
 import io.netty.handler.codec.rtsp.RtspEncoder;
 import io.netty.handler.codec.rtsp.RtspHeaders;
 import io.netty.handler.codec.rtsp.RtspMethods;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import sas_systems.imflux.logging.Logger;
 import sas_systems.imflux.network.RtspHandler;
 
@@ -55,7 +58,7 @@ public class SimpleRtspSession implements RtspSession {
 	
 	// constants ------------------------------------------------------------------------------------------------------
     private static final Logger LOG = Logger.getLogger(SimpleRtspSession.class);
-    private static final String VERSION = "imflux_0.2_17042016";
+    private static final String VERSION = "imflux_0.1.0_07052016";
     
     // configuration defaults -----------------------------------------------------------------------------------------
     private static final boolean USE_NIO = true;
@@ -69,6 +72,7 @@ public class SimpleRtspSession implements RtspSession {
 									    		RtspMethods.TEARDOWN.name() + ", " +
 									    		RtspMethods.PLAY.name() + ", " +
 									    		RtspMethods.PAUSE.name();
+    private static final HttpVersion RTSP_VERSION = new HttpVersion("RTSP", 1, 0, true);
     
     // configuration --------------------------------------------------------------------------------------------------
     private final String id;
@@ -78,6 +82,7 @@ public class SimpleRtspSession implements RtspSession {
     private int receiveBufferSize;
     private boolean automatedRtspHandling;
     private String optionsString;
+    private HttpVersion rtspVersion;
 	
 	// internal vars --------------------------------------------------------------------------------------------------
     private final AtomicBoolean running;
@@ -108,6 +113,7 @@ public class SimpleRtspSession implements RtspSession {
 		this.receiveBufferSize = RECEIVE_BUFFER_SIZE;
 		this.automatedRtspHandling = AUTOMATED_RTSP_HANDLING;
 		this.optionsString = OPTIONS_STRING;
+		this.rtspVersion = RTSP_VERSION;
 	}
 	
 	// RtspSession ----------------------------------------------------------------------------------------------------
@@ -144,6 +150,7 @@ public class SimpleRtspSession implements RtspSession {
 		        .option(ChannelOption.SO_SNDBUF, this.sendBufferSize)
 		    	.option(ChannelOption.SO_RCVBUF, this.receiveBufferSize)
 	        	.channel(channelType)
+	        	.handler(new LoggingHandler(LogLevel.INFO))
 	        	.childHandler(new ChannelInitializer<Channel>() { // is used to initialize the ChannelPipeline
 					@Override
 					protected void initChannel(Channel ch) throws Exception {
@@ -179,6 +186,16 @@ public class SimpleRtspSession implements RtspSession {
 	@Override
 	public void terminate() {
 		terminate1();
+	}
+	
+	@Override
+	public boolean sendRequest(HttpRequest request, Channel channel) {
+		return internalSend(request,channel);
+	}
+	
+	@Override
+	public boolean sendResponse(HttpResponse response, Channel channel) {
+		return internalSend(response, channel);
 	}
 	
 	@Override
@@ -273,6 +290,16 @@ public class SimpleRtspSession implements RtspSession {
 		}
     }
     
+    private boolean internalSend(HttpMessage message, Channel channel) {
+    	if(!this.running.get()) {
+			return false;
+		}
+		if(!message.getProtocolVersion().equals(rtspVersion)) {
+			throw new IllegalArgumentException("Unsupported HTTP version!");
+		}
+		channel.writeAndFlush(message);
+		return true;
+    }
 
 	private void handleOptionsRequest(Channel channel, HttpRequest request) {
 		if(!automatedRtspHandling) {
@@ -285,12 +312,32 @@ public class SimpleRtspSession implements RtspSession {
 		
 		// handle options request
 		String sequence = request.headers().get(RtspHeaders.Names.CSEQ);
-		DefaultHttpResponse response = new DefaultHttpResponse(request.getProtocolVersion(), HttpResponseStatus.OK);
+		DefaultHttpResponse response = new DefaultHttpResponse(rtspVersion, HttpResponseStatus.OK);
 		HttpHeaders headers = response.headers();
 		headers.add(RtspHeaders.Names.CSEQ, sequence)
 			.add(RtspHeaders.Names.PUBLIC, optionsString);
 		
-		channel.write(response);
+		sendResponse(response, channel);
+	}
+	
+	private void handleSetupRequest(Channel channel, HttpRequest request) {
+		if(!automatedRtspHandling) {
+			// forward messages
+			for (RtspRequestListener listener : this.requestListener) {
+				listener.setupRequestReceived(request.headers());
+			}
+			return;
+		}
+		
+		// handle setup request
+		String transport = request.headers().get(RtspHeaders.Names.TRANSPORT);
+		// parse header...
+		DefaultHttpResponse response = new DefaultHttpResponse(rtspVersion, HttpResponseStatus.OK);
+		HttpHeaders headers = response.headers();
+		headers.add(request.headers());
+		headers.add(RtspHeaders.Names.SESSION, "session id");
+		
+		sendResponse(response, channel);
 	}
         
 	// getters & setters ----------------------------------------------------------------------------------------------

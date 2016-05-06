@@ -15,6 +15,9 @@
  */
 package sas_systems.imflux.session.rtsp;
 
+import io.netty.channel.Channel;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
 import sas_systems.imflux.network.RtspPacketReceiver;
 import sas_systems.imflux.session.Session;
 
@@ -30,6 +33,24 @@ import sas_systems.imflux.session.Session;
  */
 public interface RtspSession extends Session, RtspPacketReceiver {
 
+	/**
+     * Sends a {@link HttpRequest} through the channel. <br/>
+     * 
+     * @param request the {@link HttpRequest} to be sent
+     * @param channel the {@link Channel} to use
+     * @return {@code true} if the {@link HttpRequest} was sent and {@code false} otherwise
+     */
+    boolean sendRequest(HttpRequest request, Channel channel);
+    
+    /**
+     * Sends a {@link HttpResponse} through the channel. <br/>
+     * 
+     * @param response the {@link HttpResponse} to be sent
+     * @param channel the {@link Channel} to use
+     * @return {@code true} if the {@link HttpResponse} was sent and {@code false} otherwise
+     */
+    boolean sendResponse(HttpResponse response, Channel channel);
+    
 	/**
      * Adds a {@link RtspRequestListener} to this session. It's 
      * methods are called when corresponding RTSP requests are
