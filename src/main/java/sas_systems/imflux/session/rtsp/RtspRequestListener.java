@@ -16,7 +16,7 @@
 
 package sas_systems.imflux.session.rtsp;
 
-import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpRequest;
 
 /**
  * Interface for creating a listener for received RTSP methods of the {@link RtspSession}. 
@@ -26,10 +26,14 @@ import io.netty.handler.codec.http.HttpHeaders;
  */
 public interface RtspRequestListener {
 
-	void optionsRequestReceived(HttpHeaders headers);
-	void describeRequestReceived(HttpHeaders headers);
-	void setupRequestReceived(HttpHeaders headers);
-	void teardownRequestReceived(HttpHeaders headers);
-	void playRequestReceived(HttpHeaders headers);
-	void pauseRequestReceived(HttpHeaders headers);
+	void optionsRequestReceived(HttpRequest message);
+	void describeRequestReceived(HttpRequest message);
+	void setupRequestReceived(HttpRequest message);
+	void teardownRequestReceived(HttpRequest message);
+	void playRequestReceived(HttpRequest message);
+	void pauseRequestReceived(HttpRequest message);
+	void getParameterRequestReceived(HttpRequest message);
+	void setParameterRequestReceived(HttpRequest message);
+	void redirectRequestReceived(HttpRequest message);
+	void recordRequestReceived(HttpRequest message);
 }
