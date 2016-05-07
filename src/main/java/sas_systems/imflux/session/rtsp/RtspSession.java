@@ -19,6 +19,7 @@ import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import sas_systems.imflux.network.RtspPacketReceiver;
+import sas_systems.imflux.participant.RtpParticipant;
 import sas_systems.imflux.session.Session;
 
 /**
@@ -80,4 +81,10 @@ public interface RtspSession extends Session, RtspPacketReceiver {
 	 * @param listener
 	 */
     void removeResponseListener(RtspResponseListener listener);
+    
+    /**
+     * @return a {@link RtpParticipant} instance containing information about 
+     * 		the underlying RTP session (must not be managed by the implementing class)
+     */
+    RtpParticipant getLocalRtpParticipant();
 }

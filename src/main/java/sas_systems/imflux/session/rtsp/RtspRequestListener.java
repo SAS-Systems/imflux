@@ -28,6 +28,7 @@ public interface RtspRequestListener {
 
 	void optionsRequestReceived(HttpRequest message);
 	void describeRequestReceived(HttpRequest message);
+	void announceRequestReceived(HttpRequest request);
 	void setupRequestReceived(HttpRequest message);
 	void teardownRequestReceived(HttpRequest message);
 	void playRequestReceived(HttpRequest message);

@@ -17,6 +17,7 @@ package sas_systems.imflux.session.rtsp;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -50,6 +51,7 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import sas_systems.imflux.logging.Logger;
 import sas_systems.imflux.network.RtspHandler;
+import sas_systems.imflux.participant.RtpParticipant;
 
 /**
  * A simple RTSP session created on a TCP channel. 
@@ -93,14 +95,16 @@ public class SimpleRtspSession implements RtspSession {
 	private EventLoopGroup workerGroup;
 	private List<RtspRequestListener> requestListener;
 	private List<RtspResponseListener> responseListener;
+	private RtpParticipant localRtpParticipant;
 
 	// constructors ---------------------------------------------------------------------------------------------------
-	public SimpleRtspSession(String id) {
-		this(id, new InetSocketAddress(RTSP_HOST, RTSP_PORT));
+	public SimpleRtspSession(String id, RtpParticipant localRtpParticipantInformation) {
+		this(id, localRtpParticipantInformation, new InetSocketAddress(RTSP_HOST, RTSP_PORT));
 	}
 	
-	public SimpleRtspSession(String id, SocketAddress loAddress) {
+	public SimpleRtspSession(String id, RtpParticipant localRtpParticipantInformation, SocketAddress loAddress) {
 		this.id = id;
+		this.localRtpParticipant = localRtpParticipantInformation;
 		this.localAddress = loAddress;
 		this.running = new AtomicBoolean(false);
 		this.sequence = new AtomicInteger(0);
@@ -232,8 +236,24 @@ public class SimpleRtspSession implements RtspSession {
 			handleOptionsRequest(channel, request);
 		}
 		if(request.getMethod().equals(RtspMethods.DESCRIBE)) {
+			if(this.requestListener.isEmpty()) {
+				LOG.warn("No requestListener registered, sending NOT_IMPLEMENTED as response of a SET_PARAMETER request!");
+				sendNotImplemented(channel, request);
+			}
+			// forward message (resource description is application specific)
+			for (RtspRequestListener listener : this.requestListener) {
+				listener.describeRequestReceived(request);
+			}
 		}
 		if(request.getMethod().equals(RtspMethods.ANNOUNCE)) {
+			if(this.requestListener.isEmpty()) {
+				LOG.warn("No requestListener registered, sending NOT_IMPLEMENTED as response of a SET_PARAMETER request!");
+				sendNotImplemented(channel, request);
+			}
+			// forward message (resource description is again application specific)
+			for (RtspRequestListener listener : this.requestListener) {
+				listener.announceRequestReceived(request);
+			}
 		}
 		if(request.getMethod().equals(RtspMethods.SETUP)) {
 			handleSetupRequest(channel, request);
@@ -356,17 +376,71 @@ public class SimpleRtspSession implements RtspSession {
 		}
 		
 		// handle setup request
-		String transport = request.headers().get(RtspHeaders.Names.TRANSPORT);
-		// parse header...
+		HttpHeaders reqHeaders = request.headers();
+		final String cseq = reqHeaders.get(RtspHeaders.Names.CSEQ);
+		final String transport = reqHeaders.get(RtspHeaders.Names.TRANSPORT);
+		
+		// if client already has a session id, this server does not allow aggregation
+		final String session = reqHeaders.get(RtspHeaders.Names.SESSION);
+		if(session != null) {
+			DefaultHttpResponse aggOpNotAllowed = new DefaultHttpResponse(RTSP_VERSION, RtspResponseStatuses.AGGREGATE_OPERATION_NOT_ALLOWED);
+			aggOpNotAllowed.headers().add(RtspHeaders.Names.CSEQ, cseq);
+			sendResponse(aggOpNotAllowed, channel);
+			return;
+		}
+		// parse transport header and validate entries
+		boolean validationError = false;
+		final String[] entries = transport.split(";");
+		if(entries.length<3) {
+			validationError = true;
+		}
+		if(!entries[0].equals("RTP/AVP")) {
+			validationError = true;
+		}
+		if(!entries[1].equals("unicast")) {
+			validationError = true;
+		}
+		int iOfEQ = entries[2].indexOf("=");
+		int iOfMin = entries[2].indexOf("-");
+		int iEnd = entries[2].length();
+		String dataPortString = entries[2].substring(iOfEQ+1, iOfMin);
+		String controlPortString = entries[2].substring(iOfMin+1, iEnd);
+		int clientDataPort = 0, clientControlPort = 0;
+		try {
+			clientDataPort = Integer.valueOf(dataPortString);
+			clientControlPort = Integer.valueOf(controlPortString);
+		} catch(NumberFormatException e) {
+			validationError = true;
+		}
+		
+		if(validationError) {
+			DefaultHttpResponse badRequest = new DefaultHttpResponse(RTSP_VERSION, RtspResponseStatuses.BAD_REQUEST);
+			badRequest.headers().add(RtspHeaders.Names.CSEQ, cseq);
+			sendResponse(badRequest, channel);
+			return;
+		}
+		
+		// create transport string for response
+		int rtpDataPort = ((InetSocketAddress) localRtpParticipant.getDataDestination()).getPort();
+		int rtpControlPort = ((InetSocketAddress) localRtpParticipant.getControlDestination()).getPort();
+		StringBuilder transportResponse = new StringBuilder();
+		transportResponse.append(entries[0]).append(";")
+				.append(entries[1]).append(";")
+				.append("client_port=").append(clientDataPort).append("-").append(clientControlPort).append(";")
+				.append("server_port=").append(rtpDataPort).append("-").append(rtpControlPort);
+		
+		// send response
 		DefaultHttpResponse response = new DefaultHttpResponse(rtspVersion, RtspResponseStatuses.OK);
 		HttpHeaders headers = response.headers();
-		headers.add(request.headers());
+		headers.add(RtspHeaders.Names.CSEQ, cseq);
 		headers.add(RtspHeaders.Names.SESSION, "session id");
+		headers.add(RtspHeaders.Names.TRANSPORT, transportResponse.toString());
+		headers.add(RtspHeaders.Names.DATE, new Date()); // FIXME: format to RFC format
 		
 		sendResponse(response, channel);
 	}
 	
-	private void handleDescribeRequest(Channel channel, HttpRequest request) {
+	private void handleTeardownRequest(Channel channel, HttpRequest request) {
 		
 	}
 
@@ -453,5 +527,13 @@ public class SimpleRtspSession implements RtspSession {
             throw new IllegalArgumentException("Cannot modify property after initialisation");
         }
 		this.optionsString = optionsString;
+	}
+
+	public RtpParticipant getLocalRtpParticipant() {
+		return localRtpParticipant;
+	}
+
+	public void setLocalRtpParticipant(RtpParticipant localRtpParticipant) {
+		this.localRtpParticipant = localRtpParticipant;
 	}
 }
