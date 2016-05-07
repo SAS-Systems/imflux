@@ -230,6 +230,7 @@ public class SimpleRtspSession implements RtspSession {
 			return;
 		
 		LOG.debug("RTSP request received: {}", request);
+		System.out.println(request);
 		
 		
 		if(request.getMethod().equals(RtspMethods.OPTIONS)) {
@@ -237,7 +238,7 @@ public class SimpleRtspSession implements RtspSession {
 		}
 		if(request.getMethod().equals(RtspMethods.DESCRIBE)) {
 			if(this.requestListener.isEmpty()) {
-				LOG.warn("No requestListener registered, sending NOT_IMPLEMENTED as response of a SET_PARAMETER request!");
+				LOG.warn("No requestListener registered, sending NOT_IMPLEMENTED as response of a DESCRIBE request!");
 				sendNotImplemented(channel, request);
 			}
 			// forward message (resource description is application specific)
@@ -247,7 +248,7 @@ public class SimpleRtspSession implements RtspSession {
 		}
 		if(request.getMethod().equals(RtspMethods.ANNOUNCE)) {
 			if(this.requestListener.isEmpty()) {
-				LOG.warn("No requestListener registered, sending NOT_IMPLEMENTED as response of a SET_PARAMETER request!");
+				LOG.warn("No requestListener registered, sending NOT_IMPLEMENTED as response of an ANNOUNCE request!");
 				sendNotImplemented(channel, request);
 			}
 			// forward message (resource description is again application specific)
