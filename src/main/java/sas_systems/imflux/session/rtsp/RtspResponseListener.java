@@ -17,6 +17,7 @@
 package sas_systems.imflux.session.rtsp;
 
 import io.netty.handler.codec.http.HttpResponse;
+import sas_systems.imflux.participant.RtspParticipant;
 
 /**
  * Interface for creating a listener for received RTSP methods of the {@link RtspSession}. 
@@ -27,8 +28,10 @@ import io.netty.handler.codec.http.HttpResponse;
 public interface RtspResponseListener {
 
 	/**
-	 * This method is called when a RTSP response was received.
+	 * This method is called when a RTSP response was received. Use the participant information
+	 * to perform tasks based on this response.
 	 * @param message
+	 * @param participant
 	 */
-	void responseReceived(HttpResponse message);
+	void responseReceived(HttpResponse message, RtspParticipant participant);
 }

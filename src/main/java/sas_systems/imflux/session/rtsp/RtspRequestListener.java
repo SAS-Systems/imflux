@@ -17,6 +17,7 @@
 package sas_systems.imflux.session.rtsp;
 
 import io.netty.handler.codec.http.HttpRequest;
+import sas_systems.imflux.participant.RtspParticipant;
 
 /**
  * Interface for creating a listener for received RTSP methods of the {@link RtspSession}. 
@@ -27,18 +28,20 @@ import io.netty.handler.codec.http.HttpRequest;
 public interface RtspRequestListener {
 
 	/**
-	 * This method is called when a OPTIONS request was received from a client.
+	 * This method is called when a OPTIONS request was received from a client. Use the 
+	 * participant information to send a response to the participant.
 	 * @param message
+	 * @param participant
 	 */
-	void optionsRequestReceived(HttpRequest message);
-	void describeRequestReceived(HttpRequest message);
-	void announceRequestReceived(HttpRequest request);
-	void setupRequestReceived(HttpRequest message);
-	void teardownRequestReceived(HttpRequest message);
-	void playRequestReceived(HttpRequest message);
-	void pauseRequestReceived(HttpRequest message);
-	void getParameterRequestReceived(HttpRequest message);
-	void setParameterRequestReceived(HttpRequest message);
-	void redirectRequestReceived(HttpRequest message);
-	void recordRequestReceived(HttpRequest message);
+	void optionsRequestReceived(HttpRequest message, RtspParticipant participant);
+	void describeRequestReceived(HttpRequest message, RtspParticipant participant);
+	void announceRequestReceived(HttpRequest request, RtspParticipant participant);
+	void setupRequestReceived(HttpRequest message, RtspParticipant participant);
+	void teardownRequestReceived(HttpRequest message, RtspParticipant participant);
+	void playRequestReceived(HttpRequest message, RtspParticipant participant);
+	void pauseRequestReceived(HttpRequest message, RtspParticipant participant);
+	void getParameterRequestReceived(HttpRequest message, RtspParticipant participant);
+	void setParameterRequestReceived(HttpRequest message, RtspParticipant participant);
+	void redirectRequestReceived(HttpRequest message, RtspParticipant participant);
+	void recordRequestReceived(HttpRequest message, RtspParticipant participant);
 }

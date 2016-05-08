@@ -20,6 +20,7 @@ import java.net.SocketAddress;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -52,6 +53,7 @@ import io.netty.handler.logging.LoggingHandler;
 import sas_systems.imflux.logging.Logger;
 import sas_systems.imflux.network.RtspHandler;
 import sas_systems.imflux.participant.RtpParticipant;
+import sas_systems.imflux.participant.RtspParticipant;
 import sas_systems.imflux.session.rtp.RtpSession;
 
 /**
@@ -99,7 +101,7 @@ public class SimpleRtspSession implements RtspSession {
 	private List<RtspRequestListener> requestListener;
 	private List<RtspResponseListener> responseListener;
 	private RtpParticipant localRtpParticipant;
-	private Map<String, Object> sessions;
+	private Map<String, RtspParticipant> participantSessions;
 
 	// constructors ---------------------------------------------------------------------------------------------------
 	/**
@@ -130,6 +132,7 @@ public class SimpleRtspSession implements RtspSession {
 		// CopyOnWriteArrayList to make this class thread-safe
         this.requestListener = new CopyOnWriteArrayList<RtspRequestListener>();
         this.responseListener = new CopyOnWriteArrayList<RtspResponseListener>();
+        this.participantSessions = new ConcurrentHashMap<>();
 		
 		this.useNio = USE_NIO;
 		this.sendBufferSize = SEND_BUFFER_SIZE;
@@ -285,7 +288,7 @@ public class SimpleRtspSession implements RtspSession {
 			}
 			// forward message (resource description is application specific)
 			for (RtspRequestListener listener : this.requestListener) {
-				listener.describeRequestReceived(request);
+				listener.describeRequestReceived(request, new RtspParticipant(channel));
 			}
 		}
 		if(request.getMethod().equals(RtspMethods.ANNOUNCE)) {
@@ -295,7 +298,7 @@ public class SimpleRtspSession implements RtspSession {
 			}
 			// forward message (resource description is again application specific)
 			for (RtspRequestListener listener : this.requestListener) {
-				listener.announceRequestReceived(request);
+				listener.announceRequestReceived(request, new RtspParticipant(channel));
 			}
 		}
 		if(request.getMethod().equals(RtspMethods.SETUP)) {
@@ -314,7 +317,7 @@ public class SimpleRtspSession implements RtspSession {
 			}
 			// forward message (GET_PARAMETER is application specific)
 			for (RtspRequestListener listener : this.requestListener) {
-				listener.getParameterRequestReceived(request);
+				listener.getParameterRequestReceived(request, new RtspParticipant(channel));
 			}
 		}
 		if(request.getMethod().equals(RtspMethods.SET_PARAMETER)) {
@@ -324,14 +327,14 @@ public class SimpleRtspSession implements RtspSession {
 			}
 			// forward message (SET_PARAMETER is application specific)
 			for (RtspRequestListener listener : this.requestListener) {
-				listener.setParameterRequestReceived(request);
+				listener.setParameterRequestReceived(request, new RtspParticipant(channel));
 			}
 		}
 		if(request.getMethod().equals(RtspMethods.REDIRECT)) {
 			if(!automatedRtspHandling) {
 				// forward message 
 				for (RtspRequestListener listener : this.requestListener) {
-					listener.redirectRequestReceived(request);
+					listener.redirectRequestReceived(request, new RtspParticipant(channel));
 				}
 			} else {
 				sendNotImplemented(channel, request);
@@ -341,7 +344,7 @@ public class SimpleRtspSession implements RtspSession {
 			if(!automatedRtspHandling) {
 				// forward message 
 				for (RtspRequestListener listener : this.requestListener) {
-					listener.recordRequestReceived(request);
+					listener.recordRequestReceived(request, new RtspParticipant(channel));
 				}
 			} else {
 				sendNotImplemented(channel, request);
@@ -356,7 +359,7 @@ public class SimpleRtspSession implements RtspSession {
 	public void responseReceived(HttpResponse response) {
 		LOG.debug("RTSP response received: {}", response);
 		for (RtspResponseListener listener : this.responseListener) {
-			listener.responseReceived(response);
+			listener.responseReceived(response, new RtspParticipant(channel));
 		}
 	}
 
@@ -411,7 +414,7 @@ public class SimpleRtspSession implements RtspSession {
 		if(!automatedRtspHandling) {
 			// forward messages
 			for (RtspRequestListener listener : this.requestListener) {
-				listener.optionsRequestReceived(request);
+				listener.optionsRequestReceived(request, new RtspParticipant(channel));
 			}
 			return;
 		}
@@ -438,12 +441,13 @@ public class SimpleRtspSession implements RtspSession {
 		if(!automatedRtspHandling) {
 			// forward messages
 			for (RtspRequestListener listener : this.requestListener) {
-				listener.setupRequestReceived(request);
+				listener.setupRequestReceived(request, new RtspParticipant(channel));
 			}
 			return;
 		}
 		
 		// handle setup request
+		RtspParticipant participant;
 		HttpHeaders reqHeaders = request.headers();
 		final String cseq = reqHeaders.get(RtspHeaders.Names.CSEQ);
 		final String transport = reqHeaders.get(RtspHeaders.Names.TRANSPORT);
@@ -454,8 +458,17 @@ public class SimpleRtspSession implements RtspSession {
 			DefaultHttpResponse aggOpNotAllowed = new DefaultHttpResponse(RTSP_VERSION, RtspResponseStatuses.AGGREGATE_OPERATION_NOT_ALLOWED);
 			aggOpNotAllowed.headers().add(RtspHeaders.Names.CSEQ, cseq);
 			sendResponse(aggOpNotAllowed, channel);
+			// or:
+//			participant = this.participantSessions.get(Integer.valueOf(session));
+//			participant.sendMessage(aggOpNotAllowed);
 			return;
 		}
+		
+		// create participant and session id
+		participant = new RtspParticipant(channel);
+		final String sessionId = participant.setup();
+		this.participantSessions.put(sessionId, participant);
+		
 		// parse transport header and validate entries
 		boolean validationError = false;
 		final String[] entries = transport.split(";");
@@ -485,6 +498,8 @@ public class SimpleRtspSession implements RtspSession {
 			DefaultHttpResponse badRequest = new DefaultHttpResponse(RTSP_VERSION, RtspResponseStatuses.BAD_REQUEST);
 			badRequest.headers().add(RtspHeaders.Names.CSEQ, cseq);
 			sendResponse(badRequest, channel);
+			// or:
+//			participant.sendMessage(aggOpNotAllowed);
 			return;
 		}
 		
@@ -501,7 +516,7 @@ public class SimpleRtspSession implements RtspSession {
 		final DefaultHttpResponse response = new DefaultHttpResponse(rtspVersion, RtspResponseStatuses.OK);
 		final HttpHeaders headers = response.headers();
 		headers.add(RtspHeaders.Names.CSEQ, cseq);
-		headers.add(RtspHeaders.Names.SESSION, "session id");
+		headers.add(RtspHeaders.Names.SESSION, sessionId);
 		headers.add(RtspHeaders.Names.TRANSPORT, transportResponse.toString());
 		headers.add(RtspHeaders.Names.DATE, new Date()); // HttpHeaders takes care of formatting the date
 		
