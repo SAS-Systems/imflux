@@ -26,6 +26,10 @@ import io.netty.handler.codec.http.HttpRequest;
  */
 public interface RtspRequestListener {
 
+	/**
+	 * This method is called when a OPTIONS request was received from a client.
+	 * @param message
+	 */
 	void optionsRequestReceived(HttpRequest message);
 	void describeRequestReceived(HttpRequest message);
 	void announceRequestReceived(HttpRequest request);

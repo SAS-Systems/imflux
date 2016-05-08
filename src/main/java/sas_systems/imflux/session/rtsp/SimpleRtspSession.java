@@ -19,6 +19,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,7 +41,6 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.rtsp.RtspDecoder;
 import io.netty.handler.codec.rtsp.RtspEncoder;
@@ -52,9 +52,12 @@ import io.netty.handler.logging.LoggingHandler;
 import sas_systems.imflux.logging.Logger;
 import sas_systems.imflux.network.RtspHandler;
 import sas_systems.imflux.participant.RtpParticipant;
+import sas_systems.imflux.session.rtp.RtpSession;
 
 /**
  * A simple RTSP session created on a TCP channel. 
+ * <br/>
+ * <strong>The automated RTSP handling is on beta status!</strong>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
 public class SimpleRtspSession implements RtspSession {
@@ -65,7 +68,7 @@ public class SimpleRtspSession implements RtspSession {
     
     // configuration defaults -----------------------------------------------------------------------------------------
     private static final boolean USE_NIO = true;
-    private static final boolean AUTOMATED_RTSP_HANDLING = true;
+    private static final boolean AUTOMATED_RTSP_HANDLING = false;
     private static final String RTSP_HOST = "localhost";
     private static final int RTSP_PORT = 554; // or: 8554
     private static final int SEND_BUFFER_SIZE = 1500;
@@ -96,12 +99,27 @@ public class SimpleRtspSession implements RtspSession {
 	private List<RtspRequestListener> requestListener;
 	private List<RtspResponseListener> responseListener;
 	private RtpParticipant localRtpParticipant;
+	private Map<String, Object> sessions;
 
 	// constructors ---------------------------------------------------------------------------------------------------
+	/**
+	 * @see #SimpleRtspSession(String, RtpParticipant, SocketAddress)
+	 * @param id
+	 * @param localRtpParticipantInformation
+	 */
 	public SimpleRtspSession(String id, RtpParticipant localRtpParticipantInformation) {
 		this(id, localRtpParticipantInformation, new InetSocketAddress(RTSP_HOST, RTSP_PORT));
 	}
 	
+	/**
+	 * Creates a new RTSP session. Use {@link #init()} to start the session. <br/>
+	 * The localRtpParticipantInformation object should be the same local participant than the one used in the
+	 * {@link RtpSession} to share the address information. It is used in the automatedRtspHandling feature only.
+	 * 
+	 * @param id this sessions id
+	 * @param localRtpParticipantInformation information about the RTP session
+	 * @param loAddress a {@link SocketAddress} where this session will listen for requests
+	 */
 	public SimpleRtspSession(String id, RtpParticipant localRtpParticipantInformation, SocketAddress loAddress) {
 		this.id = id;
 		this.localRtpParticipant = localRtpParticipantInformation;
@@ -188,42 +206,66 @@ public class SimpleRtspSession implements RtspSession {
         return true;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void terminate() {
 		terminate1();
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public boolean sendRequest(HttpRequest request, Channel channel) {
 		return internalSend(request,channel);
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public boolean sendResponse(HttpResponse response, Channel channel) {
 		return internalSend(response, channel);
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void addRequestListener(RtspRequestListener listener) {
 		this.requestListener.add(listener);
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void removeRequestListener(RtspRequestListener listener) {
 		this.requestListener.remove(listener);
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void addResponseListener(RtspResponseListener listener) {
 		this.responseListener.add(listener);
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void removeResponseListener(RtspResponseListener listener) {
 		this.responseListener.remove(listener);	
 	}
 
 	// RtspPacketReceiver ---------------------------------------------------------------------------------------------
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void requestReceived(Channel channel, HttpRequest request) {
 		if(!request.getDecoderResult().isSuccess())
@@ -307,6 +349,9 @@ public class SimpleRtspSession implements RtspSession {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void responseReceived(HttpResponse response) {
 		LOG.debug("RTSP response received: {}", response);
@@ -337,6 +382,14 @@ public class SimpleRtspSession implements RtspSession {
 		}
     }
     
+    /**
+     * Checks if this session is running and if the message is a supported message and
+     * send the message through the channel.
+     * 
+     * @param message object to send
+     * @param channel 
+     * @return {@code true} if the message was send, {@code false} otherwise
+     */
     private boolean internalSend(HttpMessage message, Channel channel) {
     	if(!this.running.get()) {
 			return false;
@@ -348,6 +401,12 @@ public class SimpleRtspSession implements RtspSession {
 		return true;
     }
 
+    /**
+     * Handles an OPTIONS request by sending the options as a response.
+     * 
+     * @param channel
+     * @param request
+     */
 	private void handleOptionsRequest(Channel channel, HttpRequest request) {
 		if(!automatedRtspHandling) {
 			// forward messages
@@ -358,15 +417,23 @@ public class SimpleRtspSession implements RtspSession {
 		}
 		
 		// handle options request
-		String sequence = request.headers().get(RtspHeaders.Names.CSEQ);
-		DefaultHttpResponse response = new DefaultHttpResponse(rtspVersion, HttpResponseStatus.OK);
-		HttpHeaders headers = response.headers();
+		final String sequence = request.headers().get(RtspHeaders.Names.CSEQ);
+		final DefaultHttpResponse response = new DefaultHttpResponse(rtspVersion, RtspResponseStatuses.OK);
+		final HttpHeaders headers = response.headers();
 		headers.add(RtspHeaders.Names.CSEQ, sequence)
 			.add(RtspHeaders.Names.PUBLIC, optionsString);
 		
 		sendResponse(response, channel);
 	}
 	
+	/**
+	 * Handles a SETUP request by checking the specified headers and sending a corresponding response. 
+	 * There is no logic for setting up the the RTP stream or something else, because we do not know the details
+	 * about it.
+	 * 
+	 * @param channel
+	 * @param request
+	 */
 	private void handleSetupRequest(Channel channel, HttpRequest request) {
 		if(!automatedRtspHandling) {
 			// forward messages
@@ -401,11 +468,11 @@ public class SimpleRtspSession implements RtspSession {
 		if(!entries[1].equals("unicast")) {
 			validationError = true;
 		}
-		int iOfEQ = entries[2].indexOf("=");
-		int iOfMin = entries[2].indexOf("-");
-		int iEnd = entries[2].length();
-		String dataPortString = entries[2].substring(iOfEQ+1, iOfMin);
-		String controlPortString = entries[2].substring(iOfMin+1, iEnd);
+		final int iOfEQ = entries[2].indexOf("=");
+		final int iOfMin = entries[2].indexOf("-");
+		final int iEnd = entries[2].length();
+		final String dataPortString = entries[2].substring(iOfEQ+1, iOfMin);
+		final String controlPortString = entries[2].substring(iOfMin+1, iEnd);
 		int clientDataPort = 0, clientControlPort = 0;
 		try {
 			clientDataPort = Integer.valueOf(dataPortString);
@@ -422,29 +489,41 @@ public class SimpleRtspSession implements RtspSession {
 		}
 		
 		// create transport string for response
-		int rtpDataPort = ((InetSocketAddress) localRtpParticipant.getDataDestination()).getPort();
-		int rtpControlPort = ((InetSocketAddress) localRtpParticipant.getControlDestination()).getPort();
-		StringBuilder transportResponse = new StringBuilder();
+		final int rtpDataPort = ((InetSocketAddress) localRtpParticipant.getDataDestination()).getPort();
+		final int rtpControlPort = ((InetSocketAddress) localRtpParticipant.getControlDestination()).getPort();
+		final StringBuilder transportResponse = new StringBuilder();
 		transportResponse.append(entries[0]).append(";")
 				.append(entries[1]).append(";")
 				.append("client_port=").append(clientDataPort).append("-").append(clientControlPort).append(";")
 				.append("server_port=").append(rtpDataPort).append("-").append(rtpControlPort);
 		
 		// send response
-		DefaultHttpResponse response = new DefaultHttpResponse(rtspVersion, RtspResponseStatuses.OK);
-		HttpHeaders headers = response.headers();
+		final DefaultHttpResponse response = new DefaultHttpResponse(rtspVersion, RtspResponseStatuses.OK);
+		final HttpHeaders headers = response.headers();
 		headers.add(RtspHeaders.Names.CSEQ, cseq);
 		headers.add(RtspHeaders.Names.SESSION, "session id");
 		headers.add(RtspHeaders.Names.TRANSPORT, transportResponse.toString());
-		headers.add(RtspHeaders.Names.DATE, new Date()); // FIXME: format to RFC format
+		headers.add(RtspHeaders.Names.DATE, new Date()); // HttpHeaders takes care of formatting the date
 		
 		sendResponse(response, channel);
 	}
 	
+	/**
+	 * Handles a TEARDOWN request by checking the request headers and sending a corresponding response.
+	 * This method does not take care of stopping any RTP streams.
+	 * 
+	 * @param channel
+	 * @param request
+	 */
 	private void handleTeardownRequest(Channel channel, HttpRequest request) {
 		
 	}
 
+	/**
+	 * Helper method for creating a Not Implemented (501) error response.
+	 * @param channel
+	 * @param request
+	 */
 	private void sendNotImplemented(Channel channel, HttpRequest request) {
 		// send a 501: not implemented
 		HttpResponse response = new DefaultHttpResponse(RTSP_VERSION, RtspResponseStatuses.NOT_IMPLEMENTED);

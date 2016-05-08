@@ -26,15 +26,9 @@ import io.netty.handler.codec.http.HttpResponse;
  */
 public interface RtspResponseListener {
 
+	/**
+	 * This method is called when a RTSP response was received.
+	 * @param message
+	 */
 	void responseReceived(HttpResponse message);
-//	void optionsResponseReceived(HttpResponse message);
-//	void describeResponseReceived(HttpResponse message);
-//	void setupResponseReceived(HttpResponse message);
-//	void teardownResponseReceived(HttpResponse message);
-//	void playResponseReceived(HttpResponse message);
-//	void pauseResponseReceived(HttpResponse message);
-//	void getParameterResponseReceived(HttpResponse message);
-//	void setParameterResponseReceived(HttpResponse message);
-//	void redirectResponseReceived(HttpResponse message);
-//	void recordResponseReceived(HttpResponse message);
 }
