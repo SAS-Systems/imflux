@@ -20,7 +20,8 @@ import java.security.SecureRandom;
 
 /**
  * This class generates session IDs as an alpha-numeric String.
- * <p>My thanks go to <em>erickson</em> for <a href="http://stackoverflow.com/a/41156">his answer on stackoverflow</a>.
+ * <p>My thanks goes to <em>erickson</em> for <a href="http://stackoverflow.com/a/41156">his answer on stackoverflow</a>.
+ * 
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
 public final class SessionIdentifierGenerator {
@@ -42,6 +43,10 @@ public final class SessionIdentifierGenerator {
 		return InstanceHolder.INSTANCE;
 	}
 	
+	/**
+	 * Generates a new alpha-numeric ID-
+	 * @return a String containing a newly generated session ID
+	 */
 	public String nextSessionId() {
 		return new BigInteger(130, random).toString(32);
 	}

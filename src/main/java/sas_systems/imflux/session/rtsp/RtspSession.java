@@ -18,6 +18,8 @@ package sas_systems.imflux.session.rtsp;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.rtsp.RtspResponseStatuses;
 import sas_systems.imflux.network.RtspPacketReceiver;
 import sas_systems.imflux.participant.RtpParticipant;
 import sas_systems.imflux.session.Session;
@@ -43,6 +45,16 @@ public interface RtspSession extends Session, RtspPacketReceiver {
      */
     boolean sendRequest(HttpRequest request, Channel channel);
     
+    /**
+     * Sends a {@link HttpResponse} through the channel with the specified values. <br/>
+     * 
+     * @param status a {@link RtspResponseStatuses} instance
+     * @param cSeq the sequence number of the request/response
+     * @param channel the {@link Channel} to use
+     * @return {@code true} if the {@link HttpResponse} was sent and {@code false} otherwise
+     */
+	boolean sendResponse(HttpResponseStatus status, String cSeq, Channel channel);
+	
     /**
      * Sends a {@link HttpResponse} through the channel. <br/>
      * 

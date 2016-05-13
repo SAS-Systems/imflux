@@ -15,6 +15,10 @@
  */
 package sas_systems.imflux.participant;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.rtsp.RtspHeaders;
@@ -39,6 +43,7 @@ public class RtspParticipant {
 	private boolean isInValidSession;
 	private Channel channel;
 	private State state;
+	private Map<String, Object> parameters;
 
 	// constructors ---------------------------------------------------------------------------------------------------
 	/**
@@ -49,6 +54,7 @@ public class RtspParticipant {
 		this.channel = channel;
 		this.isInValidSession = IS_NOT_IN_VALID_SESSION;
 		this.state = State.INITIALIZING;
+		this.parameters = new HashMap<>();
 	}
 	
 	/**
@@ -151,6 +157,28 @@ public class RtspParticipant {
 	
 	public State getState() {
 		return this.state;
+	}
+	
+	public Object getParameter(String parameterName) {
+		return this.parameters.get(parameterName);
+	}
+	
+	/**
+	 * If there is already a value for the key {@code name}, then this method replaces
+	 * the value with the new one.
+	 * @param name
+	 * @param value
+	 */
+	public void setParameter(String name, Object value) {
+		this.parameters.put(name, value);
+	}
+	
+	/**
+	 * 
+	 * @return a read-only Map of this participant's parameters
+	 */
+	public Map<String, Object> getParameters() {
+		return Collections.unmodifiableMap(this.parameters);
 	}
 	
 	// inner state class ----------------------------------------------------------------------------------------------
