@@ -35,6 +35,7 @@ import io.netty.channel.ServerChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.oio.OioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.channel.socket.oio.OioServerSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -220,9 +221,25 @@ public class SimpleRtspSession implements RtspSession {
 	/**
 	 * {@inheritDoc}
 	 */
+	public boolean sendRequest(HttpRequest request, SocketAddress remoteAddress) {
+		Channel ch = new NioSocketChannel();
+		this.workerGroup.register(ch);
+		try {
+			ch.connect(remoteAddress).sync();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return internalSend(request, ch);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public boolean sendRequest(HttpRequest request, Channel channel) {
-		return internalSend(request,channel);
+		return internalSend(request, channel);
 	}
 	
 	/**
