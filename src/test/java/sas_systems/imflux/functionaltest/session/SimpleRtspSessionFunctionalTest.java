@@ -17,7 +17,9 @@
 package sas_systems.imflux.functionaltest.session;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -31,7 +33,6 @@ import org.junit.After;
 import org.junit.Test;
 
 import io.netty.handler.codec.http.DefaultHttpRequest;
-import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.rtsp.RtspHeaders;
@@ -42,6 +43,7 @@ import sas_systems.imflux.participant.RtpParticipant;
 import sas_systems.imflux.participant.RtpParticipantInfo;
 import sas_systems.imflux.participant.RtspParticipant;
 import sas_systems.imflux.session.rtsp.RtspRequestListener;
+import sas_systems.imflux.session.rtsp.RtspResponseListener;
 import sas_systems.imflux.session.rtsp.SimpleRtspSession;
 
 /**
@@ -93,13 +95,13 @@ public class SimpleRtspSessionFunctionalTest {
     }
 
     /**
-     * Create N {@link SimpleRtspSession}s and link them. Afterwards send data 
-     * from each session to the others.
+     * Create N {@link SimpleRtspSession}s. Afterwards send data 
+     * from each session to the others. Use the automated RTSP handling functionality.
      * 
      * @throws Exception
      */
     @Test
-    public void testDeliveryToAllParticipants() throws Exception {
+    public void testDeliveryToAllParticipantsWithAutoRtspHandling() throws Exception {
         this.sessions = new SimpleRtspSession[N];
         final AtomicInteger[] counters = new AtomicInteger[N];
         final CountDownLatch latch = new CountDownLatch(N);
@@ -112,9 +114,10 @@ public class SimpleRtspSessionFunctionalTest {
             		"127.0.0.1", 
             		10000 + (i * 2), 
             		20001 + (i * 2));
-            final SocketAddress localAddress = new InetSocketAddress("127.0.0.1", 30000 + (i * 2));
+            final SocketAddress localAddress = new InetSocketAddress("127.0.0.1", 30000 + i);
             this.sessions[i] = new SimpleRtspSession(sessionId, localParticipant, localAddress);
-            this.sessions[i].setAutomatedRtspHandling(false);
+            this.sessions[i].setUseNio(true);
+            this.sessions[i].setAutomatedRtspHandling(true);
             assertTrue(this.sessions[i].init());
             
             final AtomicInteger counter = new AtomicInteger();
@@ -123,33 +126,36 @@ public class SimpleRtspSessionFunctionalTest {
             this.sessions[i].addRequestListener(new RtspRequestListener() {
 				@Override
 				public void teardownRequestReceived(HttpRequest message, RtspParticipant participant) {
+					fail("automated RTSP handling is set to true, so this method should not be invoked!");
 				}
 				@Override
 				public void setupRequestReceived(HttpRequest message, RtspParticipant participant) {
+					fail("automated RTSP handling is set to true, so this method should not be invoked!");
 				}
 				@Override
 				public void setParameterRequestReceived(HttpRequest message, RtspParticipant participant) {
 				}
 				@Override
 				public void redirectRequestReceived(HttpRequest message, RtspParticipant participant) {
+					fail("automated RTSP handling is set to true, so this method should not be invoked!");
 				}
 				@Override
 				public void recordRequestReceived(HttpRequest message, RtspParticipant participant) {
+					fail("automated RTSP handling is set to true, so this method should not be invoked!");
 				}
 				@Override
 				public void playRequestReceived(HttpRequest message, RtspParticipant participant) {
+					fail("automated RTSP handling is set to true, so this method should not be invoked!");
 				}
 				@Override
 				public void pauseRequestReceived(HttpRequest message, RtspParticipant participant) {
+					fail("automated RTSP handling is set to true, so this method should not be invoked!");
 				}
 				@Override
 				public void optionsRequestReceived(HttpRequest message, RtspParticipant participant) {
-					System.out.println("\t" + sessionId + " received data from " + participant + ": " + message);
-                    if (counter.incrementAndGet() == ((N - 1)/* * 2*/)) {
-                        // Release the latch once all N-1 messages (because it wont receive the message it sends) are
-                        // received.
-                        latch.countDown();
-                    }
+//					System.out.println("\t" + sessionId + " received request from " + participant.getChannel() + ": " + message);
+//					counter.incrementAndGet();
+					fail("automated RTSP handling is set to true, so this method should not be invoked!");
 				}
 				@Override
 				public void getParameterRequestReceived(HttpRequest message, RtspParticipant participant) {
@@ -162,35 +168,76 @@ public class SimpleRtspSessionFunctionalTest {
 				}
 			});
             
-//            this.sessions[i].addResponseListener(new RtspResponseListener() {
-//				@Override
-//				public void responseReceived(HttpResponse message, RtspParticipant participant) {
-//					System.out.println("\t" + sessionId + " received data from " + participant + ": " + message);
-//                    if (counter.incrementAndGet() == ((N - 1)/* * 2*/)) {
-//                        // Release the latch once all N-1 messages (because it wont receive the message it sends) are
-//                        // received.
-//                        latch.countDown();
-//                    }
-//				}
-//			});
+            this.sessions[i].addResponseListener(new RtspResponseListener() {
+				@Override
+				public void responseReceived(HttpResponse message, RtspParticipant participant) {
+					System.out.println("\t" + sessionId + " received response: " + message);
+					final String cSeqString = message.headers().get(RtspHeaders.Names.CSEQ);
+					
+					int cseq = 0;
+					try {
+						cseq = Integer.valueOf(cSeqString);
+					} catch(Exception e) {
+						fail("Sequence number was not correctly set!");
+					}
+					
+					if(cseq == 1) {				// response of SETUP
+						final String sessionId = message.headers().get(RtspHeaders.Names.SESSION);
+						assertNotNull(sessionId);
+						
+						// send TEARDOWN request
+		        		final HttpRequest teardownRequest = new DefaultHttpRequest(RtspVersions.RTSP_1_0, RtspMethods.TEARDOWN, "rtsp://localhost/path/to/resource");
+		                teardownRequest.headers().add(RtspHeaders.Names.CSEQ, cseq+1);
+		                teardownRequest.headers().add(RtspHeaders.Names.SESSION, sessionId);
+		        		participant.sendMessage(teardownRequest);
+					}
+					if(cseq == 2) {				// response of TEARDOWN
+						if(message.getStatus().equals(RtspResponseStatuses.OK) && counter.incrementAndGet() == (N-1)) {
+							latch.countDown();
+						}
+					}
+				}
+			});
         }
 
         // send data
-        final String uri = "rtsp://localhost:30000/path/to/resource";
-        final HttpRequest optionsRequest = new DefaultHttpRequest(RtspVersions.RTSP_1_0, RtspMethods.OPTIONS, uri);
-        optionsRequest.headers().add(RtspHeaders.Names.CSEQ, 1);
         for (int i = 0; i < N; i++) {
-            assertTrue(this.sessions[i].sendRequest(optionsRequest, new InetSocketAddress("127.0.0.1", 30000 + (i * 2))));
+        	if(i==1) break;
+        	for (int j = 0; j < N; j++) {
+        		if(j==2) break;
+        		if(i == j)
+        			continue;
+        		
+        		final SocketAddress remoteAddress = new InetSocketAddress("127.0.0.1", 30000 + j);
+        		final String uri = "rtsp://localhost:" + (30000 + j) + "/path/to/resource";
+        		int cseq = 0;
+        		
+        		// send OPTIONS request
+                final HttpRequest optionsRequest = new DefaultHttpRequest(RtspVersions.RTSP_1_0, RtspMethods.OPTIONS, uri);
+                optionsRequest.headers().add(RtspHeaders.Names.CSEQ, cseq++);
+        		assertTrue(this.sessions[i].sendRequest(optionsRequest, new InetSocketAddress("127.0.0.1", 30000 + j)));
+        		
+        		// send SETUP request
+        		final RtpParticipant localRtp = this.sessions[i].getLocalRtpParticipant();
+        		final int localRtpPort = ((InetSocketAddress) localRtp.getDataDestination()).getPort();
+        		final int localRtcpPort = ((InetSocketAddress) localRtp.getControlDestination()).getPort();
+        		final HttpRequest setupRequest = new DefaultHttpRequest(RtspVersions.RTSP_1_0, RtspMethods.SETUP, uri);
+        		setupRequest.headers().add(RtspHeaders.Names.CSEQ, cseq++);
+        		setupRequest.headers().add(RtspHeaders.Names.TRANSPORT, "RTP/AVP;unicast;client_port=" + localRtpPort + "-" + localRtcpPort);
+        		assertTrue(this.sessions[i].sendRequest(setupRequest, remoteAddress));
+        		
+			}
+        	
 //            assertTrue(this.sessions[i].sendData(deadbeef, 0x45, false));
         }
         System.out.println("Wait for latch.....");
 
         // wait for the Threads to finish and check counters
-        if(!latch.await(5000L, TimeUnit.MILLISECONDS))
+        if(!latch.await(2000L, TimeUnit.MILLISECONDS))
         	System.out.println("! Latch timed out !");
         System.out.println(".. latch finished!\n");
         for (byte i = 0; i < N; i++) {
-            assertEquals(((N - 1)/* * 2*/), counters[i].get());
+            assertEquals((N-1), counters[i].get());
         }
     }
 }

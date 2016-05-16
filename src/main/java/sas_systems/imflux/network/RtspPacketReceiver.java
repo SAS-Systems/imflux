@@ -45,8 +45,9 @@ public interface RtspPacketReceiver {
 	 * is called from the {@link RtspHandler} if he has received a 
 	 * corresponding packet.
 	 * 
+	 * @param channel source of the response
 	 * @param packet the received {@link HttpResponse}
 	 */
-	public void responseReceived(HttpResponse response);
+	public void responseReceived(Channel channel, HttpResponse response);
 	
 }

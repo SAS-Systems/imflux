@@ -15,6 +15,8 @@
  */
 package sas_systems.imflux.session.rtsp;
 
+import java.net.SocketAddress;
+
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
@@ -37,11 +39,20 @@ import sas_systems.imflux.session.Session;
 public interface RtspSession extends Session, RtspPacketReceiver {
 
 	/**
+	 * Sends a {@link HttpRequest} through a new channel to the specified remote address. <br/>
+	 * 
+	 * @param request the {@link HttpRequest} to be sent
+	 * @param remoteAddress the {@link SocketAddress} of the request's destination
+	 * @return {@code true} if the {@link HttpRequest} was sent successfully and {@code false} otherwise
+	 */
+	public boolean sendRequest(HttpRequest request, SocketAddress remoteAddress);
+	
+	/**
      * Sends a {@link HttpRequest} through the channel. <br/>
      * 
      * @param request the {@link HttpRequest} to be sent
      * @param channel the {@link Channel} to use
-     * @return {@code true} if the {@link HttpRequest} was sent and {@code false} otherwise
+     * @return {@code true} if the {@link HttpRequest} was sent successfully and {@code false} otherwise
      */
     boolean sendRequest(HttpRequest request, Channel channel);
     
@@ -51,7 +62,7 @@ public interface RtspSession extends Session, RtspPacketReceiver {
      * @param status a {@link RtspResponseStatuses} instance
      * @param cSeq the sequence number of the request/response
      * @param channel the {@link Channel} to use
-     * @return {@code true} if the {@link HttpResponse} was sent and {@code false} otherwise
+     * @return {@code true} if the {@link HttpResponse} was sent successfully and {@code false} otherwise
      */
 	boolean sendResponse(HttpResponseStatus status, String cSeq, Channel channel);
 	
@@ -60,7 +71,7 @@ public interface RtspSession extends Session, RtspPacketReceiver {
      * 
      * @param response the {@link HttpResponse} to be sent
      * @param channel the {@link Channel} to use
-     * @return {@code true} if the {@link HttpResponse} was sent and {@code false} otherwise
+     * @return {@code true} if the {@link HttpResponse} was sent successfully and {@code false} otherwise
      */
     boolean sendResponse(HttpResponse response, Channel channel);
     

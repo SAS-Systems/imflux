@@ -97,6 +97,7 @@ public class SimpleRtspSession implements RtspSession {
 	
 	// internal vars --------------------------------------------------------------------------------------------------
     private final AtomicBoolean running;
+    private ServerBootstrap bootstrap;
 	private Channel channel;
 	private EventLoopGroup bossGroup;
 	private EventLoopGroup workerGroup;
@@ -172,7 +173,7 @@ public class SimpleRtspSession implements RtspSession {
         	channelType = OioServerSocketChannel.class;
         }
         
-		ServerBootstrap bootstrap = new ServerBootstrap();
+		bootstrap = new ServerBootstrap();
         bootstrap.group(this.bossGroup, this.workerGroup)
 		        .option(ChannelOption.SO_SNDBUF, this.sendBufferSize)
 		    	.option(ChannelOption.SO_RCVBUF, this.receiveBufferSize)
@@ -221,14 +222,25 @@ public class SimpleRtspSession implements RtspSession {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public boolean sendRequest(HttpRequest request, SocketAddress remoteAddress) {
-		Channel ch = new NioSocketChannel();
+		if(!this.running.get()) {
+			return false;
+		}
+		
+		// create channel and connect it to the given remote
+		final Channel ch = new NioSocketChannel();
+		final ChannelPipeline pipe = ch.pipeline();
+		pipe.addLast("decoder", new RtspDecoder());
+		pipe.addLast("encoder", new RtspEncoder());
+		pipe.addLast("handler", new RtspHandler(SimpleRtspSession.this));
 		this.workerGroup.register(ch);
+		
 		try {
 			ch.connect(remoteAddress).sync();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Could not open TCP connection to remote at {}.", e, remoteAddress);
+			return false;
 		}
 		
 		return internalSend(request, ch);
@@ -239,6 +251,10 @@ public class SimpleRtspSession implements RtspSession {
 	 */
 	@Override
 	public boolean sendRequest(HttpRequest request, Channel channel) {
+		if(!this.running.get()) {
+			return false;
+		}
+		
 		return internalSend(request, channel);
 	}
 	
@@ -257,6 +273,10 @@ public class SimpleRtspSession implements RtspSession {
 	 */
 	@Override
 	public boolean sendResponse(HttpResponse response, Channel channel) {
+		if(!this.running.get()) {
+			return false;
+		}
+		
 		return internalSend(response, channel);
 	}
 	
@@ -301,8 +321,8 @@ public class SimpleRtspSession implements RtspSession {
 		if(!request.getDecoderResult().isSuccess())
 			return;
 		
-		LOG.debug("RTSP request received: {}", request);
-		System.out.println(request);
+//		LOG.debug("RTSP request received: {}", request);
+//		System.out.println(request);
 		
 		
 		if(request.getMethod().equals(RtspMethods.OPTIONS)) {
@@ -407,10 +427,20 @@ public class SimpleRtspSession implements RtspSession {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void responseReceived(HttpResponse response) {
+	public void responseReceived(Channel channel, HttpResponse response) {
 		LOG.debug("RTSP response received: {}", response);
+		// check if we know this participant
+		final String session = response.headers().get(RtspHeaders.Names.SESSION);
+		RtspParticipant participant = null;
+		if(session != null) {
+			participant = this.participantSessions.get(session);
+		}
+		if(participant == null) {
+			participant = new RtspParticipant(channel);
+		}
+		
 		for (RtspResponseListener listener : this.responseListener) {
-			listener.responseReceived(response, new RtspParticipant(channel));
+			listener.responseReceived(response, participant);
 		}
 	}
 
@@ -440,17 +470,14 @@ public class SimpleRtspSession implements RtspSession {
     }
     
     /**
-     * Checks if this session is running and if the message is a supported message and
-     * send the message through the channel.
+     * Checks if the message is a supported message and
+     * sends the message through the channel.
      * 
      * @param message object to send
      * @param channel 
      * @return {@code true} if the message was send, {@code false} otherwise
      */
     private boolean internalSend(HttpMessage message, Channel channel) {
-    	if(!this.running.get()) {
-			return false;
-		}
 		if(!message.getProtocolVersion().equals(rtspVersion)) {
 			throw new IllegalArgumentException("Unsupported RTSP version!");
 		}
@@ -703,5 +730,9 @@ public class SimpleRtspSession implements RtspSession {
 
 	public void setLocalRtpParticipant(RtpParticipant localRtpParticipant) {
 		this.localRtpParticipant = localRtpParticipant;
+	}
+
+	public SocketAddress getLocalAddress() {
+		return localAddress;
 	}
 }
