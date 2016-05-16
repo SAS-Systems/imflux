@@ -67,17 +67,16 @@ public class ControlPacketDecoder extends ChannelInboundHandlerAdapter {
         }
 
         // Usually 2 packets per UDP frame...
-        List<ControlPacket> controlPacketList = new ArrayList<ControlPacket>(2);
+        List<ControlPacket> controlPacketList = new ArrayList<>(2);
 
         // While there's data to read, keep on decoding.
         while (buffer.readableBytes() > 0) {
             try {
             	// to steps to prevent adding null
             	ControlPacket packet = ControlPacket.decode(buffer);
-            	if(packet == null){
-            		continue;
+            	if(packet != null){
+            		controlPacketList.add(packet);
             	}
-                controlPacketList.add(packet);
             } catch (Exception e1) {
                 LOG.debug("Exception caught while decoding RTCP packet.", e1);
                 break;

@@ -95,6 +95,10 @@ public class UdpDataPacketEncoder extends MessageToMessageEncoder<AddressedEnvel
      * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
      */
     private static final class InstanceHolder {
+    	/**
+    	 * Private constructor for hiding the implicit default one.
+    	 */
+    	private InstanceHolder() {};
         private static final UdpDataPacketEncoder INSTANCE = new UdpDataPacketEncoder();
     }
 }

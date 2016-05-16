@@ -83,17 +83,16 @@ public class UdpControlPacketDecoder extends MessageToMessageDecoder<DatagramPac
         }
 
         // Usually 2 packets per UDP frame...
-        final List<ControlPacket> controlPacketList = new ArrayList<ControlPacket>(2);
+        final List<ControlPacket> controlPacketList = new ArrayList<>(2);
 
         // While there's data to read, keep on decoding.
         while (content.readableBytes() > 0) {
             try {
             	// prevent adding null
             	final ControlPacket packet = ControlPacket.decode(content);
-            	if(packet == null){
-            		continue;
+            	if(packet != null){
+            		controlPacketList.add(packet);
             	}
-                controlPacketList.add(packet);
             } catch (Exception e1) {
                 LOG.debug("Exception caught while decoding RTCP packet.", e1);
                 break;
@@ -104,7 +103,7 @@ public class UdpControlPacketDecoder extends MessageToMessageDecoder<DatagramPac
             // Only forward to next ChannelHandler when there were more than one valid decoded packets.
             // TODO shouldn't the whole compound packet be discarded when one of them has errors?!
 			final AddressedEnvelope<CompoundControlPacket, SocketAddress> newMsg = 
-					new DefaultAddressedEnvelope<CompoundControlPacket, SocketAddress>(
+					new DefaultAddressedEnvelope<>(
 							new CompoundControlPacket(controlPacketList), recipient, sender);
 			out.add(newMsg);
         }

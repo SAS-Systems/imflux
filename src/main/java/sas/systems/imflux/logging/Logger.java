@@ -30,7 +30,7 @@ public class Logger {
 
     // internal vars --------------------------------------------------------------------------------------------------
     
-    private org.slf4j.Logger logger;
+    private org.slf4j.Logger slf4jLogger;
 
     // constructors ---------------------------------------------------------------------------------------------------
 
@@ -40,11 +40,11 @@ public class Logger {
      * @param clazz Name of the class to log.
      */
     public Logger(@SuppressWarnings("rawtypes") Class clazz) {
-        this.logger = LoggerFactory.getLogger(clazz);
+        this.slf4jLogger = LoggerFactory.getLogger(clazz);
     }
 
     public Logger(String name) {
-        this.logger = LoggerFactory.getLogger(name);
+        this.slf4jLogger = LoggerFactory.getLogger(name);
     }
 
     // static methods -------------------------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ public class Logger {
      * @return Name of the logger.
      */
     public String getName() {
-        return this.logger.getName();
+        return this.slf4jLogger.getName();
     }
 
     /**
@@ -81,7 +81,7 @@ public class Logger {
      * @return <code>true</code> if trace logging level is enabled, <code>false</code> otherwise.
      */
     public boolean isTraceEnabled() {
-        return this.logger.isTraceEnabled();
+        return this.slf4jLogger.isTraceEnabled();
     }
 
     /**
@@ -90,7 +90,7 @@ public class Logger {
      * @param message Message to be logged.
      */
     public void trace(String message) {
-        this.logger.trace(message);
+        this.slf4jLogger.trace(message);
     }
 
     /**
@@ -100,7 +100,7 @@ public class Logger {
      * @param parameter Message parameter.
      */
     public void trace(String message, Object parameter) {
-        this.logger.trace(message, parameter);
+        this.slf4jLogger.trace(message, parameter);
     }
 
     /**
@@ -113,7 +113,7 @@ public class Logger {
         // This is where magic happens and syntax sugar is offered...
         // The interface overrides an Object[] and offers Object... instead!
         // Awesome, ain't it? No. It should come as standard in SLF4J.
-        this.logger.trace(message, parameters);
+        this.slf4jLogger.trace(message, parameters);
     }
 
     /**
@@ -123,7 +123,7 @@ public class Logger {
      * @param throwable Throwable to be logged.
      */
     public void trace(String message, Throwable throwable) {
-        this.logger.trace(message, throwable);
+        this.slf4jLogger.trace(message, throwable);
     }
 
     /**
@@ -143,8 +143,8 @@ public class Logger {
      * @param parameters Parameters to format the message.
      */
     public void trace(String message, Throwable throwable, Object... parameters) {
-        if (this.logger.isTraceEnabled()) {
-            this.logger.trace(MessageFormatter.arrayFormat(message, parameters).getMessage(), throwable);
+        if (this.slf4jLogger.isTraceEnabled()) {
+            this.slf4jLogger.trace(MessageFormatter.arrayFormat(message, parameters).getMessage(), throwable);
         }
     }
 
@@ -154,7 +154,7 @@ public class Logger {
      * @return <code>true</code> if debug logging level is enabled, <code>false</code> otherwise.
      */
     public boolean isDebugEnabled() {
-        return this.logger.isDebugEnabled();
+        return this.slf4jLogger.isDebugEnabled();
     }
 
     /**
@@ -163,7 +163,7 @@ public class Logger {
      * @param message Message to be logged.
      */
     public void debug(String message) {
-        this.logger.debug(message);
+        this.slf4jLogger.debug(message);
     }
 
     /**
@@ -173,7 +173,7 @@ public class Logger {
      * @param parameter Message parameter.
      */
     public void debug(String message, Object parameter) {
-        this.logger.debug(message, parameter);
+        this.slf4jLogger.debug(message, parameter);
     }
 
 
@@ -184,7 +184,7 @@ public class Logger {
      * @param parameters Array of parameters.
      */
     public void debug(String message, Object... parameters) {
-        this.logger.debug(message, parameters);
+        this.slf4jLogger.debug(message, parameters);
     }
 
     /**
@@ -194,7 +194,7 @@ public class Logger {
      * @param throwable Throwable to be logged.
      */
     public void debug(String message, Throwable throwable) {
-        this.logger.debug(message, throwable);
+        this.slf4jLogger.debug(message, throwable);
     }
 
     /**
@@ -214,8 +214,8 @@ public class Logger {
      * @param parameters Parameters to format the message.
      */
     public void debug(String message, Throwable throwable, Object... parameters) {
-        if (this.logger.isDebugEnabled()) {
-            this.logger.debug(MessageFormatter.arrayFormat(message, parameters).getMessage(), throwable);
+        if (this.slf4jLogger.isDebugEnabled()) {
+            this.slf4jLogger.debug(MessageFormatter.arrayFormat(message, parameters).getMessage(), throwable);
         }
     }
 
@@ -225,7 +225,7 @@ public class Logger {
      * @return <code>true</code> if info logging level is enabled, <code>false</code> otherwise.
      */
     public boolean isInfoEnabled() {
-        return this.logger.isInfoEnabled();
+        return this.slf4jLogger.isInfoEnabled();
     }
 
     /**
@@ -234,7 +234,7 @@ public class Logger {
      * @param message Message to be logged.
      */
     public void info(String message) {
-        this.logger.info(message);
+        this.slf4jLogger.info(message);
     }
 
     /**
@@ -244,7 +244,7 @@ public class Logger {
      * @param parameter Message parameter.
      */
     public void info(String message, Object parameter) {
-        this.logger.info(message, parameter);
+        this.slf4jLogger.info(message, parameter);
     }
 
     /**
@@ -254,7 +254,7 @@ public class Logger {
      * @param parameters Array of parameters.
      */
     public void info(String message, Object... parameters) {
-        this.logger.info(message, parameters);
+        this.slf4jLogger.info(message, parameters);
     }
 
     /**
@@ -264,7 +264,7 @@ public class Logger {
      * @param throwable Throwable to be logged.
      */
     public void info(String message, Throwable throwable) {
-        this.logger.info(message, throwable);
+        this.slf4jLogger.info(message, throwable);
     }
 
     /**
@@ -284,8 +284,8 @@ public class Logger {
      * @param parameters Parameters to format the message.
      */
     public void info(String message, Throwable throwable, Object... parameters) {
-        if (this.logger.isInfoEnabled()) {
-            this.logger.info(MessageFormatter.arrayFormat(message, parameters).getMessage(), throwable);
+        if (this.slf4jLogger.isInfoEnabled()) {
+            this.slf4jLogger.info(MessageFormatter.arrayFormat(message, parameters).getMessage(), throwable);
         }
     }
 
@@ -295,7 +295,7 @@ public class Logger {
      * @return <code>true</code> if warn logging level is enabled, <code>false</code> otherwise.
      */
     public boolean isWarnEnabled() {
-        return this.logger.isWarnEnabled();
+        return this.slf4jLogger.isWarnEnabled();
     }
 
     /**
@@ -304,7 +304,7 @@ public class Logger {
      * @param message Message to be logged.
      */
     public void warn(String message) {
-        this.logger.warn(message);
+        this.slf4jLogger.warn(message);
     }
 
     /**
@@ -314,7 +314,7 @@ public class Logger {
      * @param parameter Message parameter.
      */
     public void warn(String message, Object parameter) {
-        this.logger.warn(message, parameter);
+        this.slf4jLogger.warn(message, parameter);
     }
 
     /**
@@ -324,7 +324,7 @@ public class Logger {
      * @param parameters Array of parameters.
      */
     public void warn(String message, Object... parameters) {
-        this.logger.warn(message, parameters);
+        this.slf4jLogger.warn(message, parameters);
     }
 
     /**
@@ -334,7 +334,7 @@ public class Logger {
      * @param throwable Throwable to be logged.
      */
     public void warn(String message, Throwable throwable) {
-        this.logger.warn(message, throwable);
+        this.slf4jLogger.warn(message, throwable);
     }
 
     /**
@@ -354,8 +354,8 @@ public class Logger {
      * @param parameters Parameters to format the message.
      */
     public void warn(String message, Throwable throwable, Object... parameters) {
-        if (this.logger.isWarnEnabled()) {
-            this.logger.warn(MessageFormatter.arrayFormat(message, parameters).getMessage(), throwable);
+        if (this.slf4jLogger.isWarnEnabled()) {
+            this.slf4jLogger.warn(MessageFormatter.arrayFormat(message, parameters).getMessage(), throwable);
         }
     }
 
@@ -365,7 +365,7 @@ public class Logger {
      * @return <code>true</code> if error logging level is enabled, <code>false</code> otherwise.
      */
     public boolean isErrorEnabled() {
-        return this.logger.isErrorEnabled();
+        return this.slf4jLogger.isErrorEnabled();
     }
 
     /**
@@ -374,7 +374,7 @@ public class Logger {
      * @param message Message to be logged.
      */
     public void error(String message) {
-        this.logger.error(message);
+        this.slf4jLogger.error(message);
     }
 
     /**
@@ -384,7 +384,7 @@ public class Logger {
      * @param parameter Message parameter.
      */
     public void error(String message, Object parameter) {
-        this.logger.error(message, parameter);
+        this.slf4jLogger.error(message, parameter);
     }
 
     /**
@@ -394,7 +394,7 @@ public class Logger {
      * @param parameters Array of parameters.
      */
     public void error(String message, Object... parameters) {
-        this.logger.error(message, parameters);
+        this.slf4jLogger.error(message, parameters);
     }
 
     /**
@@ -404,7 +404,7 @@ public class Logger {
      * @param throwable Throwable to be logged.
      */
     public void error(String message, Throwable throwable) {
-        this.logger.error(message, throwable);
+        this.slf4jLogger.error(message, throwable);
     }
 
     /**
@@ -424,8 +424,8 @@ public class Logger {
      * @param parameters Parameters to format the message.
      */
     public void error(String message, Throwable throwable, Object... parameters) {
-        if (this.logger.isErrorEnabled()) {
-            this.logger.error(MessageFormatter.arrayFormat(message, parameters).getMessage(), throwable);
+        if (this.slf4jLogger.isErrorEnabled()) {
+            this.slf4jLogger.error(MessageFormatter.arrayFormat(message, parameters).getMessage(), throwable);
         }
     }
 }
