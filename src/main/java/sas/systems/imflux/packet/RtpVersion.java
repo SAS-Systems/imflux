@@ -46,7 +46,7 @@ public enum RtpVersion {
      * @return RTP version as a object
      * @throws IllegalArgumentException
      */
-    public static RtpVersion fromByte(byte b) throws IllegalArgumentException {
+    public static RtpVersion fromByte(byte b) {
         byte tmp = (byte) (b & 0xc0); // mask: 1100 0000
         // Starts from version 2, which is the most common.
         for (RtpVersion version : values()) {

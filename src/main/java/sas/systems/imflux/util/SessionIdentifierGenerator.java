@@ -58,6 +58,10 @@ public final class SessionIdentifierGenerator {
 	* @author <a href="https://github.com/CodeLionX">CodeLionX</a>
 	*/
 	private static final class InstanceHolder {
+		/**
+		 * Private constructor to hide implicit constructor.
+		 */
+		private InstanceHolder(){};
 		private static final SessionIdentifierGenerator INSTANCE = new SessionIdentifierGenerator();
 	}
 }
