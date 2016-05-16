@@ -69,7 +69,7 @@ public class SimpleRtspSession implements RtspSession {
 	// constants ------------------------------------------------------------------------------------------------------
     private static final Logger LOG = Logger.getLogger(SimpleRtspSession.class);
     @SuppressWarnings("unused")
-	private static final String VERSION = "imflux_0.1.0_07052016";
+	private static final String VERSION = "imflux_0.1.1_16052016";
     
     // configuration defaults -----------------------------------------------------------------------------------------
     private static final boolean USE_NIO = true;

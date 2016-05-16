@@ -84,7 +84,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 
     // constants ------------------------------------------------------------------------------------------------------
     protected static final Logger LOG = Logger.getLogger(AbstractRtpSession.class);
-    protected static final String VERSION = "imflux_0.1.0_07052016";
+    protected static final String VERSION = "imflux_0.1.1_16052016";
 
     // configuration defaults -----------------------------------------------------------------------------------------
     protected static final boolean USE_NIO = true;

@@ -243,7 +243,7 @@ public class SimpleRtspSessionFunctionalTest {
 			}
         	// wait for 50 ms to prevent too high load on a single session
 			try {
-				Thread.sleep(50);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				fail(e.toString());
 			}
