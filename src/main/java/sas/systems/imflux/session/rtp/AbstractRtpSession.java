@@ -101,7 +101,6 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     protected final String id;
     protected final int payloadType;
     protected final HashedWheelTimer timer;
-//    protected final OrderedMemoryAwareThreadPoolExecutor executor;
     protected boolean useNio;
     protected boolean discardOutOfOrder;
     protected int bandwidthLimit;
@@ -134,16 +133,6 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     public AbstractRtpSession(String id, int payloadType, RtpParticipant local) {
         this(id, payloadType, local, null/*, null*/);
     }
-
-//    public AbstractRtpSession(String id, int payloadType, RtpParticipant local,
-//                              HashedWheelTimer timer) {
-//        this(id, payloadType, local, timer, null);
-//    }
-
-//    public AbstractRtpSession(String id, int payloadType, RtpParticipant local,
-//                              OrderedMemoryAwareThreadPoolExecutor executor) {
-//        this(id, payloadType, local, null, executor);
-//    }
     
     /**
      * 
@@ -152,8 +141,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * @param local information about the local participant
      * @param timer timer for periodic RTCP report sending, if the timer is shared across the application
      */
-    public AbstractRtpSession(String id, int payloadType, RtpParticipant local, HashedWheelTimer timer/*,
-                              OrderedMemoryAwareThreadPoolExecutor executor*/) {
+    public AbstractRtpSession(String id, int payloadType, RtpParticipant local, HashedWheelTimer timer) {
 		if ((payloadType < 0) || (payloadType > 127)) {
 			throw new IllegalArgumentException("PayloadTypes must be in range [0;127]");
 		}   		
@@ -166,7 +154,6 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         this.payloadType = payloadType;
         this.localParticipant = local;
         this.participantDatabase = this.createDatabase();
-//        this.executor = executor;
         if (timer == null) {
             this.timer = new HashedWheelTimer(1, TimeUnit.SECONDS);
             this.internalTimer = true;
@@ -177,9 +164,9 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 
         this.running = new AtomicBoolean(false);
         // CopyOnWriteArrayList to make this class thread-safe
-        this.dataListeners = new CopyOnWriteArrayList<RtpSessionDataListener>();
-        this.controlListeners = new CopyOnWriteArrayList<RtpSessionControlListener>();
-        this.eventListeners = new CopyOnWriteArrayList<RtpSessionEventListener>();
+        this.dataListeners = new CopyOnWriteArrayList<>();
+        this.controlListeners = new CopyOnWriteArrayList<>();
+        this.eventListeners = new CopyOnWriteArrayList<>();
         this.sequence = new AtomicInteger(0);
         this.sentOrReceivedPackets = new AtomicBoolean(false);
         this.collisions = new AtomicInteger(0);
@@ -274,13 +261,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         	this.dataChannel = future.sync().channel(); // wait for future to complete and retrieve channel
         } catch (Exception e) {
             LOG.error("Failed to bind data channel for session with id " + this.id, e);
-            this.workerGroup.shutdownGracefully();
-            
-            try {
-            	this.workerGroup.terminationFuture().sync();
-			} catch (InterruptedException e1) {
-				LOG.error("EventLoopGroup termination failed: {}", e1);
-			}
+            shutdownEventLoopGroup();
             return false;
         }
         
@@ -293,13 +274,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         } catch (Exception e) {
             LOG.error("Failed to bind control channel for session with id " + this.id, e);
             this.dataChannel.close();
-            this.workerGroup.shutdownGracefully();
-            
-            try {
-            	this.workerGroup.terminationFuture().sync();
-			} catch (InterruptedException e1) {
-				LOG.error("EventLoopGroup termination failed: {}", e1);
-			}
+            shutdownEventLoopGroup();
             return false;
         }
 
@@ -594,7 +569,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
                     this.handleSdesPacket(origin, (SourceDescriptionPacket) controlPacket);
                     break;
                 case BYE:
-                    this.handleByePacket(origin, (ByePacket) controlPacket);
+                    this.handleByePacket((ByePacket) controlPacket);
                     break;
                 case APP_DATA:
                 	// dispatch APP_DATA control packets to the control listeners
@@ -602,6 +577,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
                     for (RtpSessionControlListener listener : this.controlListeners) {
                         listener.appDataReceived(this, (AppDataPacket) controlPacket);
                     }
+                    break;
                 default:
                     // do nothing, unknown case
             }
@@ -627,7 +603,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
             @Override
             public void doWithParticipant(RtpParticipant participant) throws Exception {
                 AbstractReportPacket report = buildReportPacket(currentSsrc, participant);
-                // FIXME: really to all other participants?
+                // TODO: really to all other participants?
                 // i would use:
 //                writeToControl(new CompoundControlPacket(report, sdesPacket), participant.getControlDestination());
                 internalSendControl(new CompoundControlPacket(report, sdesPacket));
@@ -641,6 +617,19 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     }
 
     // protected helpers ----------------------------------------------------------------------------------------------
+    /**
+	 * Shuts down the workerGroup and waits for its termination.
+	 */
+	protected void shutdownEventLoopGroup() {
+		this.workerGroup.shutdownGracefully();
+		
+		try {
+			this.workerGroup.terminationFuture().sync();
+		} catch (InterruptedException e1) {
+			LOG.error("EventLoopGroup termination failed: {}", e1);
+		}
+	}
+	
     /**
      * <h1>automatedRtcpHandling</h1>
      * This method handles {@link SenderReportPacket}s and {@link ReceiverReportPacket}s.
@@ -692,25 +681,35 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
                 return;
             }
             if (!participant.hasReceivedSdes() || this.tryToUpdateOnEverySdes) {
-                participant.receivedSdes();
-                // If this participant wasn't created from an SDES packet, then update its participant's description.
-                if (participant.getInfo().updateFromSdesChunk(chunk)) {
-                    for (RtpSessionEventListener listener : this.eventListeners) {
-                        listener.participantInformationUpdated(this, participant);
-                    }
-                }
+                updateParticipant(chunk, participant);
             }
         }
     }
+    
+	/**
+	 * Updates the participant information with the information from the {@link SdesChunk}.
+	 * The {@link RtpSessionEventListener}s are informed about made changes.
+	 * 
+	 * @param chunk
+	 * @param participant
+	 */
+	protected void updateParticipant(SdesChunk chunk, RtpParticipant participant) {
+		participant.receivedSdes();
+		// If this participant wasn't created from an SDES packet, then update its participant's description.
+		if (participant.getInfo().updateFromSdesChunk(chunk)) {
+		    for (RtpSessionEventListener listener : this.eventListeners) {
+		        listener.participantInformationUpdated(this, participant);
+		    }
+		}
+	}
 
     /**
      * This method handles {@link ByePacket}s and therefore marks the corresponding
      * participant in the {@link ParticipantDatabase} as left.
      * 
-     * @param origin
      * @param packet
      */
-    protected void handleByePacket(SocketAddress origin, ByePacket packet) {
+    protected void handleByePacket(ByePacket packet) {
         for (Long ssrc : packet.getSsrcList()) {
             RtpParticipant participant = this.participantDatabase.getParticipant(ssrc);
             if (participant != null) {
@@ -832,7 +831,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 
             @Override
             public String toString() {
-                return "internalSendControl() for session with id " + id;
+                return "internalSendControl(ControlPacket) for session with id " + id;
             }
         });
     }
@@ -872,7 +871,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * @param destination
      */
     protected void writeToData(DataPacket packet, SocketAddress destination) {
-    	final AddressedEnvelope<DataPacket, SocketAddress> envelope = new DefaultAddressedEnvelope<DataPacket, SocketAddress>(packet, destination);
+    	final AddressedEnvelope<DataPacket, SocketAddress> envelope = new DefaultAddressedEnvelope<>(packet, destination);
         this.dataChannel.writeAndFlush(envelope);
     }
 
@@ -884,7 +883,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      */
     protected void writeToControl(ControlPacket packet, SocketAddress destination) {
     	// FIXME: does not work currently -> add new encoder for ControlPackets wrapped into Envelopes
-    	final AddressedEnvelope<ControlPacket, SocketAddress> envelope = new DefaultAddressedEnvelope<ControlPacket, SocketAddress>(packet, destination);
+    	final AddressedEnvelope<ControlPacket, SocketAddress> envelope = new DefaultAddressedEnvelope<>(packet, destination);
         this.controlChannel.writeAndFlush(envelope);
     }
 
@@ -895,7 +894,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * @param destination
      */
     protected void writeToControl(CompoundControlPacket packet, SocketAddress destination) {
-    	final AddressedEnvelope<CompoundControlPacket, SocketAddress> envelope = new DefaultAddressedEnvelope<CompoundControlPacket, SocketAddress>(packet, destination);
+    	final AddressedEnvelope<CompoundControlPacket, SocketAddress> envelope = new DefaultAddressedEnvelope<>(packet, destination);
         this.controlChannel.writeAndFlush(envelope);
     }
 
@@ -1051,18 +1050,12 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
         this.leaveSession(this.localParticipant.getSsrc(), "Session terminated, because: " + cause.toString());
         this.controlChannel.close();
 
-        this.workerGroup.shutdownGracefully();
-        LOG.debug("RtpSession with id {} terminated. Cause: {}", this.id, cause);
-
         for (RtpSessionEventListener listener : this.eventListeners) {
             listener.sessionTerminated(this, cause);
         }
         this.eventListeners.clear();
-        try {
-        	this.workerGroup.terminationFuture().sync();
-		} catch (InterruptedException e1) {
-			LOG.error("EventLoopGroup termination failed: {}", e1);
-		}
+        shutdownEventLoopGroup();
+        LOG.debug("RtpSession with id {} terminated. Cause: {}", this.id, cause);
     }
 
     protected void resetSendStats() {
