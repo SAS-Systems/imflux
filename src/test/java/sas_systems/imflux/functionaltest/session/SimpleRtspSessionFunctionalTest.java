@@ -105,6 +105,7 @@ public class SimpleRtspSessionFunctionalTest {
         this.sessions = new SimpleRtspSession[N];
         final AtomicInteger[] counters = new AtomicInteger[N];
         final CountDownLatch latch = new CountDownLatch(N);
+        final String optionsString = "OPTIONS, SETUP, TEARDOWN";
 
         // create N sessions and initialize them
         for (int i = 0; i < N; i++) {
@@ -118,6 +119,7 @@ public class SimpleRtspSessionFunctionalTest {
             this.sessions[i] = new SimpleRtspSession(sessionId, localParticipant, localAddress);
             this.sessions[i].setUseNio(true);
             this.sessions[i].setAutomatedRtspHandling(true);
+            this.sessions[i].setOptionsString(optionsString);
             assertTrue(this.sessions[i].init());
             
             final AtomicInteger counter = new AtomicInteger();
@@ -180,9 +182,21 @@ public class SimpleRtspSessionFunctionalTest {
 					}
 					System.out.println("\t" + sessionId + " received response from " + remote + "\tstatus: " + message.getStatus().code() + "\t cSeq: " + cSeqString);
 					
+					if(cseq == 0) {
+						// check PUBLIC header
+						final String options = message.headers().get(RtspHeaders.Names.PUBLIC);
+						assertNotNull(options);
+						assertEquals(optionsString, options);
+					}
 					if(cseq == 1) {				// response of SETUP
+						// check session header
 						final String sessionId = message.headers().get(RtspHeaders.Names.SESSION);
 						assertNotNull(sessionId);
+						
+						// check transport header
+						final String transport = message.headers().get(RtspHeaders.Names.TRANSPORT);
+						assertNotNull(transport);
+						// TODO: further checking if possible
 						
 						// send TEARDOWN request
 		        		final HttpRequest teardownRequest = new DefaultHttpRequest(RtspVersions.RTSP_1_0, RtspMethods.TEARDOWN, "rtsp://localhost/path/to/resource");
