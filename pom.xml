@@ -138,7 +138,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     	<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     	<sonar.language>java</sonar.language>
-    	<sonar.host.url>http://sonarqube.it.dh-karlsruhe.de/</sonar.host.url>
+<!--     	<sonar.host.url>http://sonarqube.it.dh-karlsruhe.de/</sonar.host.url> -->
 <!-- 		<sonar.host.url>http://193.196.7.25/</sonar.host.url> -->
        	<sonar.projectName>UNV-imflux</sonar.projectName>
        	<sonar.projectVersions>${project.version}</sonar.projectVersions>
