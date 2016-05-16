@@ -15,6 +15,7 @@
  */
 package sas_systems.imflux.participant;
 
+import java.net.SocketAddress;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -229,6 +230,15 @@ public class RtspParticipant {
 	 */
 	public void setParameter(String name, Object value) {
 		this.parameters.put(name, value);
+	}
+	
+	/**
+	 * Uses the channel information to retrieve the remote address of this participant.
+	 * 
+	 * @return the remote {@link SocketAddress} of this participant
+	 */
+	public SocketAddress getRemoteAddress() {
+		return this.channel.remoteAddress();
 	}
 	
 	/**

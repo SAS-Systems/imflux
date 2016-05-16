@@ -91,7 +91,7 @@ public class SimpleRtspSessionFunctionalTest {
 			}
             
         }
-        System.out.println("\n...finished!");
+        System.out.println("finished!");
     }
 
     /**
@@ -153,8 +153,6 @@ public class SimpleRtspSessionFunctionalTest {
 				}
 				@Override
 				public void optionsRequestReceived(HttpRequest message, RtspParticipant participant) {
-//					System.out.println("\t" + sessionId + " received request from " + participant.getChannel() + ": " + message);
-//					counter.incrementAndGet();
 					fail("automated RTSP handling is set to true, so this method should not be invoked!");
 				}
 				@Override
@@ -168,18 +166,19 @@ public class SimpleRtspSessionFunctionalTest {
 				}
 			});
             
+            final SimpleRtspSession session = this.sessions[i];
             this.sessions[i].addResponseListener(new RtspResponseListener() {
 				@Override
 				public void responseReceived(HttpResponse message, RtspParticipant participant) {
-					System.out.println("\t" + sessionId + " received response: " + message);
+					final SocketAddress remote = participant.getRemoteAddress(); /*new InetSocketAddress("127.0.0.1", 30001);*/
 					final String cSeqString = message.headers().get(RtspHeaders.Names.CSEQ);
-					
 					int cseq = 0;
 					try {
 						cseq = Integer.valueOf(cSeqString);
 					} catch(Exception e) {
 						fail("Sequence number was not correctly set!");
 					}
+					System.out.println("\t" + sessionId + " received response from " + remote + "\tstatus: " + message.getStatus().code() + "\t cSeq: " + cSeqString);
 					
 					if(cseq == 1) {				// response of SETUP
 						final String sessionId = message.headers().get(RtspHeaders.Names.SESSION);
@@ -189,7 +188,10 @@ public class SimpleRtspSessionFunctionalTest {
 		        		final HttpRequest teardownRequest = new DefaultHttpRequest(RtspVersions.RTSP_1_0, RtspMethods.TEARDOWN, "rtsp://localhost/path/to/resource");
 		                teardownRequest.headers().add(RtspHeaders.Names.CSEQ, cseq+1);
 		                teardownRequest.headers().add(RtspHeaders.Names.SESSION, sessionId);
-		        		participant.sendMessage(teardownRequest);
+		                session.sendRequest(teardownRequest, remote);
+		                // these both do not work...why exactly?
+//		                session.sendRequest(teardownRequest, participant.getChannel());
+//		        		participant.sendMessage(teardownRequest);
 					}
 					if(cseq == 2) {				// response of TEARDOWN
 						if(message.getStatus().equals(RtspResponseStatuses.OK) && counter.incrementAndGet() == (N-1)) {
@@ -202,9 +204,7 @@ public class SimpleRtspSessionFunctionalTest {
 
         // send data
         for (int i = 0; i < N; i++) {
-        	if(i==1) break;
         	for (int j = 0; j < N; j++) {
-        		if(j==2) break;
         		if(i == j)
         			continue;
         		
@@ -227,8 +227,12 @@ public class SimpleRtspSessionFunctionalTest {
         		assertTrue(this.sessions[i].sendRequest(setupRequest, remoteAddress));
         		
 			}
-        	
-//            assertTrue(this.sessions[i].sendData(deadbeef, 0x45, false));
+        	// wait for 50 ms to prevent too high load on a single session
+			try {
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				fail(e.toString());
+			}
         }
         System.out.println("Wait for latch.....");
 
