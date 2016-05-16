@@ -41,7 +41,7 @@ sudo: false
 # run test reports and send to coveralls
 after_success:
     - mvn clean test jacoco:report coveralls:report
-	- mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL
+    - mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL
   
 #after_failure:
 
