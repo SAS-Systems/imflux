@@ -21,6 +21,7 @@ import java.util.Map;
 
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpMessage;
+import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.rtsp.RtspHeaders;
 import sas_systems.imflux.util.SessionIdentifierGenerator;
 
@@ -50,26 +51,83 @@ public class RtspParticipant {
 	 * Creates a new {@link RtspParticipant} in the default state {@link State#INITIALIZING}.
 	 * @param channel
 	 */
-	public RtspParticipant(Channel channel) {
+	private RtspParticipant(Channel channel) {
+		this(channel, null);
+	}
+	
+	/**
+	 * Create a new {@link RtspParticipant} in the default state {@link State#INITIALIZING}.<br/>
+	 * Use the reference to the {@link RtpParticipant} to link to the RTP session.
+	 * 
+	 * @param channel
+	 * @param associatedRtpParticipant
+	 */
+	private RtspParticipant(Channel channel, RtpParticipant associatedRtpParticipant) {
 		this.channel = channel;
+		this.rtpParticipant = associatedRtpParticipant;
 		this.isInValidSession = IS_NOT_IN_VALID_SESSION;
 		this.state = State.INITIALIZING;
 		this.parameters = new HashMap<>();
 	}
 	
+	// public static methods ------------------------------------------------------------------------------------------
 	/**
-	 * Create a new {@link RtspParticipant} in the {@link State#READY} state with a session ID assigned to it. <br/>
-	 * Use the reference to the {@link RtpParticipant} to link them together.
+	 * Creates a new {@link RtspParticipant} in the default state {@link State#INITIALIZING}.
+	 * 
+	 * @param channel
+	 * @return {@link RtpParticipant}
+	 */
+	public static RtspParticipant newInstance(Channel channel) {
+		if(!channel.isActive()) {
+			throw new IllegalArgumentException("Channel is not active!");
+		}
+		if(!channel.isRegistered()) {
+			throw new IllegalArgumentException("Channel is not registered with an EventLoop!");
+		}
+		
+		return new RtspParticipant(channel);
+	}
+	
+	/**
+	 * Create a new {@link RtspParticipant} in the default state {@link State#INITIALIZING}.<br/>
+	 * Use the reference to the {@link RtpParticipant} to link to the RTP session.
 	 * 
 	 * @param channel
 	 * @param associatedRtpParticipant
+	 * @return {@link RtpParticipant}
 	 */
-	public RtspParticipant(Channel channel, RtpParticipant associatedRtpParticipant) {
-		this.isInValidSession = IS_IN_VALID_SESSION;
-		this.channel = channel;
-		this.rtpParticipant = associatedRtpParticipant;
-		this.state = State.INITIALIZING;
-	}	
+	public static RtspParticipant newInstance(Channel channel, RtpParticipant associatedRtpParticipant) {
+		if(!channel.isActive()) {
+			throw new IllegalArgumentException("Channel is not active!");
+		}
+		if(!channel.isRegistered()) {
+			throw new IllegalArgumentException("Channel is not registered with an EventLoop!");
+		}
+		
+		return new RtspParticipant(channel, associatedRtpParticipant);
+	}
+	
+	/**
+	 * Creates a new {@link RtpParticipant} from the channel and message information. If the 
+	 * {@link RtspHeaders.Names#SESSION} header is set the participant will have this session ID as a member and the 
+	 * participant's state will be {@link State#READY}.
+	 * 
+	 * @param message a {@link HttpResponse} object
+	 * @param channel the source {@link Channel} of the response
+	 * @return {@link RtpParticipant}
+	 */
+	public static RtspParticipant newInstance(Channel channel, HttpMessage message) {
+		final RtspParticipant participant = new RtspParticipant(channel);
+		// extract session id
+		final String sessionId = message.headers().get(RtspHeaders.Names.SESSION);
+		if(sessionId != null) {
+			participant.sessionId = sessionId;
+			participant.isInValidSession = true;
+			participant.state = State.READY;
+		}
+		
+		return participant;
+	}
 	
 	// public methods -------------------------------------------------------------------------------------------------
 	/**

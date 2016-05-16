@@ -321,7 +321,7 @@ public class SimpleRtspSession implements RtspSession {
 		if(!request.getDecoderResult().isSuccess())
 			return;
 		
-//		LOG.debug("RTSP request received: {}", request);
+		LOG.debug("RTSP request received: {}", request);
 //		System.out.println(request);
 		
 		
@@ -335,7 +335,7 @@ public class SimpleRtspSession implements RtspSession {
 			}
 			// forward message (resource description is application specific)
 			for (RtspRequestListener listener : this.requestListener) {
-				listener.describeRequestReceived(request, new RtspParticipant(channel));
+				listener.describeRequestReceived(request, RtspParticipant.newInstance(channel));
 			}
 		}
 		if(request.getMethod().equals(RtspMethods.ANNOUNCE)) {
@@ -345,7 +345,7 @@ public class SimpleRtspSession implements RtspSession {
 			}
 			// forward message (resource description is again application specific)
 			for (RtspRequestListener listener : this.requestListener) {
-				listener.announceRequestReceived(request, new RtspParticipant(channel));
+				listener.announceRequestReceived(request, RtspParticipant.newInstance(channel));
 			}
 		}
 		if(request.getMethod().equals(RtspMethods.SETUP)) {
@@ -355,7 +355,7 @@ public class SimpleRtspSession implements RtspSession {
 			if(!automatedRtspHandling) {
 				// forward message
 				for (RtspRequestListener listener : this.requestListener) {
-					listener.playRequestReceived(request, new RtspParticipant(channel));
+					listener.playRequestReceived(request, RtspParticipant.newInstance(channel));
 				}
 			} else {
 				sendNotImplemented(channel, request);
@@ -365,7 +365,7 @@ public class SimpleRtspSession implements RtspSession {
 			if(!automatedRtspHandling) {
 				// forward message
 				for (RtspRequestListener listener : this.requestListener) {
-					listener.pauseRequestReceived(request, new RtspParticipant(channel));
+					listener.pauseRequestReceived(request, RtspParticipant.newInstance(channel));
 				}
 			} else {
 				sendNotImplemented(channel, request);
@@ -388,7 +388,7 @@ public class SimpleRtspSession implements RtspSession {
 			}
 			// forward message (GET_PARAMETER is application specific)
 			for (RtspRequestListener listener : this.requestListener) {
-				listener.getParameterRequestReceived(request, new RtspParticipant(channel));
+				listener.getParameterRequestReceived(request, RtspParticipant.newInstance(channel));
 			}
 		}
 		if(request.getMethod().equals(RtspMethods.SET_PARAMETER)) {
@@ -398,14 +398,14 @@ public class SimpleRtspSession implements RtspSession {
 			}
 			// forward message (SET_PARAMETER is application specific)
 			for (RtspRequestListener listener : this.requestListener) {
-				listener.setParameterRequestReceived(request, new RtspParticipant(channel));
+				listener.setParameterRequestReceived(request, RtspParticipant.newInstance(channel));
 			}
 		}
 		if(request.getMethod().equals(RtspMethods.REDIRECT)) {
 			if(!automatedRtspHandling) {
 				// forward message 
 				for (RtspRequestListener listener : this.requestListener) {
-					listener.redirectRequestReceived(request, new RtspParticipant(channel));
+					listener.redirectRequestReceived(request, RtspParticipant.newInstance(channel));
 				}
 			} else {
 				sendNotImplemented(channel, request);
@@ -415,7 +415,7 @@ public class SimpleRtspSession implements RtspSession {
 			if(!automatedRtspHandling) {
 				// forward message 
 				for (RtspRequestListener listener : this.requestListener) {
-					listener.recordRequestReceived(request, new RtspParticipant(channel));
+					listener.recordRequestReceived(request, RtspParticipant.newInstance(channel));
 				}
 			} else {
 				sendNotImplemented(channel, request);
@@ -429,15 +429,8 @@ public class SimpleRtspSession implements RtspSession {
 	@Override
 	public void responseReceived(Channel channel, HttpResponse response) {
 		LOG.debug("RTSP response received: {}", response);
-		// check if we know this participant
-		final String session = response.headers().get(RtspHeaders.Names.SESSION);
-		RtspParticipant participant = null;
-		if(session != null) {
-			participant = this.participantSessions.get(session);
-		}
-		if(participant == null) {
-			participant = new RtspParticipant(channel);
-		}
+		// create a new RtspParticipant for forwarding the response
+		RtspParticipant participant = RtspParticipant.newInstance(channel, response);
 		
 		for (RtspResponseListener listener : this.responseListener) {
 			listener.responseReceived(response, participant);
@@ -495,7 +488,7 @@ public class SimpleRtspSession implements RtspSession {
 		if(!automatedRtspHandling) {
 			// forward messages
 			for (RtspRequestListener listener : this.requestListener) {
-				listener.optionsRequestReceived(request, new RtspParticipant(channel));
+				listener.optionsRequestReceived(request, RtspParticipant.newInstance(channel, request));
 			}
 			return;
 		}
@@ -522,7 +515,7 @@ public class SimpleRtspSession implements RtspSession {
 		if(!automatedRtspHandling) {
 			// forward messages
 			for (RtspRequestListener listener : this.requestListener) {
-				listener.setupRequestReceived(request, new RtspParticipant(channel));
+				listener.setupRequestReceived(request, RtspParticipant.newInstance(channel));
 			}
 			return;
 		}
@@ -541,7 +534,7 @@ public class SimpleRtspSession implements RtspSession {
 		}
 		
 		// create participant and session id
-		participant = new RtspParticipant(channel);
+		participant = RtspParticipant.newInstance(channel);
 		final String sessionId = participant.setup();
 		this.participantSessions.put(sessionId, participant);
 		
@@ -614,7 +607,7 @@ public class SimpleRtspSession implements RtspSession {
 		if(!automatedRtspHandling) {
 			// forward messages
 			for (RtspRequestListener listener : this.requestListener) {
-				listener.teardownRequestReceived(request, new RtspParticipant(channel));
+				listener.teardownRequestReceived(request, RtspParticipant.newInstance(channel, request));
 			}
 			return;
 		}
