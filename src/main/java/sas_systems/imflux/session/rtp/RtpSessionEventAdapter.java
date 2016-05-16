@@ -1,4 +1,4 @@
-package sas_systems.imflux.session;
+package sas_systems.imflux.session.rtp;
 
 import sas_systems.imflux.participant.RtpParticipant;
 

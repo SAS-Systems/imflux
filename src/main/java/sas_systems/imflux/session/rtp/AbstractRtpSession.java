@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Sebastian Schmidl
+ * Copyright 2016 Sebastian Schmidl
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package sas_systems.imflux.session;
+package sas_systems.imflux.session.rtp;
+
+import java.math.BigInteger;
+import java.net.SocketAddress;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.AddressedEnvelope;
@@ -31,17 +41,6 @@ import io.netty.channel.socket.oio.OioDatagramChannel;
 import io.netty.util.HashedWheelTimer;
 import io.netty.util.Timeout;
 import io.netty.util.TimerTask;
-
-import java.math.BigInteger;
-import java.net.SocketAddress;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
 import sas_systems.imflux.logging.Logger;
 import sas_systems.imflux.network.udp.UdpControlHandler;
 import sas_systems.imflux.network.udp.UdpControlPacketDecoder;
@@ -79,14 +78,13 @@ import sas_systems.imflux.participant.RtpParticipantInfo;
  * TODO: describe RTCP handling
  * </p>
  * 
- * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
 public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 
     // constants ------------------------------------------------------------------------------------------------------
     protected static final Logger LOG = Logger.getLogger(AbstractRtpSession.class);
-    protected static final String VERSION = "imflux_0.2_17042016";
+    protected static final String VERSION = "imflux_0.1.0_07052016";
 
     // configuration defaults -----------------------------------------------------------------------------------------
     protected static final boolean USE_NIO = true;
@@ -1090,10 +1088,12 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     }
 
     // getters & setters ----------------------------------------------------------------------------------------------
+    @Override
     public boolean isRunning() {
         return this.running.get();
     }
 
+    @Override
     public boolean useNio() {
         return useNio;
     }
@@ -1101,6 +1101,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     /**
      * Can only be modified before initialization.
      */
+    @Override
     public void setUseNio(boolean useNio) {
         if (this.running.get()) {
             throw new IllegalArgumentException("Cannot modify property after initialisation");

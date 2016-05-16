@@ -32,10 +32,10 @@ import org.junit.Test;
 import sas_systems.imflux.packet.DataPacket;
 import sas_systems.imflux.participant.RtpParticipant;
 import sas_systems.imflux.participant.RtpParticipantInfo;
-import sas_systems.imflux.session.RtpSession;
-import sas_systems.imflux.session.RtpSessionDataListener;
-import sas_systems.imflux.session.RtpSessionEventAdapter;
-import sas_systems.imflux.session.SingleParticipantSession;
+import sas_systems.imflux.session.rtp.RtpSession;
+import sas_systems.imflux.session.rtp.RtpSessionDataListener;
+import sas_systems.imflux.session.rtp.RtpSessionEventAdapter;
+import sas_systems.imflux.session.rtp.SingleParticipantSession;
 
 /**
  * Functional test for the class {@link SingleParticipantSession}.
