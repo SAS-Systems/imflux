@@ -40,6 +40,7 @@ import io.netty.channel.socket.oio.OioServerSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMessage;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -183,8 +184,9 @@ public class SimpleRtspSession implements RtspSession {
 					@Override
 					protected void initChannel(Channel ch) throws Exception {
 						ChannelPipeline pipeline = ch.pipeline();
-						pipeline.addLast("decoder", new RtspDecoder());
 						pipeline.addLast("encoder", new RtspEncoder());
+						pipeline.addLast("decoder", new RtspDecoder());
+						pipeline.addLast("aggregator", new HttpObjectAggregator(64*1024));
 						pipeline.addLast("handler", new RtspHandler(SimpleRtspSession.this));
 					}
 				});
@@ -231,8 +233,9 @@ public class SimpleRtspSession implements RtspSession {
 		// create channel and connect it to the given remote
 		final Channel ch = new NioSocketChannel();
 		final ChannelPipeline pipe = ch.pipeline();
-		pipe.addLast("decoder", new RtspDecoder());
 		pipe.addLast("encoder", new RtspEncoder());
+		pipe.addLast("decoder", new RtspDecoder());
+		pipe.addLast("aggregator", new HttpObjectAggregator(64*1024));
 		pipe.addLast("handler", new RtspHandler(SimpleRtspSession.this));
 		this.workerGroup.register(ch);
 		
