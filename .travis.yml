@@ -36,15 +36,16 @@ sudo: false
 
 #before_script:
 
-#script:
-
+script:
+  - false
+  
 # run test reports and send to coveralls
 after_success:
     - mvn clean test jacoco:report coveralls:report
     - mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL
 
 after_failure:
-    - ./send_jira_ticket.sh
+    - sh send_jira_ticket.sh
 
 #before_deploy:
 
