@@ -36,9 +36,8 @@ sudo: false
 
 #before_script:
 
-script:
-  - false
-  
+#script:
+
 # run test reports and send to coveralls
 after_success:
     - mvn clean test jacoco:report coveralls:report
