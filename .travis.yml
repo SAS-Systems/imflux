@@ -2,7 +2,7 @@
 
 
 # Notes:
-#  - you can skip a build by adding [ci skip] to the commit message 
+#  - you can skip a build by adding [ci skip] to the commit message
 #
 
 # see http://about.travis-ci.org/docs/user/languages/java/
@@ -21,7 +21,7 @@ branches:
     - deploy
     - coverallsTest
     - travisTest
-   
+
 # container-based build:
 sudo: false
 
@@ -32,7 +32,7 @@ sudo: false
 #--------------------------------------------------------------------
 
 #before_install:
-#   - 
+#   -
 
 #before_script:
 
@@ -42,8 +42,9 @@ sudo: false
 after_success:
     - mvn clean test jacoco:report coveralls:report
     - mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL
-  
-#after_failure:
+
+after_failure:
+    - ./send_jira_ticket.sh
 
 #before_deploy:
 
