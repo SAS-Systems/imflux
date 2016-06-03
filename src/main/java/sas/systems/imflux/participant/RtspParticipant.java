@@ -183,10 +183,10 @@ public class RtspParticipant {
 	private void checkAndAddSessionId(HttpMessage message) {
 		final String session = message.headers().get(RtspHeaders.Names.SESSION);
 		
-		if(session == null || !session.equals(String.valueOf(sessionId))) {
+		if(session == null || !session.contains(String.valueOf(sessionId))) {
 			message.headers().add(RtspHeaders.Names.SESSION, sessionId);
 		} else {
-			if(!session.equals(String.valueOf(sessionId))) {
+			if(!session.contains(String.valueOf(sessionId))) {
 				message.headers().remove(RtspHeaders.Names.SESSION);
 				message.headers().add(RtspHeaders.Names.SESSION, sessionId);
 			}
