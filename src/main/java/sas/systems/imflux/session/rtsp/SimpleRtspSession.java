@@ -200,12 +200,8 @@ public class SimpleRtspSession implements RtspSession {
             this.workerGroup.shutdownGracefully();
             this.bossGroup.shutdownGracefully();
             
-            try {
-            	this.workerGroup.terminationFuture().sync();
-            	this.bossGroup.terminationFuture().sync();
-			} catch (InterruptedException e1) {
-				LOG.error("EventLoopGroup termination failed: {}", e1);
-			}
+            this.workerGroup.terminationFuture().syncUninterruptibly();
+            this.bossGroup.terminationFuture().syncUninterruptibly();
             return false;
         }
         LOG.debug("RTSP channel bound for RtspSession with id {}.", this.id);
@@ -239,12 +235,7 @@ public class SimpleRtspSession implements RtspSession {
 		pipe.addLast("handler", new RtspHandler(SimpleRtspSession.this));
 		this.workerGroup.register(ch);
 		
-		try {
-			ch.connect(remoteAddress).sync();
-		} catch (InterruptedException e) {
-			LOG.error("Could not open TCP connection to remote at {}.", e, remoteAddress);
-			return false;
-		}
+		ch.connect(remoteAddress).syncUninterruptibly();
 		
 		return internalSend(request, ch);
 	}
@@ -457,12 +448,9 @@ public class SimpleRtspSession implements RtspSession {
         this.participantSessions.clear();
         this.requestListener.clear();
         this.responseListener.clear();
-        try {
-        	this.workerGroup.terminationFuture().sync();
-        	this.bossGroup.terminationFuture().sync();
-		} catch (InterruptedException e1) {
-			LOG.error("EventLoopGroup termination failed: {}", e1);
-		}
+        // wait for termination
+        this.workerGroup.terminationFuture().syncUninterruptibly();
+        this.bossGroup.terminationFuture().syncUninterruptibly();
     }
     
     /**
