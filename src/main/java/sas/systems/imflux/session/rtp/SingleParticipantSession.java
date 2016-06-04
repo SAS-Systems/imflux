@@ -178,7 +178,7 @@ public class SingleParticipantSession extends AbstractRtpSession {
             this.writeToData(packet, destination);
             this.sentOrReceivedPackets.set(true);
         } catch (Exception e) {
-            LOG.error("Failed to send {} to {} in session with id {}.", packet, this.id, this.receiver.getInfo());
+            LOG.error("Failed to send {} to {} in session with id {}.", e, packet, this.id, this.receiver.getInfo());
         }
     }
 
@@ -203,7 +203,7 @@ public class SingleParticipantSession extends AbstractRtpSession {
             this.writeToControl(packet, destination);
             this.sentOrReceivedPackets.set(true);
         } catch (Exception e) {
-            LOG.error("Failed to send RTCP packet to {} in session with id {}.", this.receiver.getInfo(), this.id);
+            LOG.error("Failed to send RTCP packet to {} in session with id {}.", e, this.receiver.getInfo(), this.id);
         }
     }
 
@@ -228,7 +228,7 @@ public class SingleParticipantSession extends AbstractRtpSession {
             this.writeToControl(packet, destination);
             this.sentOrReceivedPackets.set(true);
         } catch (Exception e) {
-            LOG.error("Failed to send compound RTCP packet to {} in session with id {}.", this.receiver.getInfo(), this.id);
+            LOG.error("Failed to send compound RTCP packet to {} in session with id {}.", e, this.receiver.getInfo(), this.id);
         }
     }
 
