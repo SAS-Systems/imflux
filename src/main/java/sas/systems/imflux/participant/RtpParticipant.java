@@ -43,6 +43,7 @@ public class RtpParticipant {
     // constants ------------------------------------------------------------------------------------------------------
 	// TODO: not used?
     private static final int VALID_PACKETS_UNTIL_VALID_PARTICIPANT = 3;
+    private static final String INVALID_PORT_NUMBER = "Invalid port number; use range [0;65536]";
 
     // configuration --------------------------------------------------------------------------------------------------
     private final RtpParticipantInfo info;
@@ -90,10 +91,10 @@ public class RtpParticipant {
         RtpParticipant participant = new RtpParticipant(new RtpParticipantInfo());
 
         if ((dataPort < 0) || (dataPort > 65536)) {
-            throw new IllegalArgumentException("Invalid port number; use range [0;65536]");
+            throw new IllegalArgumentException(INVALID_PORT_NUMBER);
         }
         if ((controlPort < 0) || (controlPort > 65536)) {
-            throw new IllegalArgumentException("Invalid port number; use range [0;65536]");
+            throw new IllegalArgumentException(INVALID_PORT_NUMBER);
         }
 
         participant.dataDestination = new InetSocketAddress(host, dataPort);
@@ -115,10 +116,10 @@ public class RtpParticipant {
         RtpParticipant participant = new RtpParticipant(info);
 
         if ((dataPort < 0) || (dataPort > 65536)) {
-            throw new IllegalArgumentException("Invalid port number; use range [0;65536]");
+            throw new IllegalArgumentException(INVALID_PORT_NUMBER);
         }
         if ((controlPort < 0) || (controlPort > 65536)) {
-            throw new IllegalArgumentException("Invalid port number; use range [0;65536]");
+            throw new IllegalArgumentException(INVALID_PORT_NUMBER);
         }
 
         participant.dataDestination = new InetSocketAddress(host, dataPort);
