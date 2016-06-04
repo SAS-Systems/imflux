@@ -190,21 +190,7 @@ public class SingleParticipantSession extends AbstractRtpSession {
      */
     @Override
     protected void internalSendControl(ControlPacket packet) {
-        try {
-            // This assumes that the sender is sending from the same ports where its expecting to receive.
-            // Can be dangerous if the other end fully respects the RFC and supports ICE, but this is nearly the only
-            // workaround that will work if the other end doesn't support ICE and is behind a NAT.
-            SocketAddress destination;
-            if (this.sendToLastOrigin && (this.receiver.getLastControlOrigin() != null)) {
-                destination = this.receiver.getLastControlOrigin();
-            } else {
-                destination = this.receiver.getControlDestination();
-            }
-            this.writeToControl(packet, destination);
-            this.sentOrReceivedPackets.set(true);
-        } catch (Exception e) {
-            LOG.error("Failed to send RTCP packet to {} in session with id {}.", e, this.receiver.getInfo(), this.id);
-        }
+        new SendControlHelper(packet).sendControl();
     }
 
     /**
@@ -215,21 +201,7 @@ public class SingleParticipantSession extends AbstractRtpSession {
      */
     @Override
     protected void internalSendControl(CompoundControlPacket packet) {
-        try {
-        	// This assumes that the sender is sending from the same ports where its expecting to receive.
-            // Can be dangerous if the other end fully respects the RFC and supports ICE, but this is nearly the only
-            // workaround that will work if the other end doesn't support ICE and is behind a NAT.
-            SocketAddress destination;
-            if (this.sendToLastOrigin && (this.receiver.getLastControlOrigin() != null)) {
-                destination = this.receiver.getLastControlOrigin();
-            } else {
-                destination = this.receiver.getControlDestination();
-            }
-            this.writeToControl(packet, destination);
-            this.sentOrReceivedPackets.set(true);
-        } catch (Exception e) {
-            LOG.error("Failed to send compound RTCP packet to {} in session with id {}.", e, this.receiver.getInfo(), this.id);
-        }
+        new SendControlHelper(packet).sendControl();
     }
 
     // DataPacketReceiver ---------------------------------------------------------------------------------------------
@@ -249,10 +221,10 @@ public class SingleParticipantSession extends AbstractRtpSession {
                       packet.getSsrc(), this.receiver.getInfo().getSsrc());
             return;
         }
-
+        
         super.dataPacketReceived(origin, packet);
     }
-
+    
     // getters & setters ----------------------------------------------------------------------------------------------
     public RtpParticipant getRemoteParticipant() {
         return this.receiver;
@@ -279,4 +251,62 @@ public class SingleParticipantSession extends AbstractRtpSession {
         }
         this.ignoreFromUnknownSsrc = ignoreFromUnknownSsrc;
     }
+    
+    // private helper class -------------------------------------------------------------------------------------------
+    /**
+     * Helper class for sending either {@link CompoundControlPacket}s or {@link ControlPacket} to the remote 
+     * participant.
+     * 
+     * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
+     */
+    private class SendControlHelper {
+    	private final boolean isCompound;
+    	
+    	private ControlPacket packet;
+    	private CompoundControlPacket compountPacket;
+    	
+    	/**
+    	 * This class sends a {@link ControlPacket} to the remote participant.
+    	 * @param packet
+    	 */
+    	public SendControlHelper(ControlPacket packet) {
+			this.packet = packet;
+			this.isCompound = false;
+		}
+    	
+    	/**
+    	 * This class sends a {@link CompoundControlPacket} to the remote participant.
+    	 * @param packet
+    	 */
+    	public SendControlHelper(CompoundControlPacket compoundPacket) {
+    		this.compountPacket = compoundPacket;
+    		this.isCompound = true;
+    	}
+    	
+    	/**
+    	 * Sends the packet.
+    	 */
+    	public void sendControl() {
+    		try {
+            	// This assumes that the sender is sending from the same ports where its expecting to receive.
+                // Can be dangerous if the other end fully respects the RFC and supports ICE, but this is nearly the only
+                // workaround that will work if the other end doesn't support ICE and is behind a NAT.
+                SocketAddress destination;
+                if (sendToLastOrigin && (receiver.getLastControlOrigin() != null)) {
+                    destination = receiver.getLastControlOrigin();
+                } else {
+                    destination = receiver.getControlDestination();
+                }
+                if(isCompound) {
+                	writeToControl(compountPacket, destination);
+                } else {
+                	writeToControl(packet, destination);
+                }
+                sentOrReceivedPackets.set(true);
+            } catch (Exception e) {
+                LOG.error("Failed to send compound RTCP packet to {} in session with id {}.", e, receiver.getInfo(), id);
+            }
+    	}
+    }
+
 }
