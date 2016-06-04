@@ -74,8 +74,8 @@ public class DefaultParticipantDatabase implements ParticipantDatabase {
         this.id = id;
         this.listener = eventListener;
 
-        this.receivers = new ArrayList<RtpParticipant>();
-        this.members = new HashMap<Long, RtpParticipant>();
+        this.receivers = new ArrayList<>();
+        this.members = new HashMap<>();
 
         this.lock = new ReentrantReadWriteLock();
 
@@ -83,19 +83,23 @@ public class DefaultParticipantDatabase implements ParticipantDatabase {
         this.timeoutAfterByeAndNoPacketsReceived = TIMEOUT_AFTER_BYE_AND_NO_PACKETS_RECEIVED;
     }
 
-    // public methods -------------------------------------------------------------------------------------------------
+    // ParticipantDatabase --------------------------------------------------------------------------------------------
+    @Override
     public String getId() {
         return id;
     }
     
+    @Override
     public Collection<RtpParticipant> getReceivers() {
         return Collections.unmodifiableCollection(this.receivers);
     }
 
+    @Override
     public Map<Long, RtpParticipant> getMembers() {
         return Collections.unmodifiableMap(this.members);
     }
 
+    @Override
     public void doWithReceivers(ParticipantOperation operation) {
         this.lock.readLock().lock();
         try {
@@ -111,6 +115,7 @@ public class DefaultParticipantDatabase implements ParticipantDatabase {
         }
     }
 
+    @Override
     public void doWithParticipants(ParticipantOperation operation) {
         this.lock.readLock().lock();
         try {
@@ -126,6 +131,7 @@ public class DefaultParticipantDatabase implements ParticipantDatabase {
         }
     }
 
+    @Override
     public boolean addReceiver(RtpParticipant remoteParticipant) {
         if (!remoteParticipant.isReceiver()) {
             return false;
@@ -154,6 +160,7 @@ public class DefaultParticipantDatabase implements ParticipantDatabase {
         }
     }
 
+    @Override
     public boolean removeReceiver(RtpParticipant remoteParticipant) {
         this.lock.writeLock().lock();
         try {
@@ -163,6 +170,7 @@ public class DefaultParticipantDatabase implements ParticipantDatabase {
         }
     }
 
+    @Override
     public RtpParticipant getParticipant(long ssrc) {
         this.lock.readLock().lock();
         try {
@@ -172,36 +180,27 @@ public class DefaultParticipantDatabase implements ParticipantDatabase {
         }
     }
 
+    @Override
     public RtpParticipant getOrCreateParticipantFromDataPacket(SocketAddress origin, DataPacket packet) {
         this.lock.writeLock().lock();
         try {
             RtpParticipant participant = this.members.get(packet.getSsrc());
             if (participant == null) {
                 // Iterate through the receivers, trying to find a match for this participant through the RTP ports.
-                boolean isReceiver = false;
-                for (RtpParticipant receiver : this.receivers) {
-                    if (receiver.getDataDestination().equals(origin)) {
-                        // Will be added to the members list.
-                        receiver.getInfo().setSsrc(packet.getSsrc());
-                        participant = receiver;
-                        participant.setLastDataOrigin(origin);
-                        isReceiver = true;
-                        break;
-                    }
-                }
-
-                boolean created = false;
-                if (!isReceiver) {
-                    // Will be added to the members list but will NOT be a receiver. 
+                RtpParticipant receiver = findReceiverWith(origin);
+                if(receiver != null) {
+                	// Will be added to the members list.
+                    receiver.getInfo().setSsrc(packet.getSsrc());
+                    participant = receiver;
+                    participant.setLastDataOrigin(origin);
+                } else {
+                	// Will be added to the members list but will NOT be a receiver. 
                     participant = RtpParticipant.createFromUnexpectedDataPacket(origin, packet);
-                    created = true;
-                }
-
-                this.members.put(packet.getSsrc(), participant);
-
-                if (created) {
+                    // notify listeners
                     this.listener.participantCreatedFromDataPacket(participant);
                 }
+                
+                this.members.put(packet.getSsrc(), participant);
             }
 
             return participant;
@@ -210,47 +209,28 @@ public class DefaultParticipantDatabase implements ParticipantDatabase {
         }
     }
 
+    @Override
     public RtpParticipant getOrCreateParticipantFromSdesChunk(SocketAddress origin, SdesChunk chunk) {
         this.lock.writeLock().lock();
         try {
             RtpParticipant participant = this.members.get(chunk.getSsrc());
             if (participant == null) {
-                // Iterate through the receivers, trying to find a match for this participant through the RTCP ports or
-                // CNAME.
-                boolean isReceiver = false;
-                for (RtpParticipant receiver : this.receivers) {
-                    // Verify if CNAME is the same
-                    boolean equalCname = false;
-                    String chunkCname = chunk.getItemValue(SdesChunkItem.Type.CNAME);
-                    if ((chunkCname != null) && chunkCname.equals(receiver.getInfo().getCname())) {
-                        equalCname = true;
-                    }
-
-                    // If either CNAME matches or control destination matches source, then there's a match in the
-                    // receivers list.
-                    if (receiver.getControlDestination().equals(origin) || equalCname) {
-                        // Will be added to the members list.
-                        receiver.getInfo().setSsrc(chunk.getSsrc());
-                        participant = receiver;
-                        participant.setLastControlOrigin(origin);
-                        participant.receivedSdes();
-                        participant.getInfo().updateFromSdesChunk(chunk);
-                        isReceiver = true;
-                        break;
-                    }
-                }
-
-                boolean created = false;
-                if (!isReceiver) {
-                    // Will be added to the members list but will NOT be a receiver.
+            	RtpParticipant receiver = findReceiverWith(origin, chunk.getItemValue(SdesChunkItem.Type.CNAME));
+            	if(receiver != null) {
+            		// Will be added to the members list.
+                    receiver.getInfo().setSsrc(chunk.getSsrc());
+                    participant = receiver;
+                    participant.setLastControlOrigin(origin);
+                    participant.receivedSdes();
+                    participant.getInfo().updateFromSdesChunk(chunk);
+            	} else {
+            		// Will be added to the members list but will NOT be a receiver.
                     participant = RtpParticipant.createFromSdesChunk(origin, chunk);
-                    created = true;
-                }
+                    // notify listeners
+                    this.listener.participantCreatedFromSdesChunk(participant);
+            	}
 
                 this.members.put(chunk.getSsrc(), participant);
-                if (created) {
-                    this.listener.participantCreatedFromSdesChunk(participant);
-                }
             }
 
             return participant;
@@ -259,14 +239,17 @@ public class DefaultParticipantDatabase implements ParticipantDatabase {
         }
     }
 
+    @Override
     public int getReceiverCount() {
         return this.receivers.size();
     }
 
+    @Override
     public int getParticipantCount() {
         return this.members.size();
     }
 
+    @Override
     public void cleanup() {
         this.lock.writeLock().lock();
         long now = TimeUtils.now();
@@ -289,6 +272,48 @@ public class DefaultParticipantDatabase implements ParticipantDatabase {
         } finally {
             this.lock.writeLock().unlock();
         }
+    }
+    
+    // private helpers ------------------------------------------------------------------------------------------------
+    /**
+     * Searches the receivers and compares the {@code address} with their data destination.
+     * If they are equal the receiver is returned.
+     * 
+     * @param address
+     * @return the receiver if found, {@code null} otherwise
+     */
+    private RtpParticipant findReceiverWith(SocketAddress address) {
+    	for (RtpParticipant receiver : this.receivers) {
+            if (receiver.getDataDestination().equals(address)) {
+            	return receiver;
+            }
+    	}
+    	return null;
+    }
+    
+    /**
+     * Iterate through the receivers, trying to find a match for this participant through the RTCP ports or 
+     * CNAME.
+     * 
+     * @param address
+     * @param cName
+     * @return the receiver if found, {@code null} otherwise
+     */
+    private RtpParticipant findReceiverWith(SocketAddress address, String cName) {
+        for (RtpParticipant receiver : this.receivers) {
+            // Verify if CNAME is the same
+            boolean equalCname = false;
+            if ((cName != null) && cName.equals(receiver.getInfo().getCname())) {
+                equalCname = true;
+            }
+
+            // If either CNAME matches or control destination matches source, then there's a match in the
+            // receivers list.
+            if (receiver.getControlDestination().equals(address) || equalCname) {
+                return receiver;
+            }
+        }
+        return null;
     }
 
     // getters & setters ----------------------------------------------------------------------------------------------
