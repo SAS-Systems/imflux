@@ -622,12 +622,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 	 */
 	protected void shutdownEventLoopGroup() {
 		this.workerGroup.shutdownGracefully();
-		
-		try {
-			this.workerGroup.terminationFuture().sync();
-		} catch (InterruptedException e1) {
-			LOG.error("EventLoopGroup termination failed: {}", e1);
-		}
+		this.workerGroup.terminationFuture().syncUninterruptibly();
 	}
 	
     /**
@@ -816,24 +811,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * @param participant participant information
      */
     protected void internalSendControl(final ControlPacket packet) {
-        this.participantDatabase.doWithReceivers(new ParticipantOperation() {
-            @Override
-            public void doWithParticipant(RtpParticipant participant) throws Exception {
-                if (!participant.isReceiver() || participant.receivedBye()) {
-                    return;
-                }
-                try {
-                    writeToControl(packet, participant.getControlDestination());
-                } catch (Exception e) {
-                    LOG.error("Failed to send RTCP packet to participants in session with id {}.", e, id);
-                }
-            }
-
-            @Override
-            public String toString() {
-                return "internalSendControl(ControlPacket) for session with id " + id;
-            }
-        });
+        this.participantDatabase.doWithReceivers(new SendOperation(packet));
     }
 
     /**
@@ -844,24 +822,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * @param participant participant information
      */
     protected void internalSendControl(final CompoundControlPacket packet) {
-        this.participantDatabase.doWithReceivers(new ParticipantOperation() {
-            @Override
-            public void doWithParticipant(RtpParticipant participant) throws Exception {
-                if (!participant.isReceiver() || participant.receivedBye()) {
-                    return;
-                }
-                try {
-                    writeToControl(packet, participant.getControlDestination());
-                } catch (Exception e) {
-                    LOG.error("Failed to send RTCP compound packet to participants in session with id {}.", e, id);
-                }
-            }
-
-            @Override
-            public String toString() {
-                return "internalSendControl(CompoundControlPacket) for session with id " + id;
-            }
-        });
+        this.participantDatabase.doWithReceivers(new SendOperation(packet));
     }
 
     /**
@@ -1220,5 +1181,63 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
             throw new IllegalArgumentException("Cannot modify property after initialisation");
         }
         this.participantDatabaseCleanup = participantDatabaseCleanup;
+    }
+    
+    // private classes ------------------------------------------------------------------------------------------------
+    /**
+     * Implementation of the {@link ParticipantOperation} interface for sending a packet to the participant.
+     * 
+     * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
+     */
+    private class SendOperation implements ParticipantOperation {
+    	
+    	private final boolean isCompound;
+    	private ControlPacket packet;
+    	private CompoundControlPacket compoundPacket;
+    	
+    	/**
+    	 * This class sends a {@link ControlPacket} to the participant.
+    	 * @param packet
+    	 */
+    	public SendOperation(final ControlPacket packet) {
+    		this.packet = packet;
+    		this.isCompound = false;
+    	}
+    	
+    	/**
+    	 * This class sends a {@link CompoundControlPacket} to the participant.
+    	 * @param packet
+    	 */
+    	public SendOperation(final CompoundControlPacket packet) {
+    		this.compoundPacket = packet;
+    		this.isCompound = true;
+    	}
+
+    	/**
+    	 * {@inheritDoc}
+    	 */
+		@Override
+		public void doWithParticipant(RtpParticipant participant) throws Exception {
+			if (!participant.isReceiver() || participant.receivedBye()) {
+                return;
+            }
+            try {
+            	if(isCompound) {
+            		writeToControl(compoundPacket, participant.getControlDestination());
+            	} else {
+            		writeToControl(packet, participant.getControlDestination());
+            	}
+            } catch (Exception e) {
+                LOG.error("Failed to send RTCP packet to participants in session with id {}.", e, id);
+            }
+		}
+    	
+		@Override
+        public String toString() {
+            return "internalSendControl(" 
+            		+ (isCompound?"CompoundControlPacket":"ControlPacket")
+            		+ ") for session with id " 
+            		+ id;
+        }
     }
 }
