@@ -17,18 +17,18 @@
 package sas.systems.imflux.test.packet.rtcp;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+
+import java.math.BigInteger;
+import java.util.Collection;
+
+import org.junit.Test;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import sas.systems.imflux.packet.rtcp.ControlPacket;
 import sas.systems.imflux.packet.rtcp.ReceptionReport;
 import sas.systems.imflux.packet.rtcp.SenderReportPacket;
 import sas.systems.imflux.util.ByteUtils;
-
-import java.math.BigInteger;
-
-import org.junit.Test;
 
 /**
  * JUnit test for a ControlPacket of {@link ControlPacket.Type} {@link SenderReportPacket}
@@ -57,7 +57,7 @@ public class SenderReportPacketTest {
         assertEquals(2, srPacket.getSenderPacketCount());
         assertEquals(2, srPacket.getSenderOctetCount());
         assertEquals(0, srPacket.getReportCount());
-        assertNull(srPacket.getReports());
+        assertEmpty(srPacket.getReports());
 
         assertEquals(0, buffer.readableBytes());
     }
@@ -80,7 +80,7 @@ public class SenderReportPacketTest {
         assertEquals(523, srPacket.getSenderPacketCount());
         assertEquals(89956, srPacket.getSenderOctetCount());
         assertEquals(0, srPacket.getReportCount());
-        assertNull(srPacket.getReports());
+        assertEmpty(srPacket.getReports());
 
         assertEquals(0, buffer.readableBytes());
     }
@@ -124,7 +124,7 @@ public class SenderReportPacketTest {
         assertEquals(0x45, srPacket.getRtpTimestamp());
         assertEquals(20, srPacket.getSenderOctetCount());
         assertEquals(2, srPacket.getSenderPacketCount());
-        assertNotNull(srPacket.getReports());
+        assertNotEmpty(srPacket.getReports());
         assertEquals(2, srPacket.getReportCount());
         assertEquals(2, srPacket.getReports().size());
         assertEquals(10, srPacket.getReports().get(0).getSsrc());
@@ -164,5 +164,13 @@ public class SenderReportPacketTest {
         assertEquals(0x45, srPacket.getRtpTimestamp());
 
         assertEquals(0, encoded.readableBytes());
+    }
+    
+    public <E> void assertNotEmpty(Collection<E> c) {
+    	assertEquals(false, c.isEmpty());
+    }
+    
+    public <E> void assertEmpty(Collection<E> c) {
+    	assertEquals(true, c.isEmpty());
     }
 }

@@ -59,21 +59,21 @@ public class ByteUtils {
      * @return a hex string
      */
     public static String convertToHex(byte[] data) {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder stringBuilder = new StringBuilder();
         
         for (byte aData : data) {
             int halfbyte = (aData >>> 4) & 0x0F; // shift 4 bits right and mask with 0000 1111 to get hex value of the second nipple(half-byte)
             int two_halfs = 0;
             do {
                 if ((0 <= halfbyte) && (halfbyte <= 9)) {
-                    buf.append((char) ('0' + halfbyte));
+                    stringBuilder.append((char) ('0' + halfbyte));
                 } else {
-                    buf.append((char) ('a' + (halfbyte - 10)));
+                    stringBuilder.append((char) ('a' + (halfbyte - 10)));
                 }
                 halfbyte = aData & 0x0F;
             } while (two_halfs++ < 1);
         }
-        return buf.toString();
+        return stringBuilder.toString();
     }
 
     /**
@@ -89,23 +89,23 @@ public class ByteUtils {
             return convertToHex(array);
         }
 
-        StringBuilder builder = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder();
         for (byte b : array) {
-            builder.append(" 0x");
+            stringBuilder.append(" 0x");
             String hex = Integer.toHexString(b);
             switch (hex.length()) { 
                 case 1:
-                    builder.append('0').append(hex);	// append leading zero
+                    stringBuilder.append('0').append(hex);	// append leading zero
                     break;
                 case 2:
-                    builder.append(hex);
+                    stringBuilder.append(hex);
                     break;
                 default:
-                    builder.append(hex.substring(6, 8));
+                    stringBuilder.append(hex.substring(6, 8));
             }
         }
 
-        return builder.toString();
+        return stringBuilder.toString();
     }
 
     /**
@@ -158,12 +158,12 @@ public class ByteUtils {
      * @return A String representation of the byte.
      */
     public static String writeBits(byte b) {
-        StringBuffer stringBuffer = new StringBuffer();
+        StringBuilder stringBuilder = new StringBuilder();
         int bit;
         for (int i = 7; i >= 0; i--) {
             bit = (b >>> i) & 0x01;
-            stringBuffer.append(bit);
+            stringBuilder.append(bit);
         }
-        return stringBuffer.toString();
+        return stringBuilder.toString();
     }
 }

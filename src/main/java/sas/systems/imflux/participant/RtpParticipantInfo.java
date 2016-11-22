@@ -108,7 +108,7 @@ public class RtpParticipantInfo {
             this.ssrc = chunk.getSsrc();
             modified = true;
         }
-        if (chunk.getItems() == null) {
+        if (chunk.getItems().isEmpty()) {
             return modified;
         }
 

@@ -42,6 +42,7 @@ public class ReceptionReport {
 
     // constructors ---------------------------------------------------------------------------------------------------
     public ReceptionReport() {
+    	// nothing to do here
     }
 
     // public static methods ------------------------------------------------------------------------------------------

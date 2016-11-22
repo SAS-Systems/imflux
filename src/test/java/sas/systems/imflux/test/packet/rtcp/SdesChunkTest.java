@@ -18,6 +18,9 @@ package sas.systems.imflux.test.packet.rtcp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import java.util.Collection;
+
 import io.netty.buffer.ByteBuf;
 import sas.systems.imflux.packet.rtcp.SdesChunk;
 import sas.systems.imflux.packet.rtcp.SdesChunkItem;
@@ -57,7 +60,7 @@ public class SdesChunkTest {
         SdesChunk decoded = SdesChunk.decode(encoded);
 
         assertEquals(chunk.getSsrc(), decoded.getSsrc());
-        assertNotNull(decoded.getItems());
+        assertNotEmpty(decoded.getItems());
         assertEquals(4, decoded.getItems().size());
 
         for (int i = 0; i < chunk.getItems().size(); i++) {
@@ -89,7 +92,7 @@ public class SdesChunkTest {
         SdesChunk decoded = SdesChunk.decode(encoded);
 
         // chunk is checked in test1
-        assertNotNull(decoded.getItems());
+        assertNotEmpty(decoded.getItems());
         assertEquals(4, decoded.getItems().size());
         for (int i = 0; i < chunk.getItems().size(); i++) {
             assertEquals(chunk.getItems().get(i).getType(), decoded.getItems().get(i).getType());
@@ -97,5 +100,9 @@ public class SdesChunkTest {
         }
 
         assertEquals(0, encoded.readableBytes());
+    }
+    
+    public <E> void assertNotEmpty(Collection<E> c) {
+    	assertEquals(false, c.isEmpty());
     }
 }

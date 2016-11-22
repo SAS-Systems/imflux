@@ -50,6 +50,7 @@ public class SdesChunk {
 
     // constructors ---------------------------------------------------------------------------------------------------
     public SdesChunk() {
+    	// nothing to do here
     }
 
     public SdesChunk(long ssrc) {
@@ -190,7 +191,7 @@ public class SdesChunk {
 
     public List<SdesChunkItem> getItems() {
         if (this.items == null) {
-            return null;
+            return new ArrayList<SdesChunkItem>();
         }
 
         return Collections.unmodifiableList(this.items);

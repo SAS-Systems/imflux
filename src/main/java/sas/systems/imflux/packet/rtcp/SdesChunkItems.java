@@ -28,10 +28,16 @@ import io.netty.util.CharsetUtil;
  * @see SdesChunkItem
  * @see SdesChunk
  */
-public class SdesChunkItems {
+public final class SdesChunkItems {
 
     // constants ------------------------------------------------------------------------------------------------------
     public static final SdesChunkItem NULL_ITEM = new SdesChunkItem(SdesChunkItem.Type.NULL, null);
+    
+    //constructor -----------------------------------------------------------------------------------------------------
+    /**
+     * Private constructor to hide the default one.
+     */
+    private SdesChunkItems() {}
 
     // public static methods ------------------------------------------------------------------------------------------
     public static SdesChunkItem createNullItem() {

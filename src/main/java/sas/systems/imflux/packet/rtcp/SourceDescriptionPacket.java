@@ -207,7 +207,7 @@ public class SourceDescriptionPacket extends ControlPacket {
     // getters & setters ----------------------------------------------------------------------------------------------
     public List<SdesChunk> getChunks() {
         if (this.chunks == null) {
-            return null;
+            return new ArrayList<SdesChunk>();
         }
         return Collections.unmodifiableList(this.chunks);
     }

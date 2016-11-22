@@ -1038,7 +1038,8 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 
     protected long updatePeriodicRtcpSendInterval() {
         // TODO make this adaptative
-        return (this.periodicRtcpSendInterval = 5);
+    	this.periodicRtcpSendInterval = 5;
+        return this.periodicRtcpSendInterval;
     }
 
     // getters & setters ----------------------------------------------------------------------------------------------

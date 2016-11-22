@@ -124,7 +124,7 @@ public class SdesChunkItem {
      * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
      * @author <a:mailto="bruno.carvalho@wit-software.com" />Bruno de Carvalho</a>
      */
-    public static enum Type {
+    public enum Type {
 
         // constants --------------------------------------------------------------------------------------------------
         NULL((byte) 0),

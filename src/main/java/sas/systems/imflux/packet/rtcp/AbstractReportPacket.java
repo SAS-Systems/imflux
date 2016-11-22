@@ -74,7 +74,7 @@ public abstract class AbstractReportPacket extends ControlPacket {
 
     public List<ReceptionReport> getReports() {
         if (this.reports == null) {
-            return null;
+            return new ArrayList<ReceptionReport>();
         }
         return Collections.unmodifiableList(this.reports);
     }

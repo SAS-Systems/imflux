@@ -87,12 +87,11 @@ public class SenderReportPacket extends AbstractReportPacket {
      * Decodes a control packet from a {@code ByteBuf}. This method is called by {@code ControlPacket.decode()}.
      * 
      * @param buffer bytes, which still have to be decoded
-     * @param hasPadding indicator for a padding at the end of the packet, which have to be discarded
      * @param innerBlocks number of reports in this packet
      * @param length remaining 32bit words
      * @return a new {@code SenderReportPacket} containing all information from the {@code buffer}
      */
-    public static SenderReportPacket decode(ByteBuf buffer, boolean hasPadding, byte innerBlocks, int length) {
+    public static SenderReportPacket decode(ByteBuf buffer, byte innerBlocks, int length) {
         SenderReportPacket packet = new SenderReportPacket();
         
         packet.setSenderSsrc(buffer.readUnsignedInt());			// reads 4 bytes (one 32bit word) from the buffer
@@ -114,7 +113,7 @@ public class SenderReportPacket extends AbstractReportPacket {
         }
 
         // Length is written in 32bit words, not octet count.
-        int lengthInOctets = (length * 4);
+        int lengthInOctets = length * 4;
         // (hasPadding == true) check is not done here. RFC respecting implementations will set the padding bit to 1
         // if length of packet is bigger than the necessary to convey the data; therefore it's a redundant check.
         if (read < lengthInOctets) {

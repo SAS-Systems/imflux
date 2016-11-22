@@ -17,7 +17,11 @@
 package sas.systems.imflux.test.packet.rtcp;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+
+import java.util.Collection;
+
+import org.junit.Test;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import sas.systems.imflux.packet.RtpVersion;
@@ -28,8 +32,6 @@ import sas.systems.imflux.packet.rtcp.SdesChunkItems;
 import sas.systems.imflux.packet.rtcp.SdesChunkPrivItem;
 import sas.systems.imflux.packet.rtcp.SourceDescriptionPacket;
 import sas.systems.imflux.util.ByteUtils;
-
-import org.junit.Test;
 
 /**
  * JUnit test for a ControlPacket of {@link ControlPacket.Type} {@link SourceDescriptionPacket}
@@ -51,10 +53,10 @@ public class SourceDescriptionPacketTest {
         assertEquals(ControlPacket.Type.SOURCE_DESCRIPTION, controlPacket.getType());
 
         SourceDescriptionPacket sdesPacket = (SourceDescriptionPacket) controlPacket;
-        assertNotNull(sdesPacket.getChunks());
+        assertNotEmpty(sdesPacket.getChunks());
         assertEquals(1, sdesPacket.getChunks().size());
         assertEquals(0x4f52eb38, sdesPacket.getChunks().get(0).getSsrc());
-        assertNotNull(sdesPacket.getChunks().get(0).getItems());
+        assertNotEmpty(sdesPacket.getChunks().get(0).getItems());
         assertEquals(1, sdesPacket.getChunks().get(0).getItems().size());
         assertEquals(SdesChunkItem.Type.CNAME, sdesPacket.getChunks().get(0).getItems().get(0).getType());
         assertEquals("null@localhost", sdesPacket.getChunks().get(0).getItems().get(0).getValue());
@@ -76,10 +78,10 @@ public class SourceDescriptionPacketTest {
         assertEquals(ControlPacket.Type.SOURCE_DESCRIPTION, controlPacket.getType());
 
         SourceDescriptionPacket sdesPacket = (SourceDescriptionPacket) controlPacket;
-        assertNotNull(sdesPacket.getChunks());
+        assertNotEmpty(sdesPacket.getChunks());
         assertEquals(1, sdesPacket.getChunks().size());
         assertEquals(0xe6aa996eL, sdesPacket.getChunks().get(0).getSsrc());
-        assertNotNull(sdesPacket.getChunks().get(0).getItems());
+        assertNotEmpty(sdesPacket.getChunks().get(0).getItems());
         assertEquals(2, sdesPacket.getChunks().get(0).getItems().size());
         assertEquals(SdesChunkItem.Type.CNAME, sdesPacket.getChunks().get(0).getItems().get(0).getType());
         assertEquals("822C64056FD84E9AB12D834BF860915A@unique.z36DB3170B07D4C30.org",
@@ -115,11 +117,11 @@ public class SourceDescriptionPacketTest {
         assertEquals(packet.getType(), decoded.getType());
 
         SourceDescriptionPacket decodedSdes = (SourceDescriptionPacket) decoded;
-        assertNotNull(decodedSdes.getChunks());
+        assertNotEmpty(decodedSdes.getChunks());
         assertEquals(2, decodedSdes.getChunks().size());
 
         assertEquals(0x45, decodedSdes.getChunks().get(0).getSsrc());
-        assertNotNull(decodedSdes.getChunks().get(0).getItems());
+        assertNotEmpty(decodedSdes.getChunks().get(0).getItems());
         assertEquals(SdesChunkItem.Type.CNAME, decodedSdes.getChunks().get(0).getItems().get(0).getType());
         assertEquals("karma", decodedSdes.getChunks().get(0).getItems().get(0).getValue());
         assertEquals(SdesChunkItem.Type.NAME, decodedSdes.getChunks().get(0).getItems().get(1).getType());
@@ -128,7 +130,7 @@ public class SourceDescriptionPacketTest {
         assertEquals("Hey crabman", decodedSdes.getChunks().get(0).getItems().get(2).getValue());
 
         assertEquals(0x46, decodedSdes.getChunks().get(1).getSsrc());
-        assertNotNull(decodedSdes.getChunks().get(1).getItems());
+        assertNotEmpty(decodedSdes.getChunks().get(1).getItems());
         assertEquals(SdesChunkItem.Type.CNAME, decodedSdes.getChunks().get(1).getItems().get(0).getType());
         assertEquals("Randy", decodedSdes.getChunks().get(1).getItems().get(0).getValue());
 
@@ -159,18 +161,18 @@ public class SourceDescriptionPacketTest {
 //        assertEquals(packet.getType(), decoded.getType());
 //
 //        SourceDescriptionPacket decodedSdes = (SourceDescriptionPacket) decoded;
-//        assertNotNull(decodedSdes.getChunks());
+//        assertNotEmpty(decodedSdes.getChunks());
 //        assertEquals(2, decodedSdes.getChunks().size());
 //
 //        assertEquals(0x45, decodedSdes.getChunks().get(0).getSsrc());
-//        assertNotNull(decodedSdes.getChunks().get(0).getItems());
+//        assertNotEmpty(decodedSdes.getChunks().get(0).getItems());
 //        assertEquals(SdesChunkItem.Type.CNAME, decodedSdes.getChunks().get(0).getItems().get(0).getType());
 //        assertEquals("karma", decodedSdes.getChunks().get(0).getItems().get(0).getValue());
 //        assertEquals(SdesChunkItem.Type.NAME, decodedSdes.getChunks().get(0).getItems().get(1).getType());
 //        assertEquals("Earl", decodedSdes.getChunks().get(0).getItems().get(1).getValue());
 //
 //        assertEquals(0x46, decodedSdes.getChunks().get(1).getSsrc());
-//        assertNotNull(decodedSdes.getChunks().get(1).getItems());
+//        assertNotEmpty(decodedSdes.getChunks().get(1).getItems());
 //        assertEquals(SdesChunkItem.Type.CNAME, decodedSdes.getChunks().get(1).getItems().get(0).getType());
 //        assertEquals("Randy", decodedSdes.getChunks().get(1).getItems().get(0).getValue());
 //
@@ -200,5 +202,9 @@ public class SourceDescriptionPacketTest {
         System.out.println("compound encoding length: " + encoded.readableBytes()); // 20
         encoded.skipBytes(encoded.readableBytes() - 1);
         assertEquals(8, encoded.readByte());
+    }
+    
+    public <E> void assertNotEmpty(Collection<E> c) {
+    	assertEquals(false, c.isEmpty());
     }
 }

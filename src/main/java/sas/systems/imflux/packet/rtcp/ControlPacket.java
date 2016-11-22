@@ -102,13 +102,13 @@ public abstract class ControlPacket {
         // to be) the alternative was having this method in a external class. Pointless. 
         switch (type) {
             case SENDER_REPORT:
-                return SenderReportPacket.decode(buffer, hasPadding, innerBlocks, length);
+                return SenderReportPacket.decode(buffer, innerBlocks, length);
             case RECEIVER_REPORT:
-                return ReceiverReportPacket.decode(buffer, hasPadding, innerBlocks, length);
+                return ReceiverReportPacket.decode(buffer, innerBlocks, length);
             case SOURCE_DESCRIPTION:
                 return SourceDescriptionPacket.decode(buffer, hasPadding, innerBlocks, length);
             case BYE:
-                return ByePacket.decode(buffer, hasPadding, innerBlocks, length);
+                return ByePacket.decode(buffer, innerBlocks, length);
             case APP_DATA:
                 return null;
             default:
@@ -158,7 +158,7 @@ public abstract class ControlPacket {
      * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
      * @author <a:mailto="bruno.carvalho@wit-software.com" />Bruno de Carvalho</a>
      */
-    public static enum Type {
+    public enum Type {
 
         // constants --------------------------------------------------------------------------------------------------
         SENDER_REPORT((byte) 0xc8),
@@ -213,7 +213,7 @@ public abstract class ControlPacket {
          * @return the packet type ID as integer
          */
         public int getInt() {
-        	return new Byte(this.b).intValue();
+        	return (int) this.b;
         }
     }
 }

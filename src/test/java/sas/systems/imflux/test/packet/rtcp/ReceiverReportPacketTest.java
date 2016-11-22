@@ -17,8 +17,11 @@
 package sas.systems.imflux.test.packet.rtcp;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+
+import java.util.Collection;
+
+import org.junit.Test;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import sas.systems.imflux.packet.RtpVersion;
@@ -26,8 +29,6 @@ import sas.systems.imflux.packet.rtcp.ControlPacket;
 import sas.systems.imflux.packet.rtcp.ReceiverReportPacket;
 import sas.systems.imflux.packet.rtcp.ReceptionReport;
 import sas.systems.imflux.util.ByteUtils;
-
-import org.junit.Test;
 
 /**
  * JUnit test for a ControlPacket of {@link ControlPacket.Type} {@link ReceiverReportPacket}
@@ -51,7 +52,7 @@ public class ReceiverReportPacketTest {
 
         assertEquals(0xe6aa996eL, srPacket.getSenderSsrc());
         assertEquals(0, srPacket.getReportCount());
-        assertNull(srPacket.getReports());
+        assertEmpty(srPacket.getReports());
 
         assertEquals(0, buffer.readableBytes());
     }
@@ -87,7 +88,7 @@ public class ReceiverReportPacketTest {
         ReceiverReportPacket srPacket = (ReceiverReportPacket) controlPacket;
 
         assertEquals(RtpVersion.V2, srPacket.getVersion());
-        assertNotNull(srPacket.getReports());
+        assertNotEmpty(srPacket.getReports());
         assertEquals(2, srPacket.getReportCount());
         assertEquals(2, srPacket.getReports().size());
         assertEquals(10, srPacket.getReports().get(0).getSsrc());
@@ -104,5 +105,13 @@ public class ReceiverReportPacketTest {
         assertEquals(25, srPacket.getReports().get(1).getExtendedHighestSequenceNumberReceived());
 
         assertEquals(0, encoded.readableBytes());
+    }
+    
+    public <E> void assertNotEmpty(Collection<E> c) {
+    	assertEquals(false, c.isEmpty());
+    }
+    
+    public <E> void assertEmpty(Collection<E> c) {
+    	assertEquals(true, c.isEmpty());
     }
 }

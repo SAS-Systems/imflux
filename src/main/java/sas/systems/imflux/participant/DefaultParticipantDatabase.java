@@ -256,18 +256,7 @@ public class DefaultParticipantDatabase implements ParticipantDatabase {
         try {
             Iterator<RtpParticipant> iterator = this.members.values().iterator();
             while (iterator.hasNext()) {
-                RtpParticipant participant = iterator.next();
-                int timeout = this.timeoutAfterByeAndNoPacketsReceived * 1000;
-                if (participant.receivedBye() && TimeUtils
-                        .hasExpired(now, participant.getLastReceptionInstant(), timeout)) {
-                    LOG.trace("Removed {} from session with id '{}' after reception of BYE and {}s of inactivity.",
-                              participant, this.id, this.timeoutAfterByeAndNoPacketsReceived);
-                    iterator.remove();
-                    if (participant.isReceiver()) {
-                        this.receivers.remove(participant);
-                    }
-                    this.listener.participantDeleted(participant);
-                }
+            	this.checkAndRemoveParticipant(iterator, now);
             }
         } finally {
             this.lock.writeLock().unlock();
@@ -275,6 +264,29 @@ public class DefaultParticipantDatabase implements ParticipantDatabase {
     }
     
     // private helpers ------------------------------------------------------------------------------------------------
+    /**
+     * Checks the participant bye-flag and the last reception instant for removing it from the database. If the
+     * participant is a receiver it is also removed from the receiver-map.
+     * 
+     * @param iterator of the participant map
+     * @param now current instant in long
+     */
+    private void checkAndRemoveParticipant(Iterator<RtpParticipant> iterator, long now) {
+    	RtpParticipant participant = iterator.next();
+        int timeout = this.timeoutAfterByeAndNoPacketsReceived * 1000;
+        boolean participantExpired = TimeUtils.hasExpired(now, participant.getLastReceptionInstant(), timeout);
+        
+        if (participant.receivedBye() && participantExpired) {
+            LOG.trace("Removed {} from session with id '{}' after reception of BYE and {}s of inactivity.",
+                      participant, this.id, this.timeoutAfterByeAndNoPacketsReceived);
+            iterator.remove();
+            if (participant.isReceiver()) {
+                this.receivers.remove(participant);
+            }
+            this.listener.participantDeleted(participant);
+        }
+    }
+    
     /**
      * Searches the receivers and compares the {@code address} with their data destination.
      * If they are equal the receiver is returned.

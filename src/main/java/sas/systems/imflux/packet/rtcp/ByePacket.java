@@ -63,12 +63,11 @@ public class ByePacket extends ControlPacket {
      * Decodes a receiver report from a {@code ByteBuf}. This method is called by {@code ControlPacket.decode()}.
      * 
      * @param buffer bytes, which still have to be decoded
-     * @param hasPadding indicator for a padding at the end of the packet, which have to be discarded
      * @param innerBlocks number of reports in this packet
      * @param length remaining 32bit words
      * @return a new {@code ByePacket} containing all information from the {@code buffer}
      */
-    public static ByePacket decode(ByteBuf buffer, boolean hasPadding, byte innerBlocks, int length) {
+    public static ByePacket decode(ByteBuf buffer, byte innerBlocks, int length) {
         ByePacket packet = new ByePacket();
         int read = 0;
         for (int i = 0; i < innerBlocks; i++) {
@@ -77,7 +76,7 @@ public class ByePacket extends ControlPacket {
         }
 
         // Length is written in 32bit words, not octet count.
-        int lengthInOctets = (length * 4);
+        int lengthInOctets = length * 4;
         if (read < lengthInOctets) {
             byte[] reasonBytes = new byte[buffer.readUnsignedByte()];
             buffer.readBytes(reasonBytes);
@@ -85,7 +84,7 @@ public class ByePacket extends ControlPacket {
             read += (1 + reasonBytes.length);
             if (read < lengthInOctets) {
                 // Skip remaining bytes (used for padding). This takes care of both the null termination bytes (padding
-                // of the 'reason for leaving' string and the packet padding bytes.
+                // of the 'reason for leaving' string) and the packet padding bytes.
                 buffer.skipBytes(lengthInOctets - read);
             }
         }

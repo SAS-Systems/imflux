@@ -157,6 +157,7 @@ public class SimpleRtspSession implements RtspSession {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public synchronized boolean init() {
 		if(this.running.get()) {
 			return true;
@@ -315,9 +316,7 @@ public class SimpleRtspSession implements RtspSession {
 		if(!request.getDecoderResult().isSuccess())
 			return;
 		
-		LOG.debug("RTSP request received: {}", request);
-//		System.out.println(request);
-		
+		LOG.debug("RTSP request received: {}", request);		
 		
 		if(request.getMethod().equals(RtspMethods.OPTIONS)) {
 			handleOptionsRequest(channel, request);
@@ -544,7 +543,7 @@ public class SimpleRtspSession implements RtspSession {
 		if(!entries[0].contains("RTP")) {
 			validationError = true;
 		}
-		if(!entries[1].equals("unicast")) {
+		if(!"unicast".equals(entries[1])) {
 			validationError = true;
 		}
 		final int iOfEQ = entries[2].indexOf("=");
@@ -708,6 +707,7 @@ public class SimpleRtspSession implements RtspSession {
 		this.optionsString = optionsString;
 	}
 
+	@Override
 	public RtpParticipant getLocalRtpParticipant() {
 		return localRtpParticipant;
 	}
