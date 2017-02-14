@@ -61,7 +61,7 @@ public final class SessionIdentifierGenerator {
 		/**
 		 * Private constructor to hide implicit constructor.
 		 */
-		private InstanceHolder(){};
+		private InstanceHolder(){}
 		private static final SessionIdentifierGenerator INSTANCE = new SessionIdentifierGenerator();
 	}
 }

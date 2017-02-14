@@ -66,7 +66,7 @@ public class UdpDataPacketEncoder extends MessageToMessageEncoder<AddressedEnvel
      * is added to the AddressedEnvelope.
      * 
      * @param ctx The context of the ChannelHandler
-     * @param message the message which should be encoded
+     * @param msg the message which should be encoded
      * @param out a list where all messages are written to
      */
     @Override
@@ -84,7 +84,7 @@ public class UdpDataPacketEncoder extends MessageToMessageEncoder<AddressedEnvel
         }
         
 		final AddressedEnvelope<ByteBuf, SocketAddress> newMsg = 
-				new DefaultAddressedEnvelope<ByteBuf, SocketAddress>(buffer, recipient, sender);
+				new DefaultAddressedEnvelope<>(buffer, recipient, sender);
 		out.add(newMsg);
     }
 
@@ -98,7 +98,7 @@ public class UdpDataPacketEncoder extends MessageToMessageEncoder<AddressedEnvel
     	/**
     	 * Private constructor for hiding the implicit default one.
     	 */
-    	private InstanceHolder() {};
+    	private InstanceHolder() {}
         private static final UdpDataPacketEncoder INSTANCE = new UdpDataPacketEncoder();
     }
 }

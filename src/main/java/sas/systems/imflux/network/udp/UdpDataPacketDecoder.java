@@ -64,7 +64,7 @@ public class UdpDataPacketDecoder extends MessageToMessageDecoder<DatagramPacket
      * the used {@link SocketChannel}. 
      * 
      * @param ctx The context of the ChannelHandler
-     * @param message the message which should be encoded
+     * @param msg the message which should be encoded
      * @param out a list where all messages are written to
      */
     @Override
@@ -76,7 +76,7 @@ public class UdpDataPacketDecoder extends MessageToMessageDecoder<DatagramPacket
         try {
             final DataPacket dataPacket = DataPacket.decode(content);
             final AddressedEnvelope<DataPacket, SocketAddress> newMsg = 
-    				new DefaultAddressedEnvelope<DataPacket, SocketAddress>(
+    				new DefaultAddressedEnvelope<>(
     						dataPacket, recipient, sender);
     		out.add(newMsg);
         } catch (Exception e) {
@@ -94,7 +94,7 @@ public class UdpDataPacketDecoder extends MessageToMessageDecoder<DatagramPacket
     	/**
     	 * Private constructor for hiding the implicit default one.
     	 */
-    	private InstanceHolder() {};
+    	private InstanceHolder() {}
         private static final UdpDataPacketDecoder INSTANCE = new UdpDataPacketDecoder();
     }
 }

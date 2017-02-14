@@ -47,7 +47,7 @@ public class DataPacketDecoder extends MessageToMessageDecoder<ByteBuf> {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf message, List<Object> out) throws Exception {
         try {
-            out.add(DataPacket.decode((ByteBuf) message));
+            out.add(DataPacket.decode(message));
         } catch (Exception e) {
             LOG.debug("Failed to decode RTP packet.", e);
             out.add(null);

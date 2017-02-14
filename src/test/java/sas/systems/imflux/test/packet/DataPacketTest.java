@@ -170,7 +170,7 @@ public class DataPacketTest {
         System.out.println("packet = " + packet);
 
         ByteBuf encoded = packet.encode(64);
-        System.out.println(ByteUtils.writeArrayAsHex(encoded.array(), true));
+        System.out.println(ByteUtils.writeArrayAsHex(encoded.array()));
         assertEquals(64, encoded.readableBytes());
 
         DataPacket decoded = DataPacket.decode(encoded);

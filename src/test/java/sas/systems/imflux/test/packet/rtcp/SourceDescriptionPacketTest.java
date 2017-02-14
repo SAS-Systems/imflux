@@ -109,7 +109,7 @@ public class SourceDescriptionPacketTest {
         packet.addItem(chunk);
 
         ByteBuf encoded = packet.encode();
-        System.out.println(ByteUtils.writeArrayAsHex(encoded.array(), true));
+        System.out.println(ByteUtils.writeArrayAsHex(encoded.array()));
 
         assertEquals(0, encoded.readableBytes() % 4);
 
@@ -194,7 +194,7 @@ public class SourceDescriptionPacketTest {
 
         // 36 bytes
         ByteBuf encoded = packet.encode();
-        System.out.println(ByteUtils.writeArrayAsHex(encoded.array(), true));
+        System.out.println(ByteUtils.writeArrayAsHex(encoded.array()));
         System.out.println("simple encoding length: " + encoded.readableBytes());
         assertEquals(0, encoded.readableBytes() % 4);
         // assuming previous 20 bytes, 36 bytes of normally encoded packet thus become 44 (+8 for padding, 20+36+8 = 64)

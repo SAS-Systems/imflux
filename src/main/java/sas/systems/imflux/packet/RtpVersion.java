@@ -34,7 +34,7 @@ public enum RtpVersion {
     private final byte b;
 
     // constructors ---------------------------------------------------------------------------------------------------
-    private RtpVersion(byte b) {
+    RtpVersion(byte b) {
         this.b = b;
     }
 

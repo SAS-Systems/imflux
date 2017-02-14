@@ -808,7 +808,6 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * This method is only recommended for packets of type {@link ControlPacket.Type.APP_DATA}
      * 
      * @param packet the {@link ControlPacket} to be sent
-     * @param participant participant information
      */
     protected void internalSendControl(final ControlPacket packet) {
         this.participantDatabase.doWithReceivers(new SendOperation(packet));
@@ -819,7 +818,6 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * session to <strong>all</strong> participant.
      * 
      * @param packet the {@link CompoundControlPacket} to be sent
-     * @param participant participant information
      */
     protected void internalSendControl(final CompoundControlPacket packet) {
         this.participantDatabase.doWithReceivers(new SendOperation(packet));
@@ -952,9 +950,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 
         RtpParticipantInfo info = this.localParticipant.getInfo();
         if (info.getCname() == null) {
-            info.setCname(new StringBuilder()
-                    .append("efflux/").append(this.id).append('@')
-                    .append(this.dataChannel.localAddress()).toString());
+            info.setCname("efflux/" + this.id + "@" + this.dataChannel.localAddress());
         }
         chunk.addItem(SdesChunkItems.createCnameItem(info.getCname()));
 

@@ -23,7 +23,7 @@ import java.util.Map;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.rtsp.RtspHeaders;
+import io.netty.handler.codec.rtsp.RtspHeaderNames;
 import sas.systems.imflux.util.SessionIdentifierGenerator;
 
 /**
@@ -110,7 +110,7 @@ public class RtspParticipant {
 	
 	/**
 	 * Creates a new {@link RtpParticipant} from the channel and message information. If the 
-	 * {@link RtspHeaders.Names#SESSION} header is set the participant will have this session ID as a member and the 
+	 * {@link RtspHeaderNames#SESSION} header is set the participant will have this session ID as a member and the
 	 * participant's state will be {@link State#READY}.
 	 * 
 	 * @param message a {@link HttpResponse} object
@@ -120,7 +120,7 @@ public class RtspParticipant {
 	public static RtspParticipant newInstance(Channel channel, HttpMessage message) {
 		final RtspParticipant participant = new RtspParticipant(channel);
 		// extract session id
-		final String sessionId = message.headers().get(RtspHeaders.Names.SESSION);
+		final String sessionId = message.headers().get(RtspHeaderNames.SESSION);
 		if(sessionId != null) {
 			participant.sessionId = sessionId;
 			participant.isInValidSession = true;
@@ -181,14 +181,14 @@ public class RtspParticipant {
 	
 	// private helper methods -----------------------------------------------------------------------------------------
 	private void checkAndAddSessionId(HttpMessage message) {
-		final String session = message.headers().get(RtspHeaders.Names.SESSION);
+		final String session = message.headers().get(RtspHeaderNames.SESSION);
 		
 		if(session == null || !session.contains(String.valueOf(sessionId))) {
-			message.headers().add(RtspHeaders.Names.SESSION, sessionId);
+			message.headers().add(RtspHeaderNames.SESSION, sessionId);
 		} else {
 			if(!session.contains(String.valueOf(sessionId))) {
-				message.headers().remove(RtspHeaders.Names.SESSION);
-				message.headers().add(RtspHeaders.Names.SESSION, sessionId);
+				message.headers().remove(RtspHeaderNames.SESSION);
+				message.headers().add(RtspHeaderNames.SESSION, sessionId);
 			}
 		}
 	}
@@ -257,6 +257,6 @@ public class RtspParticipant {
 	public enum State {
 		INITIALIZING,
 		READY,
-		PLAYING;
+		PLAYING
 	}
 }

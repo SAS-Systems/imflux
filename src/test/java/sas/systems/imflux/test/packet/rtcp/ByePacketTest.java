@@ -82,7 +82,7 @@ public class ByePacketTest {
 
         ByteBuf buffer = packet.encode();
         assertEquals(36, buffer.readableBytes());
-        System.out.println(ByteUtils.writeArrayAsHex(buffer.array(), true));
+        System.out.println(ByteUtils.writeArrayAsHex(buffer.array()));
         assertEquals(0, buffer.readableBytes() % 4);
 
         ControlPacket controlPacket = ControlPacket.decode(buffer);
@@ -108,7 +108,7 @@ public class ByePacketTest {
         ByteBuf buffer = packet.encode(0, 64);
         assertEquals(64, buffer.readableBytes());
         byte[] bufferArray = buffer.array();
-        System.out.println(ByteUtils.writeArrayAsHex(bufferArray, true));
+        System.out.println(ByteUtils.writeArrayAsHex(bufferArray));
         assertEquals(0, buffer.readableBytes() % 4);
 
         ControlPacket controlPacket = ControlPacket.decode(buffer);
@@ -137,7 +137,7 @@ public class ByePacketTest {
         // Alignment would be to 128 bytes *with* the other RTCP packets. So this packet is sized at 128 - 60 = 68
         assertEquals(68, buffer.readableBytes());
         byte[] bufferArray = buffer.array();
-        System.out.println(ByteUtils.writeArrayAsHex(bufferArray, true));
+        System.out.println(ByteUtils.writeArrayAsHex(bufferArray));
         assertEquals(0, buffer.readableBytes() % 4);
 
         ControlPacket controlPacket = ControlPacket.decode(buffer);

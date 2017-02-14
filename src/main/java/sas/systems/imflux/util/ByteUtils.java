@@ -77,6 +77,16 @@ public class ByteUtils {
     }
 
     /**
+     * Converts a byte array into a hex string. The hex-string is returned in a readable form (each byte as 0xbb).
+     *
+     * @param array byte array to be converted
+     * @return a hex string
+     */
+    public static String writeArrayAsHex(byte[] array) {
+        return writeArrayAsHex(array, true);
+    }
+
+    /**
      * Converts a byte array into a hex string. When the {@code packedPrint} option is <b>not</b> set,
      * the hex-string is returned in a more readable form (each byte as 0xbb).
      * 

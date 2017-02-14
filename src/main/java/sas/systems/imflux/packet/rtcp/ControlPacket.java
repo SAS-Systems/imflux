@@ -58,7 +58,7 @@ public abstract class ControlPacket {
     /**
      * Creates a new empty {@code ControlPacket}.
      * 
-     * @param type 
+     * @param type the control packet type, see {@link Type}
      */
     protected ControlPacket(Type type) {
         this.version = RtpVersion.V2;

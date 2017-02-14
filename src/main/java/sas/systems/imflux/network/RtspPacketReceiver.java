@@ -35,9 +35,9 @@ public interface RtspPacketReceiver {
 	 * corresponding packet.
 	 * 
 	 * @param channel the channel to write the response to
-	 * @param packet the received {@link HttpRequest}
+	 * @param request the received {@link HttpRequest}
 	 */
-	public void requestReceived(Channel channel, HttpRequest request);
+	void requestReceived(Channel channel, HttpRequest request);
 
 	/**
 	 * The implementing class has to define actions which should be 
@@ -46,8 +46,8 @@ public interface RtspPacketReceiver {
 	 * corresponding packet.
 	 * 
 	 * @param channel source of the response
-	 * @param packet the received {@link HttpResponse}
+	 * @param response the received {@link HttpResponse}
 	 */
-	public void responseReceived(Channel channel, HttpResponse response);
+	void responseReceived(Channel channel, HttpResponse response);
 	
 }

@@ -56,10 +56,9 @@ public class AppDataPacket extends ControlPacket {
     /**
      * This method isn't implemented, because there isn't the need for app data packets yet.
      * 
-     * @param buffer bytes, which still have to be decoded
-     * @param hasPadding indicator for a padding at the end of the packet, which have to be discarded
-     * @param innerBlocks number of reports in this packet
-     * @param length remaining 32bit words
+     * @param currentCompoundLength
+     * @param fixedBlockSize
+     * @param packet
      * @return null
      */
     public static ByteBuf encode(int currentCompoundLength, int fixedBlockSize, AppDataPacket packet) {

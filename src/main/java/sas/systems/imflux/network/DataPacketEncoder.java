@@ -80,7 +80,7 @@ public class DataPacketEncoder extends MessageToMessageEncoder<DataPacket> {
     	/**
     	 * Private constructor for hiding the implicit default one.
     	 */
-    	private InstanceHolder() {};
+    	private InstanceHolder() {}
         private static final DataPacketEncoder INSTANCE = new DataPacketEncoder();
     }
 }

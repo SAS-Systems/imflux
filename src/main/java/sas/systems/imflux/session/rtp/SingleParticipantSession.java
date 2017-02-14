@@ -276,7 +276,7 @@ public class SingleParticipantSession extends AbstractRtpSession {
     	
     	/**
     	 * This class sends a {@link CompoundControlPacket} to the remote participant.
-    	 * @param packet
+    	 * @param compoundPacket
     	 */
     	public SendControlHelper(CompoundControlPacket compoundPacket) {
     		this.compountPacket = compoundPacket;

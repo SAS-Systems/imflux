@@ -45,13 +45,10 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.codec.rtsp.RtspDecoder;
-import io.netty.handler.codec.rtsp.RtspEncoder;
-import io.netty.handler.codec.rtsp.RtspHeaders;
-import io.netty.handler.codec.rtsp.RtspMethods;
-import io.netty.handler.codec.rtsp.RtspResponseStatuses;
+import io.netty.handler.codec.rtsp.*;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+
 import sas.systems.imflux.logging.Logger;
 import sas.systems.imflux.network.RtspHandler;
 import sas.systems.imflux.participant.RtpParticipant;
@@ -259,7 +256,7 @@ public class SimpleRtspSession implements RtspSession {
 	@Override
 	public boolean sendResponse(HttpResponseStatus status, String cseq, Channel channel) {
 		HttpResponse response = new DefaultHttpResponse(rtspVersion, status);
-		response.headers().add(RtspHeaders.Names.CSEQ, String.valueOf(cseq));
+		response.headers().add(RtspHeaderNames.CSEQ, String.valueOf(cseq));
 		return sendResponse(response, channel);
 	}
 	
@@ -313,15 +310,15 @@ public class SimpleRtspSession implements RtspSession {
 	 */
 	@Override
 	public void requestReceived(Channel channel, HttpRequest request) {
-		if(!request.getDecoderResult().isSuccess())
+		if(!request.decoderResult().isSuccess())
 			return;
 		
 		LOG.debug("RTSP request received: {}", request);		
 		
-		if(request.getMethod().equals(RtspMethods.OPTIONS)) {
+		if(request.method().equals(RtspMethods.OPTIONS)) {
 			handleOptionsRequest(channel, request);
 		}
-		if(request.getMethod().equals(RtspMethods.DESCRIBE)) {
+		if(request.method().equals(RtspMethods.DESCRIBE)) {
 			if(this.requestListener.isEmpty()) {
 				LOG.warn("No requestListener registered, sending NOT_IMPLEMENTED as response of a DESCRIBE request!");
 				sendNotImplemented(channel, request);
@@ -331,7 +328,7 @@ public class SimpleRtspSession implements RtspSession {
 				listener.describeRequestReceived(request, RtspParticipant.newInstance(channel));
 			}
 		}
-		if(request.getMethod().equals(RtspMethods.ANNOUNCE)) {
+		if(request.method().equals(RtspMethods.ANNOUNCE)) {
 			if(this.requestListener.isEmpty()) {
 				LOG.warn("No requestListener registered, sending NOT_IMPLEMENTED as response of an ANNOUNCE request!");
 				sendNotImplemented(channel, request);
@@ -341,10 +338,10 @@ public class SimpleRtspSession implements RtspSession {
 				listener.announceRequestReceived(request, RtspParticipant.newInstance(channel));
 			}
 		}
-		if(request.getMethod().equals(RtspMethods.SETUP)) {
+		if(request.method().equals(RtspMethods.SETUP)) {
 			handleSetupRequest(channel, request);
 		}
-		if(request.getMethod().equals(RtspMethods.PLAY)) {
+		if(request.method().equals(RtspMethods.PLAY)) {
 			if(!automatedRtspHandling) {
 				// forward message
 				for (RtspRequestListener listener : this.requestListener) {
@@ -354,7 +351,7 @@ public class SimpleRtspSession implements RtspSession {
 				sendNotImplemented(channel, request);
 			}
 		}
-		if(request.getMethod().equals(RtspMethods.PAUSE)) {
+		if(request.method().equals(RtspMethods.PAUSE)) {
 			if(!automatedRtspHandling) {
 				// forward message
 				for (RtspRequestListener listener : this.requestListener) {
@@ -364,16 +361,16 @@ public class SimpleRtspSession implements RtspSession {
 				sendNotImplemented(channel, request);
 			}
 		}
-		if(request.getMethod().equals(RtspMethods.TEARDOWN)) {
+		if(request.method().equals(RtspMethods.TEARDOWN)) {
 			handleTeardownRequest(channel, request);
 		}
-		if(request.getMethod().equals(RtspMethods.GET_PARAMETER)) {
+		if(request.method().equals(RtspMethods.GET_PARAMETER)) {
 			if(this.requestListener.isEmpty()) {
 				// RTSP assumes an empty body if content-length header is missing
-				if(!request.headers().contains(RtspHeaders.Names.CONTENT_LENGTH)) {
+				if(!request.headers().contains(RtspHeaderNames.CONTENT_LENGTH)) {
 					// assume this is a ping 
 					HttpResponse response = new DefaultHttpResponse(rtspVersion, RtspResponseStatuses.OK);
-					response.headers().add(RtspHeaders.Names.CSEQ, request.headers().get(RtspHeaders.Names.CSEQ));
+					response.headers().add(RtspHeaderNames.CSEQ, request.headers().get(RtspHeaderNames.CSEQ));
 					sendResponse(response, channel);
 				}
 				LOG.warn("No requestListener registered, sending NOT_IMPLEMENTED as response of a GET_PARAMETER request!");
@@ -384,7 +381,7 @@ public class SimpleRtspSession implements RtspSession {
 				listener.getParameterRequestReceived(request, RtspParticipant.newInstance(channel));
 			}
 		}
-		if(request.getMethod().equals(RtspMethods.SET_PARAMETER)) {
+		if(request.method().equals(RtspMethods.SET_PARAMETER)) {
 			if(this.requestListener.isEmpty()) {
 				LOG.warn("No requestListener registered, sending NOT_IMPLEMENTED as response of a SET_PARAMETER request!");
 				sendNotImplemented(channel, request);
@@ -394,7 +391,7 @@ public class SimpleRtspSession implements RtspSession {
 				listener.setParameterRequestReceived(request, RtspParticipant.newInstance(channel));
 			}
 		}
-		if(request.getMethod().equals(RtspMethods.REDIRECT)) {
+		if(request.method().equals(RtspMethods.REDIRECT)) {
 			if(!automatedRtspHandling) {
 				// forward message 
 				for (RtspRequestListener listener : this.requestListener) {
@@ -404,7 +401,7 @@ public class SimpleRtspSession implements RtspSession {
 				sendNotImplemented(channel, request);
 			}
 		}
-		if(request.getMethod().equals(RtspMethods.RECORD)) {
+		if(request.method().equals(RtspMethods.RECORD)) {
 			if(!automatedRtspHandling) {
 				// forward message 
 				for (RtspRequestListener listener : this.requestListener) {
@@ -461,7 +458,7 @@ public class SimpleRtspSession implements RtspSession {
      * @return {@code true} if the message was send, {@code false} otherwise
      */
     private boolean internalSend(HttpMessage message, Channel channel) {
-		if(!message.getProtocolVersion().equals(rtspVersion)) {
+		if(!message.protocolVersion().equals(rtspVersion)) {
 			throw new IllegalArgumentException("Unsupported RTSP version!");
 		}
 		channel.writeAndFlush(message);
@@ -484,11 +481,11 @@ public class SimpleRtspSession implements RtspSession {
 		}
 		
 		// handle options request
-		final String sequence = request.headers().get(RtspHeaders.Names.CSEQ);
+		final String sequence = request.headers().get(RtspHeaderNames.CSEQ);
 		final DefaultHttpResponse response = new DefaultHttpResponse(rtspVersion, RtspResponseStatuses.OK);
 		final HttpHeaders headers = response.headers();
-		headers.add(RtspHeaders.Names.CSEQ, sequence)
-			   .add(RtspHeaders.Names.PUBLIC, optionsString);
+		headers.add(RtspHeaderNames.CSEQ, sequence)
+			   .add(RtspHeaderNames.PUBLIC, optionsString);
 		
 		sendResponse(response, channel);
 	}
@@ -513,11 +510,11 @@ public class SimpleRtspSession implements RtspSession {
 		// handle setup request
 		RtspParticipant participant;
 		final HttpHeaders reqHeaders = request.headers();
-		final String cseq = reqHeaders.get(RtspHeaders.Names.CSEQ);
-		final String transport = reqHeaders.get(RtspHeaders.Names.TRANSPORT);
+		final String cseq = reqHeaders.get(RtspHeaderNames.CSEQ);
+		final String transport = reqHeaders.get(RtspHeaderNames.TRANSPORT);
 		
 		// if client already has a session id, this server does not allow aggregation
-		final String session = reqHeaders.get(RtspHeaders.Names.SESSION);
+		final String session = reqHeaders.get(RtspHeaderNames.SESSION);
 		if(session != null) {
 			sendResponse(RtspResponseStatuses.AGGREGATE_OPERATION_NOT_ALLOWED, cseq, channel);
 			return;
@@ -572,16 +569,16 @@ public class SimpleRtspSession implements RtspSession {
 		final StringBuilder transportResponse = new StringBuilder();
 		transportResponse.append(entries[0]).append(";")
 				.append(entries[1]).append(";")
-				.append(RtspHeaders.Values.CLIENT_PORT + "=").append(clientDataPort).append("-").append(clientControlPort).append(";")
-				.append(RtspHeaders.Values.SERVER_PORT + "=").append(rtpDataPort).append("-").append(rtpControlPort);
+				.append(RtspHeaderValues.CLIENT_PORT + "=").append(clientDataPort).append("-").append(clientControlPort).append(";")
+				.append(RtspHeaderValues.SERVER_PORT + "=").append(rtpDataPort).append("-").append(rtpControlPort);
 		
 		// send response
 		final HttpResponse response = new DefaultHttpResponse(rtspVersion, RtspResponseStatuses.OK);
 		final HttpHeaders headers = response.headers();
-		headers.add(RtspHeaders.Names.CSEQ, cseq);
-		headers.add(RtspHeaders.Names.SESSION, sessionId);
-		headers.add(RtspHeaders.Names.TRANSPORT, transportResponse.toString());
-		headers.add(RtspHeaders.Names.DATE, new Date()); // HttpHeaders takes care of formatting the date
+		headers.add(RtspHeaderNames.CSEQ, cseq);
+		headers.add(RtspHeaderNames.SESSION, sessionId);
+		headers.add(RtspHeaderNames.TRANSPORT, transportResponse.toString());
+		headers.add(RtspHeaderNames.DATE, new Date()); // HttpHeaders takes care of formatting the date
 		
 		sendResponse(response, channel);
 	}
@@ -604,8 +601,8 @@ public class SimpleRtspSession implements RtspSession {
 		
 		// handle teardown request
 		final HttpHeaders reqHeaders = request.headers();
-		final String cseq = reqHeaders.get(RtspHeaders.Names.CSEQ);
-		final RtspParticipant participant = this.participantSessions.get(reqHeaders.get(RtspHeaders.Names.SESSION));
+		final String cseq = reqHeaders.get(RtspHeaderNames.CSEQ);
+		final RtspParticipant participant = this.participantSessions.get(reqHeaders.get(RtspHeaderNames.SESSION));
 		
 		// return session not found if we do not have received a SETUP before
 		if(participant == null) {

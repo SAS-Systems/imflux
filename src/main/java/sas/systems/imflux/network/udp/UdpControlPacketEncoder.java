@@ -63,7 +63,7 @@ public class UdpControlPacketEncoder extends MessageToMessageEncoder<AddressedEn
      * into an {@link AddressedEnvelope}. 
      * 
      * @param ctx The context of the ChannelHandler
-     * @param message the message which should be encoded
+     * @param msg the message which should be encoded
      * @param out a list where all messages are written to
      */
 	@Override
@@ -81,7 +81,7 @@ public class UdpControlPacketEncoder extends MessageToMessageEncoder<AddressedEn
 		}
         
 		AddressedEnvelope<ByteBuf, SocketAddress> newMsg = 
-				new DefaultAddressedEnvelope<ByteBuf, SocketAddress>(compoundBuffer, msg.recipient(), ctx.channel().localAddress());
+				new DefaultAddressedEnvelope<>(compoundBuffer, msg.recipient(), ctx.channel().localAddress());
 		out.add(newMsg);
 	}
 
@@ -95,7 +95,7 @@ public class UdpControlPacketEncoder extends MessageToMessageEncoder<AddressedEn
     	/**
     	 * Private constructor for hiding the implicit default one.
     	 */
-    	private InstanceHolder() {};
+    	private InstanceHolder() {}
         private static final UdpControlPacketEncoder INSTANCE = new UdpControlPacketEncoder();
     }
 }

@@ -110,7 +110,7 @@ public class SourceDescriptionPacket extends ControlPacket {
         // encode chunks
         List<ByteBuf> encodedChunks = null;
         if (packet.chunks != null) {
-            encodedChunks = new ArrayList<ByteBuf>(packet.chunks.size());
+            encodedChunks = new ArrayList<>(packet.chunks.size());
             for (SdesChunk chunk : packet.chunks) {
                 ByteBuf encodedChunk = chunk.encode();
                 encodedChunks.add(encodedChunk);
@@ -196,7 +196,7 @@ public class SourceDescriptionPacket extends ControlPacket {
     // public methods -------------------------------------------------------------------------------------------------
     public boolean addItem(SdesChunk chunk) {
         if (this.chunks == null) {
-            this.chunks = new ArrayList<SdesChunk>();
+            this.chunks = new ArrayList<>();
             return this.chunks.add(chunk);
         }
 
@@ -207,7 +207,7 @@ public class SourceDescriptionPacket extends ControlPacket {
     // getters & setters ----------------------------------------------------------------------------------------------
     public List<SdesChunk> getChunks() {
         if (this.chunks == null) {
-            return new ArrayList<SdesChunk>();
+            return new ArrayList<>();
         }
         return Collections.unmodifiableList(this.chunks);
     }

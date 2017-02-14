@@ -44,7 +44,7 @@ public abstract class AbstractReportPacket extends ControlPacket {
     // public methods -------------------------------------------------------------------------------------------------
     public boolean addReportBlock(ReceptionReport block) {
         if (this.reports == null) {
-            this.reports = new ArrayList<ReceptionReport>();
+            this.reports = new ArrayList<>();
             return this.reports.add(block);
         }
 
@@ -74,7 +74,7 @@ public abstract class AbstractReportPacket extends ControlPacket {
 
     public List<ReceptionReport> getReports() {
         if (this.reports == null) {
-            return new ArrayList<ReceptionReport>();
+            return new ArrayList<>();
         }
         return Collections.unmodifiableList(this.reports);
     }

@@ -33,7 +33,7 @@ public interface RtpSessionEventListener {
 	 * This {@link Throwable} can be used in {@link #sessionTerminated(RtpSession, Throwable)} 
 	 * as cause. This cause is used for a regular session termination.
 	 */
-    static final Throwable TERMINATE_CALLED = new Throwable("RtpSession.terminate() called");
+    Throwable TERMINATE_CALLED = new Throwable("RtpSession.terminate() called");
 
     /**
      * This method is called when a new participant joined the session and the SSRC was extracted

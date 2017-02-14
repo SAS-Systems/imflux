@@ -98,7 +98,7 @@ public class ControlPacketEncoder extends ChannelOutboundHandlerAdapter {
     	/**
     	 * Private constructor for hiding the implicit default one.
     	 */
-    	private InstanceHolder() {};
+    	private InstanceHolder() {}
         private static final ControlPacketEncoder INSTANCE = new ControlPacketEncoder();
     }
 

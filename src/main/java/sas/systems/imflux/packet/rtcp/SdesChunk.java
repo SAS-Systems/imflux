@@ -157,7 +157,7 @@ public class SdesChunk {
         }
 
         if (this.items == null) {
-            this.items = new ArrayList<SdesChunkItem>();
+            this.items = new ArrayList<>();
         }
 
         return this.items.add(item);
@@ -191,7 +191,7 @@ public class SdesChunk {
 
     public List<SdesChunkItem> getItems() {
         if (this.items == null) {
-            return new ArrayList<SdesChunkItem>();
+            return new ArrayList<>();
         }
 
         return Collections.unmodifiableList(this.items);

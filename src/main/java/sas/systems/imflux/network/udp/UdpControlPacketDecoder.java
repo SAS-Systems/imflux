@@ -67,7 +67,7 @@ public class UdpControlPacketDecoder extends MessageToMessageDecoder<DatagramPac
      * Decodes a {@link DatagramPacket} to a {@link CompoundControlPacket} wrapped into an {@link AddressedEnvelope}.
      * 
      * @param ctx The context of the ChannelHandler
-     * @param message the message which should be encoded
+     * @param msg the message which should be encoded
      * @param out a list where all messages are written to
      */
 	@Override
@@ -103,8 +103,7 @@ public class UdpControlPacketDecoder extends MessageToMessageDecoder<DatagramPac
             // Only forward to next ChannelHandler when there were more than one valid decoded packets.
             // TODO shouldn't the whole compound packet be discarded when one of them has errors?!
 			final AddressedEnvelope<CompoundControlPacket, SocketAddress> newMsg = 
-					new DefaultAddressedEnvelope<>(
-							new CompoundControlPacket(controlPacketList), recipient, sender);
+					new DefaultAddressedEnvelope<>(new CompoundControlPacket(controlPacketList), recipient, sender);
 			out.add(newMsg);
         }
 	}
@@ -119,7 +118,7 @@ public class UdpControlPacketDecoder extends MessageToMessageDecoder<DatagramPac
     	/**
     	 * Private constructor for hiding the implicit default one.
     	 */
-        private InstanceHolder() {};
+        private InstanceHolder() {}
         private static final UdpControlPacketDecoder INSTANCE = new UdpControlPacketDecoder();
     }
 }
