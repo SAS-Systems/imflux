@@ -148,12 +148,12 @@ public abstract class ControlPacket {
      * This enumeration represents the packet type of a control packet. 
      * These types are defined in RFC 3605:
      * <table>
-     * 	<tr><th>Type</th><th>Abbreviation</th><th>ID (hex)</th><th>ID (dec)</th></tr>
-     * 	<tr><td>Sender Report</td><td>SR</td><td>0xC8</td><td>200</td></tr>
-     * 	<tr><td>Receiver Report</td><td>RR</td><td>0xC9</td><td>201</td></tr>
-     * 	<tr><td>Source Description</td><td>SDES</td><td>0xCA</td><td>202</td></tr>
-     * 	<tr><td>Goodbye</td><td>BYE</td><td>0xCB</td><td>203</td></tr>
-     * 	<tr><td>Application defined</td><td>APP</td><td>0xCC</td><td>204</td></tr>
+     * 	<tr><th>Type</th><th>Abbreviation</th><th>ID (hex)</th><th>ID (dec)</th><th>Class</th></tr>
+     * 	<tr><td>Sender Report</td><td>SR</td><td>0xC8</td><td>200</td><td>{@link SenderReportPacket}</td></tr>
+     * 	<tr><td>Receiver Report</td><td>RR</td><td>0xC9</td><td>201</td><td>{@link ReceiverReportPacket}</td></tr>
+     * 	<tr><td>Source Description</td><td>SDES</td><td>0xCA</td><td>202</td><td>{@link SourceDescriptionPacket}</td></tr>
+     * 	<tr><td>Goodbye</td><td>BYE</td><td>0xCB</td><td>203</td><td>{@link ByePacket}</td></tr>
+     * 	<tr><td>Application defined</td><td>APP</td><td>0xCC</td><td>204</td><td>{@link AppDataPacket}</td></tr>
      * </table>
      * 
      * @author <a href="https://github.com/CodeLionX">CodeLionX</a>

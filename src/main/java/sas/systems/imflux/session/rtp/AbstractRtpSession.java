@@ -228,33 +228,25 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 	        	.option(ChannelOption.SO_SNDBUF, this.sendBufferSize)
 	        	.option(ChannelOption.SO_RCVBUF, this.receiveBufferSize)
 	        	// option not set: "receiveBufferSizePredictorFactory", new FixedReceiveBufferSizePredictorFactory(this.receiveBufferSize)
-	        	.channel(channelType) // use an UDP channel implementation => forces us to use AddressedEnvelope
-	        	.handler(new ChannelInitializer<Channel>() { // is used to initialize the ChannelPipeline
-					@Override
-					protected void initChannel(Channel ch) throws Exception {
-						ChannelPipeline pipeline = ch.pipeline();
-						pipeline.addLast("decoder", UdpDataPacketDecoder.getInstance());
-						pipeline.addLast("encoder", UdpDataPacketEncoder.getInstance());
-						pipeline.addLast("handler", new UdpDataHandler(AbstractRtpSession.this));
-					}
-				});
-        
+	        	.channel(channelType); // use an UDP channel implementation => forces us to use AddressedEnvelope
+        // decide wether to use TCP or UDP as underlying protocol
+        if(useTcp)
+            dataBootstrap.handler(new TcpDataChannelInitializer(this));
+        else
+            dataBootstrap.handler(new UdpDataChannelInitializer(this));
+
         // create control channel bootstrap
         Bootstrap controlBootstrap = new Bootstrap();
         controlBootstrap.group(this.workerGroup)
 	        	.option(ChannelOption.SO_SNDBUF, this.sendBufferSize)
 	        	.option(ChannelOption.SO_RCVBUF, this.receiveBufferSize)
 	        	// option not set: "receiveBufferSizePredictorFactory", new FixedReceiveBufferSizePredictorFactory(this.receiveBufferSize)
-	        	.channel(channelType) // use an UDP channel implementation => forces us to use AddressedEnvelope
-	        	.handler(new ChannelInitializer<Channel>() { // is used to initialize the ChannelPipeline
-					@Override
-					protected void initChannel(Channel ch) throws Exception {
-						ChannelPipeline pipeline = ch.pipeline();
-						pipeline.addLast("decoder", UdpControlPacketDecoder.getInstance());
-						pipeline.addLast("encoder", UdpControlPacketEncoder.getInstance());
-						pipeline.addLast("handler", new UdpControlHandler(AbstractRtpSession.this));
-					}
-				});
+	        	.channel(channelType); // use an UDP channel implementation => forces us to use AddressedEnvelope
+        // decide wether to use TCP or UDP as underlying protocol
+        if(useTcp)
+            dataBootstrap.handler(new TcpControlChannelInitializer(this));
+        else
+            dataBootstrap.handler(new UdpControlChannelInitializer(this));
 
         // create data channel
         SocketAddress dataAddress = this.localParticipant.getDataDestination();
@@ -807,7 +799,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
      * <br/>
      * <strong>All {@link ControlPacket}s must be sent within a {@link CompoundControlPacket}!
      * Use with caution.</strong><br/>
-     * This method is only recommended for packets of type {@link ControlPacket.Type.APP_DATA}
+     * This method is only recommended for packets of type {@link ControlPacket.Type}{@code .APP_DATA}
      * 
      * @param packet the {@link ControlPacket} to be sent
      */

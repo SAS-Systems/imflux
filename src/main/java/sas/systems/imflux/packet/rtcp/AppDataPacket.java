@@ -21,7 +21,7 @@ import io.netty.buffer.ByteBuf;
 
 /**
  * A control packet of type APP (application-defined).<br/>
- * This packet is for experimental use as new application are developed. <em>This class isn't completed yet</em>, because 
+ * This packet is for experimental use as new applications are developed. <em>This class isn't completed yet</em>, because
  * there isn't the need for it. You can use this class to extend this library with custom features.
  * <pre>
  *  0               1               2               3                bytes
