@@ -56,6 +56,7 @@ public class ByePacket extends ControlPacket {
     // constructors ---------------------------------------------------------------------------------------------------
     public ByePacket() {
         super(Type.BYE);
+        ssrcList = new ArrayList<>();
     }
 
     // public static methods ------------------------------------------------------------------------------------------

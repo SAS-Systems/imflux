@@ -45,7 +45,7 @@ public interface RtspSession extends Session, RtspPacketReceiver {
 	 * @param remoteAddress the {@link SocketAddress} of the request's destination
 	 * @return {@code true} if the {@link HttpRequest} was sent successfully and {@code false} otherwise
 	 */
-	public boolean sendRequest(HttpRequest request, SocketAddress remoteAddress);
+	boolean sendRequest(HttpRequest request, SocketAddress remoteAddress);
 	
 	/**
      * Sends a {@link HttpRequest} through the channel. <br/>

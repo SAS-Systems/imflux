@@ -44,6 +44,21 @@ public class ControlPacketDecoder extends ChannelInboundHandlerAdapter {
     // constants ------------------------------------------------------------------------------------------------------
     protected static final Logger LOG = Logger.getLogger(ControlPacketDecoder.class);
 
+    // constructors ---------------------------------------------------------------------------------------------------
+    /**
+     * Private constructor, only called by the private factory class.
+     */
+    private ControlPacketDecoder() {}
+
+    // public static methods ------------------------------------------------------------------------------------------
+    /**
+     *
+     * @return instance of DataPacketEncoder
+     */
+    public static ControlPacketDecoder getInstance() {
+        return InstanceHolder.INSTANCE;
+    }
+
     // ChannelInboundHandlerAdapter -----------------------------------------------------------------------------------
     /**
      * Decodes {@link ByteBuf}fers to {@link ControlPacket}s and then put them into a {@link CompoundControlPacket} to pass
@@ -61,8 +76,7 @@ public class ControlPacketDecoder extends ChannelInboundHandlerAdapter {
 
         ByteBuf buffer = (ByteBuf) msg;
         if ((buffer.readableBytes() % 4) != 0) {
-            LOG.debug("Invalid RTCP packet received: total length should be multiple of 4 but is {}",
-                      buffer.readableBytes());
+            LOG.debug("Invalid RTCP packet received: total length should be multiple of 4 but is {}", buffer.readableBytes());
             return;
         }
 
@@ -89,4 +103,18 @@ public class ControlPacketDecoder extends ChannelInboundHandlerAdapter {
         	ctx.fireChannelRead(new CompoundControlPacket(controlPacketList));
         }
 	}
+
+    // private classes ------------------------------------------------------------------------------------------------
+    /**
+     * Factory class for the {@link ControlPacketDecoder}.
+     *
+     * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
+     */
+    private static final class InstanceHolder {
+        /**
+         * Private constructor for hiding the implicit default one.
+         */
+        private InstanceHolder() {}
+        private static final ControlPacketDecoder INSTANCE = new ControlPacketDecoder();
+    }
 }

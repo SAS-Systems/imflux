@@ -25,7 +25,7 @@ import java.security.NoSuchAlgorithmException;
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
-public class ByteUtils {
+public abstract class ByteUtils {
 
     // constructors ---------------------------------------------------------------------------------------------------
     private ByteUtils() {

@@ -22,7 +22,7 @@ package sas.systems.imflux.util;
  * @author <a:mailto="bruno.carvalho@wit-software.com" />Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
-public class TimeUtils {
+public abstract class TimeUtils {
 
     // constructors ---------------------------------------------------------------------------------------------------
     private TimeUtils() {

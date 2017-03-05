@@ -130,8 +130,8 @@ public class SimpleRtspSession implements RtspSession {
 		this.running = new AtomicBoolean(false);
 		
 		// CopyOnWriteArrayList to make this class thread-safe
-        this.requestListener = new CopyOnWriteArrayList<RtspRequestListener>();
-        this.responseListener = new CopyOnWriteArrayList<RtspResponseListener>();
+        this.requestListener = new CopyOnWriteArrayList<>();
+        this.responseListener = new CopyOnWriteArrayList<>();
         this.participantSessions = new ConcurrentHashMap<>();
 		
 		this.useNio = USE_NIO;
@@ -243,11 +243,7 @@ public class SimpleRtspSession implements RtspSession {
 	 */
 	@Override
 	public boolean sendRequest(HttpRequest request, Channel channel) {
-		if(!this.running.get()) {
-			return false;
-		}
-		
-		return internalSend(request, channel);
+		return this.running.get() && internalSend(request, channel);
 	}
 	
 	/**
@@ -265,11 +261,7 @@ public class SimpleRtspSession implements RtspSession {
 	 */
 	@Override
 	public boolean sendResponse(HttpResponse response, Channel channel) {
-		if(!this.running.get()) {
-			return false;
-		}
-		
-		return internalSend(response, channel);
+		return this.running.get() && internalSend(response, channel);
 	}
 	
 	/**

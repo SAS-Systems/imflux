@@ -84,7 +84,7 @@ public abstract class ControlPacket {
         byte b = buffer.readByte();
         RtpVersion version = RtpVersion.fromByte(b);
         if (!version.equals(RtpVersion.V2)) {
-            return null;
+            throw new IllegalArgumentException("Wrong RTP version. Only RTP Version 2 is supported!");
         }
         boolean hasPadding = (b & 0x20) > 0; // mask: 0010 0000
         byte innerBlocks = (byte) (b & 0x1f); // mask: 0001 1111
@@ -94,7 +94,7 @@ public abstract class ControlPacket {
         // This length is in 32bit (4byte) words. These first 4 bytes already read, don't count.
         int length = buffer.readShort();
         if (length == 0) {
-            return null;
+            throw new IllegalArgumentException("Unexpected end of buffer");
         }
 
         // No need to pass version downwards, only V2 is supported so subclasses can safely assume V2.
@@ -110,6 +110,7 @@ public abstract class ControlPacket {
             case BYE:
                 return ByePacket.decode(buffer, innerBlocks, length);
             case APP_DATA:
+                // TODO: is not supported yet!
                 return null;
             default:
                 throw new IllegalArgumentException("Unknown RTCP packet type: " + type);

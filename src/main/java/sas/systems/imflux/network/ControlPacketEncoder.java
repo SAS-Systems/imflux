@@ -66,9 +66,7 @@ public class ControlPacketEncoder extends ChannelOutboundHandlerAdapter {
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
      */
     @Override
-	public void write(ChannelHandlerContext ctx, Object msg,
-			ChannelPromise promise){
-		
+	public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise){
 		try {
             if (msg instanceof ControlPacket) {
             	ctx.write(((ControlPacket) msg).encode(), promise);

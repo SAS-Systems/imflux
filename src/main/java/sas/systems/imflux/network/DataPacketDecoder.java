@@ -17,6 +17,7 @@
 package sas.systems.imflux.network;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import sas.systems.imflux.logging.Logger;
@@ -30,10 +31,26 @@ import java.util.List;
  * @author <a href="http://bruno.biasedbit.com/">Bruno de Carvalho</a>
  * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
  */
+@ChannelHandler.Sharable
 public class DataPacketDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     // constants ------------------------------------------------------------------------------------------------------
     protected static final Logger LOG = Logger.getLogger(DataPacketDecoder.class);
+
+    // constructors ---------------------------------------------------------------------------------------------------
+    /**
+     * Private constructor, only called by the private factory class.
+     */
+    private DataPacketDecoder() {}
+
+    // public static methods ------------------------------------------------------------------------------------------
+    /**
+     *
+     * @return instance of DataPacketEncoder
+     */
+    public static DataPacketDecoder getInstance() {
+        return InstanceHolder.INSTANCE;
+    }
 
     // MessageToMessageDecoder ------------------------------------------------------------------------------------------------
     /**
@@ -52,5 +69,19 @@ public class DataPacketDecoder extends MessageToMessageDecoder<ByteBuf> {
             LOG.debug("Failed to decode RTP packet.", e);
             out.add(null);
         }
+    }
+
+    // private classes ------------------------------------------------------------------------------------------------
+    /**
+     * Factory class for the {@link DataPacketDecoder}.
+     *
+     * @author <a href="https://github.com/CodeLionX">CodeLionX</a>
+     */
+    private static final class InstanceHolder {
+        /**
+         * Private constructor for hiding the implicit default one.
+         */
+        private InstanceHolder() {}
+        private static final DataPacketDecoder INSTANCE = new DataPacketDecoder();
     }
 }

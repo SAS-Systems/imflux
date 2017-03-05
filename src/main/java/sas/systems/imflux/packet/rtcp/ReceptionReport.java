@@ -156,15 +156,14 @@ public class ReceptionReport {
     // low level overrides --------------------------------------------------------------------------------------------
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("ReceptionReport{")
-                .append("ssrc=").append(this.ssrc)
-                .append(", fractionLost=").append(this.fractionLost)
-                .append(", cumulativeNumberOfPacketsLost=").append(this.cumulativeNumberOfPacketsLost)
-                .append(", extendedHighestSequenceNumberReceived=").append(this.extendedHighestSequenceNumberReceived)
-                .append(", interArrivalJitter=").append(this.interArrivalJitter)
-                .append(", lastSenderReport=").append(this.lastSenderReport)
-                .append(", delaySinceLastSenderReport=").append(this.delaySinceLastSenderReport)
-                .append('}').toString();
+        return "ReceptionReport{" +
+                "ssrc=" + this.ssrc +
+                ", fractionLost=" + this.fractionLost +
+                ", cumulativeNumberOfPacketsLost=" + this.cumulativeNumberOfPacketsLost +
+                ", extendedHighestSequenceNumberReceived=" + this.extendedHighestSequenceNumberReceived +
+                ", interArrivalJitter=" + this.interArrivalJitter +
+                ", lastSenderReport=" + this.lastSenderReport +
+                ", delaySinceLastSenderReport=" + this.delaySinceLastSenderReport +
+                '}';
     }
 }

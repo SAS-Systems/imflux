@@ -72,7 +72,7 @@ public class UdpControlPacketEncoder extends MessageToMessageEncoder<AddressedEn
 		final CompoundControlPacket compoundControlPacket = msg.content();
 		final List<ControlPacket> packets = compoundControlPacket.getControlPackets();
 		ByteBuf compoundBuffer = Unpooled.EMPTY_BUFFER;
-		if(packets.isEmpty()) {
+		if(!packets.isEmpty()) {
 	        final ByteBuf[] buffers = new ByteBuf[packets.size()];
 	        for (int i = 0; i < buffers.length; i++) {
 	            buffers[i] = packets.get(i).encode();

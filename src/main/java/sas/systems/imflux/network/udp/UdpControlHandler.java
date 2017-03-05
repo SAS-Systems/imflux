@@ -78,6 +78,7 @@ public class UdpControlHandler extends SimpleChannelInboundHandler<AddressedEnve
 	protected void messageReceived(ChannelHandlerContext ctx, AddressedEnvelope<CompoundControlPacket, SocketAddress> msg) throws Exception {
 		final CompoundControlPacket packet = msg.content();
 		final SocketAddress sender = msg.sender();
+        this.counter.incrementAndGet();
     	this.receiver.controlPacketReceived(sender, packet);	
 	}
     

@@ -105,6 +105,7 @@ public class ReceiverReportPacket extends AbstractReportPacket {
      * @return a {@code ByteBuf} containing the packet as bytes
      */
     public static ByteBuf encode(int currentCompoundLength, int fixedBlockSize, ReceiverReportPacket packet) {
+        // TODO: shorten this method
         if ((currentCompoundLength < 0) || ((currentCompoundLength % 4) > 0)) {
             throw new IllegalArgumentException("Current compound length must be a non-negative multiple of 4");
         }
@@ -202,10 +203,9 @@ public class ReceiverReportPacket extends AbstractReportPacket {
     // low level overrides --------------------------------------------------------------------------------------------
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("ReceiverReportPacket{")
-                .append("senderSsrc=").append(this.senderSsrc)
-                .append(", receptionReports=").append(this.reports)
-                .append('}').toString();
+        return "ReceiverReportPacket{" +
+                "senderSsrc=" + this.senderSsrc +
+                ", receptionReports=" + this.reports +
+                '}';
     }
 }

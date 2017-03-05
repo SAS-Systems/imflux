@@ -90,10 +90,9 @@ public class SdesChunkPrivItem extends SdesChunkItem {
     // low level overrides --------------------------------------------------------------------------------------------
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("SdesChunkPrivItem{")
-                .append("prefix='").append(this.prefix).append('\'')
-                .append(", value='").append(this.value).append('\'')
-                .append('}').toString();
+        return "SdesChunkPrivItem{" +
+                "prefix='" + this.prefix + '\'' +
+                ", value='" + this.value + '\'' +
+                '}';
     }
 }

@@ -57,8 +57,10 @@ public class RtpParticipant {
     private long byeReceptionInstant;
     private int lastSequenceNumber;
     private boolean receivedSdes;
-    private final AtomicLong receivedByteCounter;
-    private final AtomicLong receivedPacketCounter;
+
+    // why are these atomic but the other members not??
+    private final AtomicLong receivedByteCounter; // TODO: check usage
+    private final AtomicLong receivedPacketCounter; // TODO: check usage
     private final AtomicInteger validPacketCounter; //TODO
 
     // constructors ---------------------------------------------------------------------------------------------------
@@ -170,7 +172,7 @@ public class RtpParticipant {
     /**
      * Generates a new SSRC avoiding all specified ones.
      * 
-     * @param ssrcToAvoid
+     * @param ssrcsToAvoid
      * @return new SSRC
      */
     public long resolveSsrcConflict(Collection<Long> ssrcsToAvoid) {
@@ -184,15 +186,15 @@ public class RtpParticipant {
     }
 
 
-    public void byeReceived() {
+    public synchronized void byeReceived() {
         this.byeReceptionInstant = TimeUtils.now();
     }
 
-    public void receivedSdes() {
+    public synchronized void receivedSdes() {
         this.receivedSdes = true;
     }
 
-    public void packetReceived() {
+    public synchronized void packetReceived() {
         this.lastReceptionInstant = TimeUtils.now();
     }
 
@@ -225,7 +227,7 @@ public class RtpParticipant {
         return lastSequenceNumber;
     }
 
-    public void setLastSequenceNumber(int lastSequenceNumber) {
+    public synchronized void setLastSequenceNumber(int lastSequenceNumber) {
         this.lastSequenceNumber = lastSequenceNumber;
     }
 
@@ -249,7 +251,7 @@ public class RtpParticipant {
         return dataDestination;
     }
 
-    public void setDataDestination(SocketAddress dataDestination) {
+    public synchronized void setDataDestination(SocketAddress dataDestination) {
         if (dataDestination == null) {
             throw new IllegalArgumentException("Argument cannot be null");
         }
@@ -260,7 +262,7 @@ public class RtpParticipant {
         return controlDestination;
     }
 
-    public void setControlDestination(SocketAddress controlDestination) {
+    public synchronized void setControlDestination(SocketAddress controlDestination) {
         if (dataDestination == null) {
             throw new IllegalArgumentException("Argument cannot be null");
         }
@@ -271,7 +273,7 @@ public class RtpParticipant {
         return lastDataOrigin;
     }
 
-    public void setLastDataOrigin(SocketAddress lastDataOrigin) {
+    public synchronized void setLastDataOrigin(SocketAddress lastDataOrigin) {
         this.lastDataOrigin = lastDataOrigin;
     }
 
@@ -279,7 +281,7 @@ public class RtpParticipant {
         return lastControlOrigin;
     }
 
-    public void setLastControlOrigin(SocketAddress lastControlOrigin) {
+    public synchronized void setLastControlOrigin(SocketAddress lastControlOrigin) {
         this.lastControlOrigin = lastControlOrigin;
     }
 

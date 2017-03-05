@@ -98,6 +98,7 @@ public class SourceDescriptionPacket extends ControlPacket {
      * @return a {@code ByteBuf} containing the packet as bytes
      */
     public static ByteBuf encode(int currentCompoundLength, int fixedBlockSize, SourceDescriptionPacket packet) {
+        // TODO: shorten this method
         if ((currentCompoundLength < 0) || ((currentCompoundLength % 4) > 0)) {
             throw new IllegalArgumentException("Current compound length must be a non-negative multiple of 4");
         }
@@ -222,9 +223,8 @@ public class SourceDescriptionPacket extends ControlPacket {
     // low level overrides --------------------------------------------------------------------------------------------
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("SourceDescriptionPacket{")
-                .append("chunks=").append(this.chunks)
-                .append('}').toString();
+        return "SourceDescriptionPacket{" +
+                "chunks=" + this.chunks +
+                '}';
     }
 }

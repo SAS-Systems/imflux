@@ -65,6 +65,7 @@ public class ControlHandler extends SimpleChannelInboundHandler<CompoundControlP
      */
     //@Override
 	protected void messageReceived(ChannelHandlerContext ctx, CompoundControlPacket msg) throws Exception {
+        this.counter.incrementAndGet();
     	this.receiver.controlPacketReceived(ctx.channel().remoteAddress(), msg);	
 	}
     

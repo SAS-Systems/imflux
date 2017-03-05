@@ -17,10 +17,7 @@
 package sas.systems.imflux.participant;
 
 import java.net.SocketAddress;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import sas.systems.imflux.logging.Logger;
 import sas.systems.imflux.packet.DataPacket;
@@ -60,13 +57,13 @@ public class SingleParticipantDatabase implements ParticipantDatabase {
 
     @Override
     public Collection<RtpParticipant> getReceivers() {
-        return Arrays.asList(this.participant);
+        return Collections.singletonList(this.participant);
     }
 
     @Override
     public Map<Long, RtpParticipant> getMembers() {
         // Could be optimised, but then again this'll be used so little...
-        Map<Long, RtpParticipant> map = new HashMap<Long, RtpParticipant>(1);
+        Map<Long, RtpParticipant> map = new HashMap<>(1);
         map.put(this.participant.getSsrc(), this.participant);
         return map;
     }

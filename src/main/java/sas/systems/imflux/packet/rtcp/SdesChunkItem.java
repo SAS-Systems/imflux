@@ -98,11 +98,10 @@ public class SdesChunkItem {
     // low level overrides --------------------------------------------------------------------------------------------
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("SdesChunkItem{")
-                .append("type=").append(this.type)
-                .append(", value='").append(this.value).append('\'')
-                .append('}').toString();
+        return "SdesChunkItem{" +
+                "type=" + this.type +
+                ", value='" + this.value + '\'' +
+                '}';
     }
 
     // public classes -------------------------------------------------------------------------------------------------

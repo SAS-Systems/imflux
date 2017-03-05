@@ -97,7 +97,7 @@ public class SenderReportPacket extends AbstractReportPacket {
         packet.setSenderSsrc(buffer.readUnsignedInt());			// reads 4 bytes (one 32bit word) from the buffer
         packet.setNtpTimestamp(									// reads 2x 4bytes (two 32bit words) from the buffer
     		BigInteger.valueOf(buffer.readUnsignedInt())			// read high word
-    		.multiply(BigInteger.valueOf(4294967296l))				// multiply by 0x0001 0000 0000 to shift value to 
+    		.multiply(BigInteger.valueOf(4294967296L))				// multiply by 0x0001 0000 0000 to shift value to
     																//   the right position
     		.add(BigInteger.valueOf(buffer.readUnsignedInt()))		// read low word
         );
@@ -133,6 +133,7 @@ public class SenderReportPacket extends AbstractReportPacket {
      * @return a {@code ByteBuf} containing the packet as bytes
      */
     public static ByteBuf encode(int currentCompoundLength, int fixedBlockSize, SenderReportPacket packet) {
+        // TODO: shorten this method
         if ((currentCompoundLength < 0) || ((currentCompoundLength % 4) > 0)) {
             throw new IllegalArgumentException("Current compound length must be a non-negative multiple of 4");
         }
@@ -303,14 +304,13 @@ public class SenderReportPacket extends AbstractReportPacket {
     // low level overrides --------------------------------------------------------------------------------------------
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("SenderReportPacket{")
-                .append("senderSsrc=").append(this.senderSsrc)
-                .append(", ntpTimestamp=").append(this.ntpTimestamp)
-                .append(", rtpTimestamp=").append(this.rtpTimestamp)
-                .append(", senderPacketCount=").append(this.senderPacketCount)
-                .append(", senderOctetCount=").append(this.senderOctetCount)
-                .append(", receptionReports=").append(this.reports)
-                .append('}').toString();
+        return "SenderReportPacket{" +
+                "senderSsrc=" + this.senderSsrc +
+                ", ntpTimestamp=" + this.ntpTimestamp +
+                ", rtpTimestamp=" + this.rtpTimestamp +
+                ", senderPacketCount=" + this.senderPacketCount +
+                ", senderOctetCount=" + this.senderOctetCount +
+                ", receptionReports=" + this.reports +
+                '}';
     }
 }

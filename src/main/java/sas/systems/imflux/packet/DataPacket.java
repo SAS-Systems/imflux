@@ -94,6 +94,7 @@ public class DataPacket {
      * @throws IndexOutOfBoundsException
      */
     public static DataPacket decode(ByteBuf buffer) throws IndexOutOfBoundsException {
+        // TODO: shorten this method
         if (buffer.readableBytes() < 12) {
             throw new IllegalArgumentException("A RTP packet must be at least 12 octets long");
         }
@@ -157,6 +158,7 @@ public class DataPacket {
      * @return a {@link ByteBuf} containing the bytes
      */
     public static ByteBuf encode(int fixedBlockSize, DataPacket packet) {
+        // TODO: shorten this method
         int size = 12; // Fixed width
         if (packet.hasExtension()) {
             size += 4 + packet.getExtensionDataSize();
@@ -404,17 +406,15 @@ public class DataPacket {
     // low level overrides --------------------------------------------------------------------------------------------
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("DataPacket{V=").append(this.version)
-                .append(", X=").append(this.hasExtension())
-                .append(", CC=").append(this.getContributingSourcesCount())
-                .append(", M=").append(this.marker)
-                .append(", PT=").append(this.payloadType)
-                .append(", SN=").append(this.sequenceNumber)
-                .append(", TS=").append(this.timestamp)
-                .append(", SSRC=").append(this.ssrc)
-                .append(", CSRCs=").append(this.contributingSourceIds)
-                .append(", data=").append(this.getDataSize()).append(" bytes}")
-                .toString();
+        return "DataPacket{V=" + this.version +
+                ", X=" + this.hasExtension() +
+                ", CC=" + this.getContributingSourcesCount() +
+                ", M=" + this.marker +
+                ", PT=" + this.payloadType +
+                ", SN=" + this.sequenceNumber +
+                ", TS=" + this.timestamp +
+                ", SSRC=" + this.ssrc +
+                ", CSRCs=" + this.contributingSourceIds +
+                ", data=" + this.getDataSize() + " bytes}";
     }
 }

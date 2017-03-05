@@ -50,7 +50,7 @@ public class SdesChunk {
 
     // constructors ---------------------------------------------------------------------------------------------------
     public SdesChunk() {
-    	// nothing to do here
+    	items = new ArrayList<>();
     }
 
     public SdesChunk(long ssrc) {
@@ -111,7 +111,7 @@ public class SdesChunk {
             // Start with SSRC
             int size = 4;
             // Add the length of each item and encode items
-            List<ByteBuf> encodedChunkItems = new ArrayList<ByteBuf>(chunk.items.size());
+            List<ByteBuf> encodedChunkItems = new ArrayList<>(chunk.items.size());
             for (SdesChunkItem item : chunk.items) {
                 ByteBuf encodedChunk = item.encode();
                 encodedChunkItems.add(encodedChunk);
@@ -204,10 +204,9 @@ public class SdesChunk {
     // low level overrides --------------------------------------------------------------------------------------------
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("SdesChunk{")
-                .append("ssrc=").append(this.ssrc)
-                .append(", items=").append(this.items)
-                .append('}').toString();
+        return "SdesChunk{" +
+                "ssrc=" + this.ssrc +
+                ", items=" + this.items +
+                '}';
     }
 }

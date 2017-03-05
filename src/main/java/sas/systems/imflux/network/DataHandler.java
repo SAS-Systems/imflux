@@ -65,6 +65,7 @@ public class DataHandler extends SimpleChannelInboundHandler<DataPacket> {
      */
     //@Override
 	protected void messageReceived(ChannelHandlerContext ctx, DataPacket msg) throws Exception {
+        this.counter.incrementAndGet();
 		this.receiver.dataPacketReceived(ctx.channel().remoteAddress(), msg);
 	}
 

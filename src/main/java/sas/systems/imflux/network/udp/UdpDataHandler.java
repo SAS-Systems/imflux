@@ -78,6 +78,7 @@ public class UdpDataHandler extends SimpleChannelInboundHandler<AddressedEnvelop
 	protected void messageReceived(ChannelHandlerContext ctx, AddressedEnvelope<DataPacket, SocketAddress> msg) throws Exception {
 		final DataPacket packet = msg.content();
 		final SocketAddress sender = msg.sender();
+        this.counter.incrementAndGet();
     	this.receiver.dataPacketReceived(sender, packet);	
 	}
     

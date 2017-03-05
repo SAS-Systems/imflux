@@ -44,7 +44,7 @@ public final class SessionIdentifierGenerator {
 	}
 	
 	/**
-	 * Generates a new alpha-numeric ID-
+	 * Generates a new alpha-numeric ID
 	 * @return a String containing a newly generated session ID
 	 */
 	public String nextSessionId() {
