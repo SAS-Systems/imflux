@@ -45,4 +45,8 @@ public interface Session {
     boolean useNio();
     
     void setUseNio(boolean useNio);
+
+    boolean useTcp();
+
+    void setUseTcp(boolean useTcp);
 }

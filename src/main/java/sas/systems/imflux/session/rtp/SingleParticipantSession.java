@@ -141,7 +141,7 @@ public class SingleParticipantSession extends AbstractRtpSession {
      */
     @Override
     public Map<Long, RtpParticipant> getRemoteParticipants() {
-        Map<Long, RtpParticipant> map = new HashMap<Long, RtpParticipant>();
+        Map<Long, RtpParticipant> map = new HashMap<>();
         map.put(this.receiver.getSsrc(), this.receiver);
         return map;
     }

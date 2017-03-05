@@ -88,6 +88,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
 
     // configuration defaults -----------------------------------------------------------------------------------------
     protected static final boolean USE_NIO = true;
+    protected static final boolean USE_TCP = false;
     protected static final boolean DISCARD_OUT_OF_ORDER = true;
     protected static final int BANDWIDTH_LIMIT = 256;
     protected static final int SEND_BUFFER_SIZE = 1500;
@@ -102,6 +103,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     protected final int payloadType;
     protected final HashedWheelTimer timer;
     protected boolean useNio;
+    protected boolean useTcp;
     protected boolean discardOutOfOrder;
     protected int bandwidthLimit;
     protected int sendBufferSize;
@@ -1048,7 +1050,7 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
     public boolean useNio() {
         return useNio;
     }
-    
+
     /**
      * Can only be modified before initialization.
      */
@@ -1058,6 +1060,23 @@ public abstract class AbstractRtpSession implements RtpSession, TimerTask {
             throw new IllegalArgumentException("Cannot modify property after initialisation");
         }
         this.useNio = useNio;
+    }
+
+    @Override
+    public boolean useTcp() {
+        return useTcp;
+    }
+
+    /**
+     * Can only be modified before initialization.
+     */
+    @Override
+    public void setUseTcp(boolean useTcp) {
+        if (this.running.get()) {
+            throw new IllegalArgumentException("Cannot modify property after initialisation");
+        }
+        throw new IllegalArgumentException("Only UDP is currently supported");
+        //this.useTcp = useTcp;
     }
 
     public boolean isDiscardOutOfOrder() {
