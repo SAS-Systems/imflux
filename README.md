@@ -5,3 +5,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/SAS-Systems/imflux/badge.svg?branch=master)](https://coveralls.io/github/SAS-Systems/imflux?branch=master)
 [![License Apache 2.0](https://img.shields.io/hexpm/l/plug.svg?maxAge=2592000&style=flat)](https://github.com/SAS-Systems/imflux/blob/master/LICENSE.txt)
 [![Github All Releases](https://img.shields.io/github/downloads/SAS-Systems/imflux/total.svg?maxAge=2592000)]()
+
+## Attention: Not maintained anymore!
+If there are questions please contact me under: `info at sebastianschmidl dot de`.
